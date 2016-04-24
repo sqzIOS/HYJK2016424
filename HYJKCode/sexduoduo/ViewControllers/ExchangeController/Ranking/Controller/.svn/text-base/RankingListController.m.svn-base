@@ -1,0 +1,222 @@
+//
+//  ViewController.m
+//  Ranking List
+//
+//  Created by sqz on 15/12/1.
+//  Copyright (c) 2015年 sqz. All rights reserved.
+//
+
+#import "RankingListController.h"
+#import "ShareFunction.h"
+#import "DayRankingController.h"
+#import "WeekRankingController.h"
+#import "MonthRankingController.h"
+
+@interface RankingListController()
+
+@property (nonatomic,weak) UIButton *chooseBtn;
+@property (nonatomic,weak) UIView *bottomLine;
+@property (nonatomic,weak) UIView *contentView;
+@property (nonatomic,strong) DayRankingController *dayRankingController;
+@property (nonatomic,strong) WeekRankingController *weekRankingController;
+@property (nonatomic,strong) MonthRankingController *monthRankingController;
+
+@end
+
+@implementation RankingListController
+
++ (instancetype)RankingListControllerInitWithStyle:(RankingListControllerStyle)rankingListControllerStyle
+{
+    RankingListController *rankingListController = [[self alloc] init];
+    rankingListController.rankingListControllerStyle = rankingListControllerStyle;
+    return rankingListController;
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+
+    
+    // 创建内容区域
+    [self setContentView];
+    
+    // 创建顶部view
+    [self setTopView];
+}
+
+// 创建内容区域
+- (void)setContentView
+{
+    UIView *contentView = [[UIView alloc] initWithFrame:CGRectMake(0, QZMake(44),SizeOfMainScreen.width, SizeOfMainScreen.height)];
+    self.contentView = contentView;
+    [self.view addSubview:contentView];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+// 懒加载
+- (UIViewController *)dayRankingController
+{
+    if (_dayRankingController == nil) {
+        _dayRankingController = [[DayRankingController alloc] init];
+        
+        // 泡吧
+        if (self.rankingListControllerStyle == RankingListControllerStyleClubbing ) {
+            _dayRankingController.bgImage = @"rank_bg_masterclubbing";
+        }
+        
+        // 打赏
+        if (self.rankingListControllerStyle == RankingListControllerStyleReward ) {
+            _dayRankingController.bgImage = @"rank_bg";
+            _dayRankingController.titleImage = @"rank_pic_world";
+        }
+        
+        // 金币
+        if (self.rankingListControllerStyle == RankingListControllerStyleGold ) {
+            _dayRankingController.bgImage = @"rank_bg";
+            _dayRankingController.titleImage = @"rank_pic_worlddinars";
+        }
+        [self setRequestWithController:_dayRankingController];
+    }
+    return _dayRankingController;
+}
+
+- (UIViewController *)weekRankingController
+{
+    if (_weekRankingController == nil) {
+        _weekRankingController = [[WeekRankingController alloc] init];
+        [self setRequestWithController:_weekRankingController];
+    }
+    return _weekRankingController;
+}
+
+- (UIViewController *)monthRankingController
+{
+    if (_monthRankingController == nil) {
+        _monthRankingController = [[MonthRankingController alloc] init];
+        [self setRequestWithController:_monthRankingController];
+    }
+    return _monthRankingController;
+}
+
+
+- (void)setRequestWithController:(RankingBaseViewController *)controller
+{
+    // 泡吧
+    if (self.rankingListControllerStyle == RankingListControllerStyleClubbing ) {
+        controller.path = @"bbs3/app/new/appUserPointStanding.jhtml";
+    }
+    
+    // 打赏
+    if (self.rankingListControllerStyle == RankingListControllerStyleReward ) {
+        controller.path = @"bbs3/app/new/appPrestigedesc.jhtml";
+    }
+    
+    // 金币
+    if (self.rankingListControllerStyle == RankingListControllerStyleGold ) {
+        controller.path = @"bbs3/app/new/appUserPresent.jhtml";
+    }
+}
+
+// 顶部view
+- (void)setTopView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *topView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:topView];
+    
+    [topView addLeftBtnTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    
+    
+    // 按钮下面的线条
+    UIView *bottomLine = [[UIView alloc] init];
+    bottomLine.frame = CGRectMake(0, 0, QZMake(37.5), 1);
+    bottomLine.backgroundColor = [UIColor colorWithRed:181/255.0 green:46/255.0  blue:110/255.0  alpha:1];
+    self.bottomLine = bottomLine;
+    bottomLine.hidden = YES;
+    [topView addSubview:bottomLine];
+    
+    // 添加按钮
+    UIButton *dayBtn = [self createBtnWithTitle:@"日榜"];
+    dayBtn.frame = CGRectMake(QZMake(106.5), 30, 40, 30);
+    [dayBtn addTarget:self action:@selector(dayBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [topView addSubview:dayBtn];
+    [self dayBtnClick:dayBtn];
+    
+    UIButton *WeekBtn = [self createBtnWithTitle:@"周榜"];
+    WeekBtn.frame = CGRectMake(QZMake(161.5),30,40, 30);
+    [WeekBtn addTarget:self action:@selector(WeekBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [topView addSubview:WeekBtn];
+    
+    UIButton *MonthBtn = [self createBtnWithTitle:@"月榜"];
+    MonthBtn.frame = CGRectMake(QZMake(216.5),30, 40, 30);
+    [MonthBtn addTarget:self action:@selector(MonthBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [topView addSubview:MonthBtn];
+}
+
+- (void)back
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+// 点击日榜
+- (void)dayBtnClick:(UIButton *)btn
+{
+    [self btnStateChange:btn];
+    [self.contentView addSubview:self.dayRankingController.view];
+}
+
+// 点击月榜
+- (void)WeekBtnClick:(UIButton *)btn
+{
+    [self btnStateChange:btn];
+    [self.contentView addSubview:self.weekRankingController.view];
+}
+
+// 点击总榜
+- (void)MonthBtnClick:(UIButton *)btn
+{
+    [self btnStateChange:btn];
+    [self.contentView addSubview:self.monthRankingController.view];
+}
+
+// 改变按钮状态及线条位置
+- (void)btnStateChange:(UIButton *)btn
+{
+    self.bottomLine.hidden = NO;
+    CGPoint center = btn.center;
+    center.y += 18;
+    self.bottomLine.center = center;
+    self.chooseBtn.selected = NO;
+    self.chooseBtn.titleLabel.font = [UIFont systemFontOfSize:QZMake(15)];
+    self.chooseBtn = btn;
+    btn.titleLabel.font = [UIFont systemFontOfSize:QZMake(18)];
+    btn.selected = YES;
+    [self.contentView.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
+}
+
+// 创建按钮
+- (UIButton *)createBtnWithTitle:(NSString *)title 
+{
+    UIButton *btn = [[UIButton alloc] init];
+    [btn setTitleColor:[UIColor colorWithRed:32/255.0 green:32/255.0  blue:32/255.0  alpha:1] forState:UIControlStateNormal];
+    [btn setTitleColor:[UIColor colorWithRed:181/255.0 green:46/255.0  blue:110/255.0  alpha:1] forState:UIControlStateSelected];
+    btn.titleLabel.font = [UIFont systemFontOfSize:QZMake(15)];
+    [btn setTitle:title forState:UIControlStateNormal];
+    
+    return btn;
+}
+@end

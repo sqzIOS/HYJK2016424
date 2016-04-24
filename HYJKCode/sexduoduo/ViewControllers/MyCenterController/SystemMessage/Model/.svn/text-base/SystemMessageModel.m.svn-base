@@ -1,0 +1,29 @@
+//
+//  SystemMessageModel.m
+//  
+//
+//  Created by apple on 15/12/7.
+//
+//
+
+#import "SystemMessageModel.h"
+
+@implementation SystemMessageModel
+
+
++ (instancetype)systemMessageModelWithDict:(NSDictionary *)dict
+{
+    SystemMessageModel *model = [[SystemMessageModel alloc] init];
+    model.content = dict[@"content"];
+    model.ID = dict[@"id"];
+    model.title = dict[@"title"];
+    model.abstracts = dict[@"abstracts"];
+    model.toUser = dict[@"toUser"];
+    model.scene = [NSString stringWithFormat:@"%@",dict[@"scene"]];
+    model.releaseTime = [dict[@"releaseTime"] longValue];
+    model.isRead = [dict[@"isRead"] boolValue];
+    
+    return model;
+}
+
+@end

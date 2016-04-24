@@ -1,0 +1,39 @@
+//
+//  DetailButton.m
+//  
+//
+//  Created by apple on 15/12/7.
+//
+//
+
+#import "DetailButton.h"
+#import "ShareFunction.h"
+#define Color(r,g,b) [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b /255.0 alpha:1]
+
+@implementation DetailButton
+
+
++ (instancetype)button
+{
+    DetailButton *button = [DetailButton buttonWithType:UIButtonTypeCustom];
+    [button setTitle:@"查看详情" forState:UIControlStateNormal];
+    button.titleLabel.font = [UIFont systemFontOfSize:QZMake(12)];
+    [button setTitleColor:Color(102, 102, 102) forState:UIControlStateNormal];
+    [button setImage:[UIImage imageNamed:@"sysmsg_ic_jump_n"] forState:UIControlStateNormal];
+    [button setImage:[UIImage imageNamed:@"sysmsg_ic_jump_p"] forState:UIControlStateHighlighted];;
+    return button;
+
+}
+
+
+- (CGRect)titleRectForContentRect:(CGRect)contentRect
+{
+    return CGRectMake(0,QZMake(10), QZMake(48), QZMake(12));
+}
+
+- (CGRect)imageRectForContentRect:(CGRect)contentRect
+{
+    return  CGRectMake(QZMake(48), QZMake(5), QZMake(24), QZMake(24));
+}
+
+@end

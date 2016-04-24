@@ -1,0 +1,23 @@
+//
+//  FirClassifyCell.h
+//  sexduoduo
+//
+//  Created by Showm on 14-10-15.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+
+@interface FirClassifyCell : UITableViewCell
+
+@property (weak, nonatomic) IBOutlet UIImageView *firClassifyImg;
+
+@property (weak, nonatomic) IBOutlet UIImageView *firClassifyUnSelectImg;
+
+
+@property (weak, nonatomic) IBOutlet UIImageView *firClassifyMark;
+
+
+
+@end

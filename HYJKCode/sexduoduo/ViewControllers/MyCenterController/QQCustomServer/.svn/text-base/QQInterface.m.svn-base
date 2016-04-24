@@ -1,0 +1,278 @@
+//
+//  QQInterface.m
+//  yueyue
+//
+//  Created by chw on 13-7-3.
+//  Copyright (c) 2013年 chw. All rights reserved.
+//
+
+#import "QQInterface.h"
+#import "SVStatusHUD.h"
+#import <TencentOpenAPI/sdkdef.h>
+#import <TencentOpenAPI/TencentOAuthObject.h>
+#import <TencentOpenAPI/QQApi.h>
+static QQInterface *instance = nil;
+@interface QQInterface ()<QQApiInterfaceDelegate>
+
+@end
+
+@implementation QQInterface
+
+@synthesize tencentOAuth;
++ (id)shareInstance
+{
+    if (instance == nil)
+    {
+        instance = [[QQInterface alloc] init];
+    }
+    return instance;
+}
+
+- (id)init
+{
+    self = [super init];
+    if (self)
+    {
+        // 设置应用需要用户授权的API列表
+//        permissions = [NSArray arrayWithObjects:
+//                         kOPEN_PERMISSION_GET_USER_INFO,
+//                         kOPEN_PERMISSION_GET_SIMPLE_USER_INFO,
+//                         kOPEN_PERMISSION_ADD_ALBUM,
+//                         kOPEN_PERMISSION_ADD_ONE_BLOG,
+//                         kOPEN_PERMISSION_ADD_SHARE,
+//                         kOPEN_PERMISSION_ADD_TOPIC,
+//                         kOPEN_PERMISSION_CHECK_PAGE_FANS,
+//                         kOPEN_PERMISSION_DEL_T,
+//                         kOPEN_PERMISSION_GET_FANSLIST,
+//                         kOPEN_PERMISSION_GET_INFO,
+//                         kOPEN_PERMISSION_GET_OTHER_INFO,
+//                         kOPEN_PERMISSION_LIST_ALBUM,
+//                         nil];
+        permissions =[NSArray arrayWithObjects:
+          kOPEN_PERMISSION_GET_USER_INFO,
+          kOPEN_PERMISSION_GET_SIMPLE_USER_INFO,
+          kOPEN_PERMISSION_ADD_ALBUM,
+          kOPEN_PERMISSION_ADD_IDOL,
+          kOPEN_PERMISSION_ADD_ONE_BLOG,
+          kOPEN_PERMISSION_ADD_PIC_T,
+          kOPEN_PERMISSION_ADD_SHARE,
+          kOPEN_PERMISSION_ADD_TOPIC,
+          kOPEN_PERMISSION_CHECK_PAGE_FANS,
+          kOPEN_PERMISSION_DEL_IDOL,
+          kOPEN_PERMISSION_DEL_T,
+          kOPEN_PERMISSION_GET_FANSLIST,
+          kOPEN_PERMISSION_GET_IDOLLIST,
+          kOPEN_PERMISSION_GET_INFO,
+          kOPEN_PERMISSION_GET_OTHER_INFO,
+          kOPEN_PERMISSION_GET_REPOST_LIST,
+          kOPEN_PERMISSION_LIST_ALBUM,
+          kOPEN_PERMISSION_UPLOAD_PIC,
+          kOPEN_PERMISSION_GET_VIP_INFO,
+          kOPEN_PERMISSION_GET_VIP_RICH_INFO,
+          kOPEN_PERMISSION_GET_INTIMATE_FRIENDS_WEIBO,
+          kOPEN_PERMISSION_MATCH_NICK_TIPS_WEIBO,
+          nil];
+        
+
+        NSString *appid = @"1103181446";
+        tencentOAuth = [[TencentOAuth alloc] initWithAppId:appid
+                                                andDelegate:self];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:FILENAME_QZONE_TOKEN])
+        {
+            NSDictionary *dic = [NSDictionary dictionaryWithContentsOfFile:FILENAME_QZONE_TOKEN];
+            NSString *token = [dic valueForKey:@"accessToken"];
+            NSNumber *time = [dic valueForKey:@"expirationDate"];
+            NSString *openId = [dic valueForKey:@"openId"];
+            [tencentOAuth setAccessToken:token];
+            [tencentOAuth setExpirationDate:[NSDate dateWithTimeIntervalSince1970:[time doubleValue]]];
+            [tencentOAuth setOpenId:openId];
+        }
+    }
+    return self;
+}
+
+- (BOOL)isQZoneAuthValid
+{
+    if (tencentOAuth.accessToken && tencentOAuth.openId &&([tencentOAuth.expirationDate laterDate:[NSDate date]]))
+    {
+        return YES;
+    }
+    return NO;
+}
+
+- (void)login
+{
+    appType = QQ_QZONE_RET;
+    NSLog(@"开始获取qqToken");
+    [tencentOAuth authorize:permissions inSafari:NO];
+}
+
+- (void)shareToQZoneWithString:(NSString*)string songURL:(NSString*)url imageURL:(NSString*)image
+{
+    appType = QQ_QZONE_RET;
+    TCAddShareDic *params = [TCAddShareDic dictionary];
+    params.paramTitle = url;
+    params.paramComment = string;
+    params.paramImages = image;
+    params.paramUrl = @"http://www.qq.com";
+	
+	if(![tencentOAuth addShareWithParams:params]){
+    }
+}
+
+- (void)shareToQQWithSongURL:(NSURL*)url songName:(NSString*)name singer:(NSString*)singer image:(NSData*)image
+{
+    appType = QQ_QZONE_RET;
+    QQApiAudioObject* img =
+    [QQApiAudioObject objectWithURL:url title:@"Wish You Were Here" description:@"Avril Lavigne" previewImageData:image];
+    
+    SendMessageToQQReq* req = [SendMessageToQQReq reqWithContent:img];
+    
+    BOOL sent = [QQApiInterface sendReq:req];
+    [self handleSendResult:sent];
+}
+
+-(void)shareToQQwithContentText
+{
+//    appType = QQ_QZONE_RET;//
+    
+    QQApiTextObject *txtObj = [QQApiTextObject objectWithText:@"亲，给你推荐一个很好的音乐社交应用。http://www.yueyuey.com"];
+    SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:txtObj];
+    //将内容分享到qq
+    QQApiSendResultCode sent = [QQApiInterface sendReq:req];
+    
+    [self handleSendResult:sent];
+//    [QQApiInterface SendReqToQZone:req];
+}
+
+/**
+ * Called when the user successfully logged in.
+ */
+- (void)tencentDidLogin {
+	// 登录成功    
+    
+    if (tencentOAuth.accessToken && 0 != [tencentOAuth.accessToken length])
+    {
+        NSTimeInterval time = [tencentOAuth.expirationDate timeIntervalSince1970];
+        NSNumber *number = [NSNumber numberWithDouble:time];
+        NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:tencentOAuth.accessToken,@"accessToken", number,@"expirationDate", tencentOAuth.openId,@"openId", nil];
+        [dic writeToFile:FILENAME_QZONE_TOKEN atomically:YES];
+    }
+    else
+    {
+        [SVStatusHUD showWithStatus:@"授权失败!" atCenter:CGPointMake(160, SCREEN_HEIGHT-75)];
+    }
+}
+
+
+/**
+ * Called when the user dismissed the dialog without logging in.
+ */
+- (void)tencentDidNotLogin:(BOOL)cancelled
+{
+	if (cancelled)
+    {
+        [SVStatusHUD showWithStatus:@"用户取消授权!" atCenter:CGPointMake(160, SCREEN_HEIGHT-75)];
+	}
+	else
+    {
+        [SVStatusHUD showWithStatus:@"授权失败!" atCenter:CGPointMake(160, SCREEN_HEIGHT-75)];
+	}
+	
+}
+
+/**
+ * Called when the notNewWork.
+ */
+-(void)tencentDidNotNetWork
+{
+    [SVStatusHUD showWithStatus:@"无网络连接!" atCenter:CGPointMake(160, SCREEN_HEIGHT-75)];
+}
+
+/**
+ * Called when the logout.
+ */
+-(void)tencentDidLogout
+{    
+}
+
+- (void)handleSendResult:(QQApiSendResultCode)sendResult
+{
+    switch (sendResult)
+    {
+        case EQQAPIAPPNOTREGISTED:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"App未注册" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+            break;
+        }
+        case EQQAPIMESSAGECONTENTINVALID:
+        case EQQAPIMESSAGECONTENTNULL:
+        case EQQAPIMESSAGETYPEINVALID:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"发送参数错误" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+            break;
+        }
+        case EQQAPIQQNOTINSTALLED:
+        {
+             UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"提示" message:@"您尚未安装QQ客户端" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+             [msgbox show];
+            break;
+        }
+        case EQQAPIQQNOTSUPPORTAPI:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"API接口不支持" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+             [msgbox show];
+            break;
+        }
+        case EQQAPISENDFAILD:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"发送失败" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+// 发起会话
+- (void)onOpenWPA:(NSString *)sender
+{
+//    [self.view endEditing:YES];
+//    [self.root fetchValueUsingBindingsIntoObject:self];
+    QQApiWPAObject *wpaObj = [QQApiWPAObject objectWithUin:sender];
+    SendMessageToQQReq *req = [SendMessageToQQReq reqWithContent:wpaObj];
+    QQApiSendResultCode sent = [QQApiInterface sendReq:req];
+    [self handleSendResult:sent];
+}
+
+//批量监测qq是否在线
+- (void)getQQUinOnlineStatuesWithArray:(NSArray *)senderArr delegate:(id<QQApiInterfaceDelegate>)delegate
+{
+    //    [self.view endEditing:YES];
+    //    [self.root fetchValueUsingBindingsIntoObject:self];
+    NSArray *ARR = [NSArray arrayWithArray:senderArr];
+    [QQApiInterface getQQUinOnlineStatues:ARR delegate:delegate];
+}
+
+
+- (void)getQQUinOnlineStatues:(NSString *)sender
+{
+//    [self.view endEditing:YES];
+//    [self.root fetchValueUsingBindingsIntoObject:self];
+    NSArray *ARR = [NSArray arrayWithObjects:sender, nil];
+    [QQApiInterface getQQUinOnlineStatues:ARR delegate:self];
+}
+
+
+
+-(void)isOnlineResponse:(NSDictionary *)response
+{
+    NSLog(@"qqInterface中 在线状态请求的 回调 =%@",response);
+}
+@end

@@ -1,0 +1,240 @@
+//
+//  DayRankingTopView.m
+//  
+//
+//  Created by sqz on 15/12/1.
+//
+//
+
+#define SizeOfMainScreen [UIScreen mainScreen].bounds.size
+
+#import "RankingTopView.h"
+#import "ShareFunction.h"
+#import "UIView+Extend.h"
+#import "NSString+Category.h"
+#import "RankingModel.h"
+#import "UIImageView+WebCache.h"
+
+@interface DayRankingTopView ()
+
+@property (nonatomic,weak) UIImageView *firstIconView;
+@property (nonatomic,weak) UIImageView *secondIconView;
+@property (nonatomic,weak) UIImageView *thirdIconView;
+
+// 前三名的信息
+@property (nonatomic,weak) UILabel *firstName;
+@property (nonatomic,weak) UILabel *secondName;
+@property (nonatomic,weak) UILabel *thirdName;
+
+
+@property (nonatomic,weak) UIButton *firstNewAddNumber;
+@property (nonatomic,weak) UIButton *secondNewAddNumber;
+@property (nonatomic,weak) UIButton *thirdNewAddNumber;
+
+@property (nonatomic,weak) UIView *firstContent;
+@property (nonatomic,weak) UIView *secondContent;
+@property (nonatomic,weak) UIView *thirdContent;
+
+@end
+
+@implementation DayRankingTopView
+
+- (void)setInfoWithModel:(RankingModel *)model byRanking:(int)ranking
+{
+    UIView *content;
+    UIImageView *iconView;
+    UILabel *nameLabel;
+    UIButton *newAdd;
+    switch (ranking) {
+        case 1:
+            iconView = self.firstIconView;
+            nameLabel = self.firstName;
+            newAdd = self.firstNewAddNumber;
+            content = self.firstContent;
+            break;
+        case 2:
+            iconView = self.secondIconView;
+            nameLabel = self.secondName;
+            newAdd = self.secondNewAddNumber;
+            content = self.secondContent;
+            break;
+        case 3:
+            iconView = self.thirdIconView;
+            nameLabel = self.thirdName;
+            content = self.thirdContent;
+            newAdd = self.thirdNewAddNumber;
+            break;
+    }
+    
+    NSURL *url = [NSURL URLWithString:model.avatar];
+    UIImage *placeholderImage;
+    if (model.sex) {
+        placeholderImage = [UIImage imageNamed:@"morentouxiangWoman"];
+    } else {
+        placeholderImage = [UIImage imageNamed:@"morentouxiangMan"];
+    }
+    [iconView  sd_setImageWithURL:url placeholderImage:placeholderImage];
+    
+    nameLabel.text = model.nickname;
+    CGRect frame = content.frame;
+    CGFloat width = [nameLabel.text sizeWithFont:[UIFont systemFontOfSize:QZMake(12)]].width;
+    if (width > QZMake(50)) {
+        width = 50;
+    }
+    frame.origin.x -= ( width / 2 + QZMake(5));
+    frame.size.width += width + QZMake(10);
+    content.frame = frame;
+
+    
+    NSString *newAddStr;
+    if (model.sumPrestige) {
+        newAddStr = [NSString stringWithFormat:@"新＋%@",model.sumPrestige];
+    } else {
+        newAddStr = [NSString stringWithFormat:@"新＋%@",model.sumPoint];
+    }
+    [newAdd setTitle:newAddStr forState:UIControlStateNormal];
+}
+
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    if (self = [super initWithFrame:frame]) {
+        self.backgroundColor = [UIColor colorWithRed:240/255.0 green:240/255.0 blue:240/255.0 alpha:1];
+        self.frame = CGRectMake(0, 0, SizeOfMainScreen.width,QZMake(236));
+        
+        [self setContent];
+    }
+    return self;
+}
+
+- (void)setContent
+{
+    // 背景图片
+    UIImageView *bgimageView = [[UIImageView alloc] init];
+    bgimageView.image = [UIImage imageNamed:self.bgImage];
+    bgimageView.frame = CGRectMake(QZMake(13), QZMake(12), QZMake(349), QZMake(204.5));
+    [self addSubview:bgimageView];
+    UIImageView *titleImageView = [[UIImageView alloc ] init];
+    titleImageView.frame = CGRectMake(QZMake(140), QZMake(15), QZMake(70), QZMake(18));
+    if (self.titleImage != nil) {        
+        titleImageView.image = [UIImage imageNamed:self.titleImage];
+    }
+    [bgimageView addSubview:titleImageView];
+    
+    // 头像
+    self.firstIconView = [self setIconWithFrame:CGRectMake(QZMake(140.25), QZMake(60), QZMake(94.5), QZMake(94.5)) andBorderColor:[UIColor yellowColor]];
+    [self setIconCoverWithFrame:CGRectMake(self.firstIconView.left + QZMake(3), self.firstIconView.bottom - QZMake(30), QZMake(85), QZMake(25)) andCoverImageName:@"ic_golden" inSuperView:self];
+    self.secondIconView = [self setIconWithFrame:CGRectMake(QZMake(24), QZMake(80), QZMake(82), QZMake(82)) andBorderColor:[UIColor grayColor]];
+    [self setIconCoverWithFrame:CGRectMake(self.secondIconView.left , self.secondIconView.bottom - QZMake(25), QZMake(83.5), QZMake(22.5)) andCoverImageName:@"ic_silver" inSuperView:self];
+    self.thirdIconView = [self setIconWithFrame:CGRectMake(QZMake(270), QZMake(83.5), QZMake(82), QZMake(82)) andBorderColor:[UIColor orangeColor]];
+    [self setIconCoverWithFrame:CGRectMake(self.thirdIconView.left , self.thirdIconView.bottom - QZMake(25), QZMake(83.5), QZMake(22.5)) andCoverImageName:@"ic_copper" inSuperView:self];
+
+    
+    // 排名和名字
+    self.firstName = [self setName:nil withCenter:CGPointMake(self.firstIconView.centerX, QZMake(182)) andRankingNumber:@"1" inSuperView:self];
+    self.secondName = [self setName:nil withCenter:CGPointMake(self.secondIconView.centerX, QZMake(182)) andRankingNumber:@"2" inSuperView:self];
+    self.thirdName =  [self setName:nil withCenter:CGPointMake(self.thirdIconView.centerX, QZMake(182)) andRankingNumber:@"3" inSuperView:self];
+    
+
+    // 底部新＋
+    UIImageView *bottomNewAddBg = [[UIImageView alloc] init];
+    bottomNewAddBg.frame = CGRectMake(0, CGRectGetMaxY(bgimageView.frame), SizeOfMainScreen.width, QZMake(19.5));
+    bottomNewAddBg.image = [UIImage imageNamed:@"rank_bg_bottom"];
+    [self addSubview:bottomNewAddBg];
+    
+    UIButton *firstNewAdd = [self createBottomNewAddWithImageName:@"rank_bg_first"];
+    self.firstNewAddNumber = firstNewAdd;
+    firstNewAdd.frame = CGRectMake(0, 0, QZMake(102.5), QZMake(26));
+    firstNewAdd.titleEdgeInsets = UIEdgeInsetsMake(0, 0, QZMake(5), 0);
+    firstNewAdd.titleLabel.font = [UIFont systemFontOfSize:QZMake(12)];
+    CGPoint center = bottomNewAddBg.center;
+    center.y -= QZMake(6);
+    firstNewAdd.center = center;
+    [self addSubview:firstNewAdd];
+    
+    UIButton *secondNewAdd = [self createBottomNewAddWithImageName:@"rank_bg_second"];
+    self.secondNewAddNumber = secondNewAdd;
+    secondNewAdd.frame = CGRectMake(QZMake(22),QZMake(-6), QZMake(87), QZMake(22.5));
+    secondNewAdd.titleEdgeInsets = UIEdgeInsetsMake(0,0 ,QZMake(4), 0);
+    secondNewAdd.titleLabel.font = [UIFont systemFontOfSize:QZMake(9)];
+    [bottomNewAddBg addSubview:secondNewAdd];
+    
+    UIButton *thirdNewAdd = [self createBottomNewAddWithImageName:@"rank_bg_second"];
+    self.thirdNewAddNumber = thirdNewAdd;
+    thirdNewAdd.frame = CGRectMake(QZMake(268),QZMake(-6), QZMake(87), QZMake(22.5));
+    thirdNewAdd.titleEdgeInsets = UIEdgeInsetsMake(0, 0, QZMake(4), 0);
+    thirdNewAdd.titleLabel.font = [UIFont systemFontOfSize:QZMake(9)];
+    [bottomNewAddBg addSubview:thirdNewAdd];
+}
+
+// 头像
+- (UIImageView *)setIconWithFrame:(CGRect)frame andBorderColor:(UIColor *)color
+{
+    UIImageView *iconView = [[UIImageView alloc] init];
+    iconView.frame = frame;
+    iconView.layer.cornerRadius = frame.size.width / 2.0;
+    iconView.clipsToBounds = YES;
+    iconView.layer.borderWidth = QZMake(3);
+    iconView.backgroundColor = [UIColor whiteColor];
+    iconView.layer.borderColor = color.CGColor;
+    [self addSubview:iconView];
+    return iconView;
+}
+
+// 头像装饰
+- (void)setIconCoverWithFrame:(CGRect)frame andCoverImageName:(NSString *)imageName inSuperView:(UIView *)superView
+{
+    UIImageView *cover = [[UIImageView alloc] init];
+    cover.frame = frame;
+    cover.image = [UIImage imageNamed:imageName];
+    [superView addSubview:cover];
+}
+
+- (UIButton *)createBottomNewAddWithImageName:(NSString *)imageName
+{
+    UIButton *newAdd = [[UIButton alloc] init];
+    newAdd.userInteractionEnabled = NO;
+    [newAdd setBackgroundImage:[UIImage imageNamed:imageName] forState:UIControlStateNormal];
+    return newAdd;
+
+}
+
+// 名字和排名
+- (UILabel *)setName:(NSString *)name withCenter:(CGPoint)center andRankingNumber:(NSString *)rankingNumber inSuperView:(UIView *)superView
+{
+    UIImageView *flower = [[UIImageView alloc] init];
+    flower.image = [UIImage imageNamed:@"rank_ic_flower"];
+    flower.frame = CGRectMake(0, 0, QZMake(21), QZMake(22));
+    
+    UILabel *number = [[UILabel alloc] init];
+    number.textAlignment = NSTextAlignmentCenter;
+    number.textColor = [UIColor whiteColor];
+    number.font = [UIFont systemFontOfSize:QZMake(12)];
+    number.frame = flower.bounds;
+    number.text = rankingNumber;
+    [flower addSubview:number];
+    
+    UILabel *nameLabel = [[UILabel alloc] init];
+    nameLabel.font = [UIFont systemFontOfSize:QZMake(14)];
+    CGFloat nameLabelWidth = QZMake(65);
+    nameLabel.frame = CGRectMake(QZMake(flower.right + QZMake(5.5)), 0, nameLabelWidth, flower.height);
+    nameLabel.textColor = [UIColor colorWithRed:1 green:138/255.0 blue:138/255.0 alpha:1];
+    
+    UIView *contentView = [[UIView alloc] init];
+    contentView.frame = CGRectMake(0, 0, flower.width  + QZMake(5.5), QZMake(22));
+    contentView.center = center;
+    contentView.clipsToBounds = YES;
+    [contentView addSubview:flower];
+    [contentView addSubview:nameLabel];
+    [superView addSubview:contentView];
+    if ([rankingNumber isEqualToString:@"1"]) {
+        self.firstContent = contentView;
+    } else if ([rankingNumber isEqualToString:@"2"] ){
+        self.secondContent = contentView;
+    } else {
+        self.thirdContent = contentView;
+    }
+    return nameLabel;
+}
+
+@end

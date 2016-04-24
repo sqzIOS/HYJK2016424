@@ -1,0 +1,384 @@
+//
+//  SRRecordHomeVC.m
+//  sexduoduo
+//
+//  Created by ly1992 on 15/7/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SRRecordHomeVC.h"
+#import "SRRecordVC.h"
+#import "SRDairyVC.h"
+#import "NSDate+Extend.h"
+#import "ClassifyFileObj.h"
+#import "SRReportVC.h" //todo
+
+@interface SRRecordHomeVC ()<UIAlertViewDelegate>
+//导航栏
+@property (strong,nonatomic)UIView *navView;
+//点击开启 open
+@property (nonatomic,strong) UIButton *openButton;
+//默认首页样式View
+@property (nonatomic,strong) UIView *homeView;
+//选择性别男女View
+@property (nonatomic,strong) UIView *sexView;
+
+@end
+
+@implementation SRRecordHomeVC
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    _homeView.hidden = NO;
+    _sexView.hidden = YES;
+    UIButton *bt = (UIButton*)[_navView viewWithTag:2222];//日历按钮
+    bt.hidden = NO;
+    
+    
+    
+    //判断是否隐藏 点击按钮
+    NSString *newDate = [NSDate dateStringYMDFromDate:[NSDate new]];
+    if ([newDate isEqualToString:[[NSUserDefaults standardUserDefaults] objectForKey:@"SRHadEvent"]]) {
+        
+      
+        _openButton.selected=YES;
+        _homeView.tag = 2222;
+        
+        //保存今天用户纪录的信息
+        NSArray *array=[ClassifyFileObj readArrayWithPath:FILE_SexRecordDateAndUsers_path];
+        if (array) {
+            if([array containsObject:USERID])
+            {
+                _openButton.selected=YES;
+                _homeView.tag = 2222;
+                
+            }else{
+
+                _openButton.selected=NO;
+                _homeView.tag = 1111;
+            }
+        }else
+        {
+            _openButton.selected=NO;
+            _homeView.tag = 1111;
+        }
+        
+    } else {
+        _openButton.selected=NO;
+        _homeView.tag = 1111;
+        
+        //将保存的userid删除
+        NSMutableArray *secRecordArray=[NSMutableArray array];
+        [ClassifyFileObj writeToFileWithArray:secRecordArray andFilePath:FILE_SexRecordDateAndUsers_path];
+        
+        
+    }
+
+    
+    if ([m_appDelegate.av isPlaying]) {
+        musicBtn.selected=NO;
+    }else musicBtn.selected=YES;
+    
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self initView];
+}
+#pragma mark ---UI
+- (void)initView
+{
+    //背景图
+    UIImageView *img_bg = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, SCREEN_HEIGHT)];
+    img_bg.backgroundColor = [UIColor clearColor];
+    img_bg.image = [UIImage imageNamed:@"record_bg"];
+    img_bg.userInteractionEnabled = YES;
+    [self.view addSubview:img_bg];
+    //
+    _scrollView.top = SCREEN_SPACE(64);
+    _scrollView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:_scrollView];
+    //背景图标
+    if (_homeView == nil) {
+        _homeView = [[UIView alloc]init];
+        _homeView.backgroundColor = [UIColor clearColor];
+        _homeView.size = _scrollView.size;
+        [_scrollView addSubview:_homeView];
+        UIImage *image = [UIImage imageNamed:@"record_bg_icon"];
+        UIImageView *img_icon = [[UIImageView alloc]init];
+        img_icon.frame = CGRectMake((SCREEN_WIDTH - image.size.width)/2, SCREEN_SPACE(50), image.size.width, image.size.height);
+        img_icon.backgroundColor = [UIColor clearColor];
+        img_icon.userInteractionEnabled = YES;
+        img_icon.image = image;
+        [_homeView addSubview:img_icon];
+        _scrollView.contentSize = CGSizeMake(0, img_icon.bottom + SCREEN_SPACE(74) + SCREEN_SPACE(100));
+        
+        //点击纪录按钮
+        image = [UIImage imageNamed:@"record_open"];
+        UIButton *openBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        openBtn.frame = CGRectMake((SCREEN_WIDTH - image.size.width)/2, img_icon.bottom + SCREEN_SPACE(20), image.size.width, image.size.height);
+        openBtn.backgroundColor = [UIColor clearColor];
+        [openBtn setImage:image forState:UIControlStateNormal];
+        [openBtn setImage:UIImageByName(@"record_open1") forState:UIControlStateSelected];
+        
+        [openBtn addTarget:self action:@selector(bt_action_event:) forControlEvents:UIControlEventTouchUpInside];
+        openBtn.tag = 1000;
+        [_homeView addSubview:openBtn];
+        _openButton = openBtn;
+
+        
+        UITapGestureRecognizer *tap=[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchHomeViewBegin:)];
+        [_homeView addGestureRecognizer:tap];
+    }
+    //性别选择界面
+    if (_sexView == nil) {
+        _sexView = [[UIView alloc]initWithFrame:CGRectMake(0, SCREEN_SPACE(85) + _scrollView.top, SCREEN_WIDTH, SCREEN_SPACE(450))];
+        _sexView.backgroundColor = [UIColor clearColor];
+        [_scrollView addSubview:_sexView];
+        _sexView.hidden = YES;
+        UIImageView *bgImageView = [[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_SPACE(15), 0, SCREEN_WIDTH - SCREEN_SPACE(30),_sexView.height)];
+        bgImageView.backgroundColor = [UIColor clearColor];
+        bgImageView.userInteractionEnabled = YES;
+        bgImageView.image = [UIImage imageNamed:@"record_bottom"];
+        [_sexView addSubview:bgImageView];
+        UIImageView *titleImageView = [[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_SPACE(5), SCREEN_SPACE(12), bgImageView.width - SCREEN_SPACE(10), SCREEN_SPACE(75))];
+        titleImageView.backgroundColor = [UIColor clearColor];
+        titleImageView.image = [UIImage imageNamed:@"record_title"];;
+        [bgImageView addSubview:titleImageView];
+        //性别==男
+        UIImage *image = [UIImage imageNamed:@"record_man_02"];
+        UIButton *manBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        manBtn.frame = CGRectMake((bgImageView.width/2 - image.size.width)/2,titleImageView.bottom + SCREEN_SPACE(15), image.size.width, image.size.height);
+        manBtn.backgroundColor = [UIColor clearColor];
+        [manBtn setImage:image forState:UIControlStateNormal];
+        [manBtn addTarget:self action:@selector(bt_action_event:) forControlEvents:UIControlEventTouchUpInside];
+        manBtn.tag = 2000;
+        [bgImageView addSubview:manBtn];
+        //性别==女
+        image = [UIImage imageNamed:@"record_women_02"];
+        UIButton *wmBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        wmBtn.frame = CGRectMake(bgImageView.width/2 + (bgImageView.width/2 - image.size.width)/2,titleImageView.bottom + SCREEN_SPACE(15), image.size.width, image.size.height);
+        wmBtn.backgroundColor = [UIColor clearColor];
+        [wmBtn setImage:image forState:UIControlStateNormal];
+        [wmBtn addTarget:self action:@selector(bt_action_event:) forControlEvents:UIControlEventTouchUpInside];
+        wmBtn.tag = 2001;
+        [bgImageView addSubview:wmBtn];
+    }
+    
+    
+    //判断是否隐藏
+    
+    
+    //
+    [self setTopNavView];
+
+}
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    UIView *navView=[[UIView alloc] initWithFrame:CGRectMake(0, imgY, SCREEN_WIDTH, 64)];
+    navView.backgroundColor = [UIColor clearColor];
+    navView.userInteractionEnabled = YES;
+    [self.view addSubview:navView];
+    UIImageView *imageView = [[UIImageView alloc]init];
+    imageView.backgroundColor = [UIColor clearColor];
+    imageView.frame = CGRectMake(0, 0, navView.width, navView.height);
+    imageView.image = [UIImage imageNamed:@"record_homeNav"];
+    [navView addSubview:imageView];
+    _navView = navView;
+    //
+    UIButton *leftBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    leftBtn.frame = CGRectMake(SCREEN_SPACE(10), SCREEN_SPACE(25) , SCREEN_SPACE(44), SCREEN_SPACE(44));
+    [leftBtn setImage:[UIImage imageNamed:@"record_back"] forState:UIControlStateNormal];
+    [leftBtn addTarget:self action:@selector(bt_action_topEvent:) forControlEvents:UIControlEventTouchUpInside];
+    leftBtn.tag = 1111;
+    [navView addSubview:leftBtn];
+    //
+    UIButton *rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightBtn.frame = CGRectMake(SCREEN_WIDTH - SCREEN_SPACE(44) - SCREEN_SPACE(10), SCREEN_SPACE(25) , SCREEN_SPACE(44), SCREEN_SPACE(44));
+    [rightBtn setImage:[UIImage imageNamed:@"record_diary"] forState:UIControlStateNormal];
+    [rightBtn addTarget:self action:@selector(bt_action_topEvent:) forControlEvents:UIControlEventTouchUpInside];
+    rightBtn.tag = 2222;
+    [navView addSubview:rightBtn];
+    //
+    UIImageView *imageTitle = [[UIImageView alloc]init];
+    imageTitle.frame = CGRectMake(160-92/3., 30, 92*2/3., 38*2/3.);
+    imageTitle.centerX = SCREEN_WIDTH/2.;
+
+    imageTitle.backgroundColor = [UIColor clearColor];
+    imageTitle.image =[UIImage imageNamed:@"record_title_nav"];
+    [navView addSubview:imageTitle];
+    
+    
+    
+    
+    musicBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    musicBtn.frame = CGRectMake(SCREEN_WIDTH - SCREEN_SPACE(44) - SCREEN_SPACE(10), SCREEN_SPACE(44 +25 +10) , SCREEN_SPACE(44), SCREEN_SPACE(44));
+    [musicBtn setImage:[UIImage imageNamed:@"musicPlay"] forState:UIControlStateNormal];
+    [musicBtn setImage:[UIImage imageNamed:@"musicStop"] forState:UIControlStateSelected];
+    if ([m_appDelegate.av isPlaying]) {
+        musicBtn.selected=NO;
+    }else musicBtn.selected=YES;
+    [musicBtn addTarget:self action:@selector(playOrStopMusic:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:musicBtn];
+    
+    
+    
+}
+
+
+
+
+//如当天记录过 跳到分析报告页
+- (void)getMonthDayWithDate:(NSString*)dateStr;
+{
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (USERID) {
+        [dict setObject:USERID forKey:@"memberId"]; //todo USERID
+    }
+    [dict setObject:DEVICEUUID forKey:@"imie"];
+    [dict setObject:dateStr forKey:@"date"];
+    [ShareFunction showHUDWithText:@"请稍等..."];
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestSRDairyDetailWithDic:dict completionHandler:^(id responseObject) {
+        [ShareFunction hiddenHUD];
+        NSDictionary *responseDic = responseObject;
+        if (responseDic[@"success"] && responseDic[@"datasource"])
+        {
+            id reportModel = responseDic[@"datasource"];
+            if ([reportModel isKindOfClass:[NSNull class]] || [reportModel count] == 0) {
+                [ShareFunction hiddenHUD];
+                [ShareFunction showToast:@"请求失败,请重试..."];
+                return;
+            }
+            NSDictionary *reportDic = reportModel;
+            if ([reportDic[@"sex"] intValue]==2) {
+                [SRReportVC gotoMySelf:self withDict:reportDic withType:ReportTypeSexWomen withForm:ExternalTypeDairy];
+            }else
+            {
+                [SRReportVC gotoMySelf:self withDict:reportDic withType:ReportTypeSexMan withForm:ExternalTypeDairy];
+            }
+        } else {
+            [ShareFunction hiddenHUD];
+            [ShareFunction showToast:@"请求失败,请重试..."];
+        }
+    } errorHandler:^(NSError *error) {
+        [ShareFunction hiddenHUD];
+        [ShareFunction showToast:@"请求失败,请重试..."];
+    }];
+    
+}
+#pragma mark ---action
+
+
+-(void)playOrStopMusic:(UIButton *)sender
+{
+    if ([m_appDelegate.av isPlaying]) {
+        [m_appDelegate stopMusic];
+        
+        sender.selected=YES;
+        
+        [UserDefaults setBool:YES  forKey:@"isStopMusic"];
+    }
+    else
+    {
+        [m_appDelegate playMusic];
+        sender.selected=NO;
+        
+        [UserDefaults removeObjectForKey:@"isStopMusic"];
+    }
+}
+
+- (void)bt_action_topEvent:(UIButton*)sender
+{
+    NSInteger index = sender.tag;
+    if (index == 1111) {              //返回
+        if (_homeView.hidden == YES) {
+            _homeView.hidden = NO;
+            _sexView.hidden = YES;
+            UIButton *bt = (UIButton*)[_navView viewWithTag:2222];
+            bt.hidden = NO;
+        } else {
+           [self.navigationController popViewControllerAnimated:YES];
+        }
+    } else if (index == 2222) {       //日历
+        [SRDairyVC gotoMySelf:self];
+    }
+}
+- (void)bt_action_event:(UIButton*)sender
+{
+    if (ISLOGIN) {
+        NSInteger index = sender.tag;
+        if(index == 1000){ //点击记录按钮 或 显示记录的按钮
+            if (sender.selected==YES) {//今天已经记录过了 跳显示分析报告
+                [self getMonthDayWithDate:[NSDate dateStringYMDFromDate:[NSDate new]]];
+            } else {
+                _homeView.hidden = YES;
+                _sexView.hidden = NO;
+                UIButton *bt = (UIButton*)[_navView viewWithTag:2222];
+                bt.hidden = YES;
+            }
+        } else if (index == 2000) {
+            [SRRecordVC gotoMySelf:self withType:ExternalTypeSexMan];
+        } else if(index == 2001) {
+            [SRRecordVC gotoMySelf:self withType:ExternalTypeSexWomen];
+        }
+    } else {
+        UIAlertView *alertView = [[UIAlertView alloc]initWithTitle:@"性福轨迹，请先登床" message:nil delegate:self cancelButtonTitle:@"取消 " otherButtonTitles:@"登录", nil];
+        [alertView show];
+    }
+}
+
+//点击view 也相当于点击按钮
+-(void)touchHomeViewBegin:(id)sender
+{
+     [self bt_action_event:_openButton];
+}
+
+#pragma mark ---UIAlertView Delegate
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex==1) {
+        [PublicMethod gotoLoginWithVC:self];
+
+    }
+}
+
+
+#pragma mark ---didReceiveMemoryWarning---
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+#pragma mark ---gotoMyself---
++(void)gotoMySelf:(id)pvc
+{
+    if (pvc == nil) {
+        return;
+    }
+    
+    SRRecordHomeVC* vc = [[SRRecordHomeVC alloc]init];
+    vc.hidesBottomBarWhenPushed = YES;
+    
+    if (![UserDefaults boolForKey:@"isStopMusic"]) {
+         [m_appDelegate playMusic];
+    }
+   
+    if ([pvc isKindOfClass:[UINavigationController class]]) {
+        [pvc pushViewController:vc animated:YES];
+    } else if ([pvc isKindOfClass:[UIViewController class]]) {
+        UIViewController *uvc = pvc;
+        [uvc.navigationController pushViewController:vc animated:YES];
+    }
+}
+
+@end

@@ -1,0 +1,52 @@
+//
+//  PackageCombinationController.h
+//  
+//
+//  Created by apple on 15/12/14.
+//
+//  商品详情跳转过来的套餐组合
+
+#import <UIKit/UIKit.h>
+
+@interface PackageCombinationController : UIViewController<ColorChooseProtocol>
+
+/**
+ * 商品图片
+ */
+@property (nonatomic,strong) UIImage *goodsImage;
+/**
+ * 商品详情
+ */
+@property (nonatomic,copy) NSString *goodsDetail;
+/**
+ * 商品市场价
+ */
+@property (nonatomic) float marketPrice;
+/**
+ * 商品实际销售价
+ */
+@property (nonatomic) float goodsPrice;
+
+
+@property (strong, nonatomic) NSMutableDictionary *goodsDetailDic;  //从上级页面 传递过来的商品信息
+@property (nonatomic, strong) NSMutableArray *colorArray;//商品的
+@property (nonatomic, strong) SDGoodsDetailChooseColorView *goodColorChooseView;
+@property (assign, nonatomic) int numIndexColor;  // 购买商品的规格  100为没选择规格
+
+
+//套餐的商品列表从前面传递
++ (instancetype)packageCombinationControllerWithListData:(NSArray *)listArray;
+
+
++ (instancetype)packageCombinationControllerWithListData:(NSArray *)listArray andColorArray:(NSArray*)colorArr andGoodDetailDic:(NSDictionary *)goodsDic;
+
+
+
+- (void)sureBuyAction:(NSInteger )numIndex;
+
+- (void)cancelBuyAction:(id)sender ;//取消购买
+- (void)plusGoodsNumAction:(id)sender;
+- (void)minusGoodsNumAction:(id)sender;
+
+
+@end

@@ -1,0 +1,111 @@
+//
+//  GoodListTiaoQingontroller.m
+//  
+//
+//  Created by apple on 15/12/31.
+//
+//
+
+#import "GoodListTiaoQingontroller.h"
+
+@interface GoodListTiaoQingontroller ()
+
+@end
+
+@implementation GoodListTiaoQingontroller
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+    [self createScrollView];
+    [self loadData];
+}
+
+
+
+#pragma mark - 创建scrollview
+- (void)createScrollView
+{
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    [self.view addSubview:scrollView];
+    scrollView.bounces = YES;
+    scrollView.showsVerticalScrollIndicator = NO;
+    scrollView.frame = CGRectMake(0,self.topView.bottom, SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.height);
+    
+    // 背景
+    CGFloat Y = 0;
+    CGRect bgimageViewFrame1 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(245));
+    [self createBgimageViewWithFrame:bgimageViewFrame1 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame1.size.height;
+    CGRect bgimageViewFrame2 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(284));
+    [self createBgimageViewWithFrame:bgimageViewFrame2 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame2.size.height;
+    CGRect bgimageViewFrame3 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(285));
+    [self createBgimageViewWithFrame:bgimageViewFrame3 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame3.size.height;
+    CGRect bgimageViewFrame4 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(257));
+    [self createBgimageViewWithFrame:bgimageViewFrame4 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame4.size.height;
+    CGRect bgimageViewFrame5 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(435));
+    [self createBgimageViewWithFrame:bgimageViewFrame5 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame5.size.height;
+    CGRect bgimageViewFrame6 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(223));
+    [self createBgimageViewWithFrame:bgimageViewFrame6 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame6.size.height;
+    CGRect bgimageViewFrame7 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(264));
+    [self createBgimageViewWithFrame:bgimageViewFrame7 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame7.size.height;
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, Y);
+    
+    
+    // 商品
+    CGRect frame1 = CGRectMake(QZMake(67), QZMake(244), QZMake(241), QZMake(103.5));
+    [self createGoodBtnWithFrame:frame1 inSuperView:scrollView];
+    CGRect frame2 = CGRectMake(QZMake(67), QZMake(383), QZMake(241), QZMake(110.5));
+    [self createGoodBtnWithFrame:frame2 inSuperView:scrollView];
+    CGRect frame3 = CGRectMake(QZMake(67), QZMake(530), QZMake(241), QZMake(73));
+    [self createGoodBtnWithFrame:frame3 inSuperView:scrollView];
+    CGRect frame4 = CGRectMake(QZMake(67), QZMake(603), QZMake(130), QZMake(185));
+    [self createGoodBtnWithFrame:frame4 inSuperView:scrollView];
+    CGRect frame5 = CGRectMake(QZMake(197), QZMake(603), QZMake(111), QZMake(185));
+    [self createGoodBtnWithFrame:frame5 inSuperView:scrollView];
+    CGRect frame6 = CGRectMake(QZMake(67), QZMake(815), QZMake(241), QZMake(90));
+    [self createGoodBtnWithFrame:frame6 inSuperView:scrollView];
+    CGRect frame7 = CGRectMake(QZMake(67), QZMake(905), QZMake(106), QZMake(118.5));
+    [self createGoodBtnWithFrame:frame7 inSuperView:scrollView];
+    CGRect frame8 = CGRectMake(QZMake(173), QZMake(905), QZMake(135), QZMake(118.5));
+    [self createGoodBtnWithFrame:frame8 inSuperView:scrollView];
+    CGRect frame9 = CGRectMake(QZMake(42), QZMake(1070), QZMake(290), QZMake(125));
+    [self createGoodBtnWithFrame:frame9 inSuperView:scrollView];
+    CGRect frame10 = CGRectMake(QZMake(42), QZMake(1195), QZMake(290), QZMake(125));
+    [self createGoodBtnWithFrame:frame10 inSuperView:scrollView];
+    CGRect frame11 = CGRectMake(QZMake(42), QZMake(1320), QZMake(290), QZMake(176));
+    [self createGoodBtnWithFrame:frame11 inSuperView:scrollView];
+
+    
+    // 分类按钮
+    UIView *bgView = [[UIView alloc] init];
+    bgView.frame = CGRectMake(0,frame11.origin.y + frame11.size.height, SCREEN_WIDTH, QZMake(200));
+    [scrollView addSubview:bgView];
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, bgView.bottom);
+    for (int i = 0; i < 6; i++) {
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        btn.frame = CGRectMake((i % 3) * QZMake(53.5) + (i % 3 + 1) * (SCREEN_WIDTH - 3 * QZMake(53.5)) / 4, QZMake(15) + QZMake(73.5) * (i / 3), QZMake(53.5), QZMake(73.5));
+        [bgView addSubview:btn];
+        [self.goodBtns addObject:btn];
+    }
+
+}
+
+
+
+@end

@@ -1,0 +1,44 @@
+//
+//  SDGoodsDetailChooseColorView.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  nib改代码 暂未改完整
+
+#import <UIKit/UIKit.h>
+
+@protocol ColorChooseProtocol;
+@interface SDGoodsDetailChooseColorView : UIView<MMGridViewDataSource,MMGridViewDelegate>
+
+
+@property (nonatomic, assign)  id<ColorChooseProtocol>  mainVC;
+
+
+@property (strong, nonatomic)  UIImageView *productImg;  //产品图片
+@property (strong, nonatomic)  UILabel *productPrice;    //产品价格
+@property (strong, nonatomic)  UILabel *productColor;    //产品规格颜色
+@property (nonatomic, strong)  UIButton *cancelBtn;  //退出按钮
+
+
+@property (strong, nonatomic)  UIScrollView *numChooseScrol;//可以滚动的规格选择
+@property (strong, nonatomic)  UITextField *goodsNumField;
+@property (strong, nonatomic)  UIView *goodsNumView;
+
+
+@property (strong, nonatomic) NSMutableArray *colorArray;
+@property (nonatomic, retain) MMGridView * gridView;
+@property (assign, nonatomic) int numIndexColor;  // 购买商品的规格  100为没选择规格
+
+
+- (void)setupGridView;
+@end
+
+@protocol ColorChooseProtocol <NSObject>
+
+- (void)sureBuyAction:(NSInteger )numIndex;
+- (void)cancelBuyAction:(id)sender ;//取消购买
+- (void)plusGoodsNumAction:(id)sender;
+- (void)minusGoodsNumAction:(id)sender;
+
+@end

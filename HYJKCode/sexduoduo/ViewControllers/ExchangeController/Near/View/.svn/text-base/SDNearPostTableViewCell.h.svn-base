@@ -1,0 +1,51 @@
+//
+//  SDNearPostTableViewCell.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/8.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  附近的帖
+
+#import <UIKit/UIKit.h>
+#import "SDNearPostModel.h"
+
+@interface SDNearPostTableViewCell : UITableViewCell
+
+@property (nonatomic, strong) UIImageView *headImageView;
+
+@property (nonatomic, strong) UIImageView *sexImageView;
+
+@property (nonatomic, strong) UILabel *nickNameLab;
+
+@property (nonatomic, strong) UILabel *titleLab;
+
+@property (nonatomic, strong) UILabel *ageLab;
+
+@property (nonatomic, strong) UILabel *addressLab;
+
+@property (nonatomic, strong) UILabel *timeLab;
+
+@property (nonatomic, strong) UIImageView *imageView1;
+
+@property (nonatomic, strong) UIImageView *imageView2;
+
+@property (nonatomic, strong) UIImageView *imageView3;
+
+@property (nonatomic, strong) UIImageView *answerImageView;
+
+@property (nonatomic, strong) UILabel *answerLab;
+
+@property (nonatomic, strong) UIButton *minbtn1;
+
+@property (nonatomic, strong) UIButton *minbtn2;
+
+@property (nonatomic, strong) UIButton *minbtn3;
+
+@property (nonatomic, strong) UIButton *moreBtn;
+
+
+- (void)theDataWith:(SDNearPostModel *)model;
+
++ (CGFloat)cellHeight:(SDNearPostModel *)model;
+
+@end

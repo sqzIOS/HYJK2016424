@@ -1,0 +1,131 @@
+//
+//  HomeThreeView_Top.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/3.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeThreeView_Top.h"
+
+@implementation HomeThreeView_Top
+{
+    NSMutableArray *imageArray;
+    NSMutableArray *labArray;
+}
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+        
+        
+    }
+    return self;
+}
+
+-(instancetype)init
+{
+    if (self=[super init]) {
+        
+        self.backgroundColor=WHITE_COLOR;
+        self.frame=CGRectMake(0, 0, SCREEN_WIDTH, 86);
+        
+        imageArray=[[NSMutableArray alloc] init];
+        labArray = [[NSMutableArray alloc] init];
+        
+        
+        NSArray *arrName=@[@"论坛",@"包邮",@"Top热卖",@"多币商城"];
+        
+        for (int i=0; i<4; i++) {
+            
+            UIImageView *imageView=[[UIImageView alloc] initWithFrame:CGRectMake(i*66 +(SCREEN_WIDTH-66*4)*(i+1)/5., 0, 66, 66)];
+            NSString *imageStr=[NSString stringWithFormat:@"homeTop%d",i+1];
+            imageView.image=UIImageByName(imageStr);
+            [self addSubview:imageView];
+            [imageArray addObject:imageView];
+            
+            UILabel *lab=FastCreatLabel(CGRectMake(i*66 + (SCREEN_WIDTH-66*4)*(i+1)/5., 66-5, 66, 20), UICOLOR_RGB(40, 40, 40), [UIFont fontWithName:k_Font size:13], CLEAR_COLOR, NSTextAlignmentCenter);
+            lab.text=arrName[i];
+            [self addSubview:lab];
+            [labArray addObject:lab];
+            
+            
+            
+            UIButton *btn=FastCreatButton(CGRectMake(i*66 + (SCREEN_WIDTH-66*4)*(i+1)/5., 0, 66, 86), nil, CLEAR_COLOR, CLEAR_COLOR, nil, nil);
+            btn.tag=i;
+            [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+            [self addSubview:btn];
+            
+            
+        }
+    }
+    
+    return self;
+}
+
+
+-(void)reset
+{
+    self.btnNum=4;
+    self.dataArray=[[NSMutableArray alloc]init];
+    
+}
+-(void)setDataArray:(NSMutableArray *)dataArray
+{
+    
+    _dataArray=dataArray;
+
+    
+    for (int i=0; i<self.btnNum; i++) {
+        
+        if (i>=dataArray.count) {
+            return;
+        }
+        
+        UIImageView *imageView1=[imageArray objectAtIndex:i];
+        UILabel *lab1=[labArray objectAtIndex:i];
+        
+        if (judgeUrlIsHave(dataArray[i],@"newLogoPath")) {
+             [imageView1 sd_setImageWithURL:[NSURL URLWithString:dataArray[i][@"newLogoPath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }else{
+             [imageView1 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[i][@"logoPath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }
+       
+        lab1.text=dataArray[i][@"name"];
+        
+    }
+    
+    
+}
+
+-(void)btnClick:(UIButton *)sender
+{
+    
+    UIButton *btn=sender;
+    NSLog(@"homeView  indexNum=%d 点击按钮%d btnNum=%d",self.indexNum,(int)btn.tag,self.btnNum);
+    NSString *str=[NSString stringWithFormat:@"ModuleNew_%d_%d",self.indexNum+1,(int)btn.tag+1];
+    // 统计 计数事件
+    [MobClick event:str];
+    
+    if (btn.tag<self.dataArray.count) {
+        NSDictionary *dic=self.dataArray[btn.tag];
+        
+        [self judgeJumpToSubControllerWithDic:dic];
+    }
+    
+}
+
+
+-(void)resetFrame;
+{}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

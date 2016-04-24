@@ -1,0 +1,19 @@
+//
+//  SRRecordHomeVC.h
+//  sexduoduo
+//
+//  Created by ly1992 on 15/7/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  爱记录
+
+#import <UIKit/UIKit.h>
+
+@interface SRRecordHomeVC : UIViewController
+{
+    UIButton *musicBtn;
+}
+@property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
+
++(void)gotoMySelf:(id)pvc;
+
+@end

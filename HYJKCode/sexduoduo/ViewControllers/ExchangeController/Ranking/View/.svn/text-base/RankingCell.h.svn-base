@@ -1,0 +1,17 @@
+//
+//  DayRankingCell.h
+//  
+//
+//  Created by sqz on 15/12/2.
+//
+//
+
+#import <UIKit/UIKit.h>
+
+@class RankingModel;
+
+@interface RankingCell : UITableViewCell
+
++ (instancetype)rankingCellWithModel:(RankingModel *)model inTableView:(UITableView *)tableView;
+
+@end

@@ -1,0 +1,38 @@
+//
+//  SDPersonalCenterModel.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPersonalCenterModel.h"
+
+@implementation SDPersonalCenterModel
+
+- (NSDictionary *)propertyMapDic {
+    return @{
+             @"avatar":@"avatar",
+             @"focus_count":@"focus_count",
+             @"groupId":@"groupId",
+             @"groupName":@"groupName",
+             @"groupPoint":@"groupPoint",
+             @"id":@"userId",
+             @"image_url":@"image_url",
+             @"lastLoginLat":@"lastLoginLat",
+             @"lastLoginLng":@"lastLoginLng",
+             @"like_count":@"like_count",
+             @"likeed":@"likeed",
+             @"nextgroupId":@"nextgroupId",
+             @"nextgroupName":@"nextgroupName",
+             @"nextgroupPoint":@"nextgroupPoint",
+             @"nickname":@"nickname",
+             @"point":@"point",
+             @"prestige":@"prestige",
+             @"replyPost":@"replyPost",
+             @"sex":@"sex",
+             @"userName":@"userName"
+             };
+}
+
+@end

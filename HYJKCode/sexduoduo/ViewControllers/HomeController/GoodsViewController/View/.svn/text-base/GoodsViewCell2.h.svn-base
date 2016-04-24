@@ -1,0 +1,35 @@
+//
+//  GoodsViewCell2.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/10.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  商品列表 行
+
+#import <UIKit/UIKit.h>
+
+@interface GoodsViewCell2 : UITableViewCell
+
+@property (weak, nonatomic) IBOutlet UIButton *leftBtn;
+
+
+@property (weak, nonatomic) IBOutlet UIImageView *leftImg;
+
+@property (weak, nonatomic) IBOutlet UILabel *leftPrice;
+
+@property (weak, nonatomic) IBOutlet UILabel *titleLeft;
+
+@property (weak, nonatomic) IBOutlet UILabel *salesNumLeft;
+
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *leftIconOffline;
+
+
+
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row;
+
+
+
+@end

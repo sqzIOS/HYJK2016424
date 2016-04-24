@@ -1,0 +1,13 @@
+//
+//  JpushViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-9-21.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  假的 审核时候露个脸
+
+#import <UIKit/UIKit.h>
+
+@interface JpushViewController : UIViewController
+
+@end

@@ -1,0 +1,53 @@
+//
+//  SDPersonalCenterModel.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPublicModel.h"
+
+@interface SDPersonalCenterModel : SDPublicModel
+
+@property (nonatomic, copy) NSString *avatar;   //头像
+
+@property (nonatomic, copy) NSString *focus_count;
+
+@property (nonatomic, copy) NSString *groupId;  //等级
+
+@property (nonatomic, copy) NSString *groupName;    //等级名称
+
+@property (nonatomic, copy) NSString *groupPoint;   //等级积分
+
+@property (nonatomic, copy) NSString *userId;   //用户id
+
+@property (nonatomic, copy) NSArray *image_url;     //图片墙数组
+
+@property (nonatomic, copy) NSString *lastLoginLat; //经度
+
+@property (nonatomic, copy) NSString *lastLoginLng; //纬度
+
+@property (nonatomic, copy) NSString *like_count;   //
+
+@property (nonatomic, copy) NSString *likeed;
+
+@property (nonatomic, copy) NSString *nextgroupId;  //下一等级
+
+@property (nonatomic, copy) NSString *nextgroupName;    //下一等级名称
+
+@property (nonatomic, copy) NSString *nextgroupPoint;   //下一等级经验
+
+@property (nonatomic, copy) NSString *nickname; //昵称
+
+@property (nonatomic, copy) NSString *point;    //用户经验
+
+@property (nonatomic, copy) NSString *prestige; //
+
+@property (nonatomic, copy) NSArray *replyPost; //回帖数组
+
+@property (nonatomic, copy) NSString *sex;  //性别
+
+@property (nonatomic, copy) NSString *userName; //用户名
+
+@end

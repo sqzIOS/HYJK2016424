@@ -1,0 +1,1189 @@
+//
+//  MyBBSListViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-9-4.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "MyBBSListViewController.h"
+#import "MJRefresh.h"
+#import "BBSReplyMeCell.h"
+#import "BBSDetailCellViewController.h"
+@interface MyBBSListViewController ()<UIGestureRecognizerDelegate>
+{
+    BOOL isHaveNextPage;
+    
+    BOOL replyMeIsHaveNextPage;//回复我的 是否有下一页
+    
+    
+    NSInteger pageIndex;
+    NSInteger replyMePageIndex;//回复我的 页码标签
+    
+    UISegmentedControl *segmentedControl;//我的回复 使用
+}
+@end
+
+@implementation MyBBSListViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+-(void)dealloc
+{
+    
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+    [self initBBSTableView];
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    
+    // noNetworkView 1
+    self.noNetworkView =(NoNetworkView *)[[[NSBundle mainBundle] loadNibNamed:@"NoNetworkView" owner:self options:nil] lastObject];
+    self.noNetworkView.delegate=self;
+    self.noNetworkView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH,SCREEN_HEIGHT);
+    [self.view addSubview:self.noNetworkView];
+    
+    //
+    self.noDataView =(NoDataView *)[[[NSBundle mainBundle] loadNibNamed:@"NoDataView" owner:self options:nil] lastObject];
+    self.noDataView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    [self.view addSubview:self.noDataView];
+    
+    
+    //获得数据
+    _dataArray=[[NSMutableArray alloc] init];
+    pageIndex=1;
+    replyMePageIndex=1;
+    
+//    [self.bbsTableView headerBeginRefreshing];
+
+    [self requestData];
+    
+    
+    
+}
+-(void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+}
+-(void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    
+    
+    [opration cancel];
+    opration=nil;
+    
+    [opration1 cancel];
+    opration1 =nil;
+    
+    
+}
+-(BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer *)gestureRecognizer
+{
+    if (self.mylistType==myListPostReply) {
+        //检查 论坛消息num
+        [m_appDelegate checkMessageNum];
+    }
+
+    return YES;
+}
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    
+    if(self.mylistType == myListMyTopic)
+        self.titleStr=@"我的帖子";
+    else if(self.mylistType == myListPostReply)
+        self.titleStr=@"我的回复";
+    else if(self.mylistType == myListBBSCollect)
+        self.titleStr=@"帖子收藏";
+    else if(self.mylistType == mylistHotBBS)
+        self.titleStr=@"热门话题";
+    
+    
+    [navView setTitleStr:_titleStr];
+    
+    
+    if (IS_ShowMessageIcon && self.mylistType==myListPostReply) {
+        navView.titleLab.hidden=YES;
+        
+        segmentedControl=[[UISegmentedControl alloc] initWithItems:@[@"我的回复",@"回复我的"]];
+        segmentedControl.frame=CGRectMake(SCREEN_WIDTH/2. - 80, 25.5, 160., 30);
+        segmentedControl.tintColor=NAV_RED_COLOR;
+        if(self.isReplyME)
+            segmentedControl.selectedSegmentIndex=1;
+        else
+            segmentedControl.selectedSegmentIndex=0;
+        [segmentedControl setSegmentedControlStyle:UISegmentedControlStyleBordered];
+        
+        [segmentedControl addTarget:self action:@selector(segmentedControlChanged:) forControlEvents:UIControlEventValueChanged];
+        [navView addSubview:segmentedControl];
+    }
+    
+    
+}
+
+-(void)segmentedControlChanged:(UISegmentedControl *)sender
+{
+    self.noDataView.hidden=YES;
+    if (sender.selectedSegmentIndex==0 ) {
+        
+        if (self.dataArray.count>0) {
+            
+            [self.bbsTableView reloadData];
+        }else  [self refreshRequestData];
+    }else
+    {
+        if (self.replyMeDataArray.count>0) {
+            [self.bbsTableView reloadData];
+        }else  [self refreshRequestData];
+    }
+
+    int index= (int)sender.selectedSegmentIndex;
+    NSLog(@"点击情况 %d",index);
+    
+}
+
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+    
+    if(self.mylistType==myListPostReply)
+    {
+        //检查 论坛消息num
+        [m_appDelegate checkMessageNum];
+    }
+    
+}
+
+
+//发布帖子
+-(void)postBBSAction
+{
+    PostMsgViewController *ctrVC = [[PostMsgViewController alloc] initWithNibName:@"PostMsgViewController" bundle:[NSBundle mainBundle]];
+    [self presentViewController:ctrVC animated:YES completion:^{
+        
+    }];
+    
+}
+
+-(void)initBBSTableView
+{
+    self.bbsTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y)];
+    self.bbsTableView.dataSource = self;
+    self.bbsTableView.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.bbsTableView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.bbsTableView.separatorColor=[UIColor clearColor];
+    self.bbsTableView.backgroundColor = [UIColor whiteColor];
+    self.bbsTableView.scrollsToTop=YES;
+    [self.view addSubview:self.bbsTableView];
+    
+    UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    self.bbsTableView.tableFooterView = footView;
+    
+    
+//    [self.bbsTableView addHeaderWithTarget:self action:@selector(headerRereshing)];
+    
+    // 2.上拉加载更多(进入刷新状态就会调用self的footerRereshing)
+    [self.bbsTableView addFooterWithTarget:self action:@selector(footerRereshing)];
+    
+    //返回顶端的按钮 1
+    goTopView=[[GoTopView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH-60, SCREEN_HEIGHT, 44, 44)];
+    goTopView.targetScrollView = self.bbsTableView;
+    [self.view addSubview:goTopView];
+    
+    
+}
+
+-(void)headerRereshing
+{
+    //
+    [self requestData];
+}
+
+-(void)footerRereshing
+{
+    if (self.mylistType == myListPostReply) {
+        
+        if (segmentedControl.selectedSegmentIndex==0) {
+            if (isHaveNextPage) {
+                [self getMoreBBSData ];
+            }else{
+                // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                [self.bbsTableView footerEndRefreshing];
+                self.promptLab.text=@"已加载到最后";
+                [self showPromptLab];
+            }
+        }else
+        {
+            if (replyMeIsHaveNextPage) {
+                [self getMoreBBSData ];
+            }else{
+                // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                [self.bbsTableView footerEndRefreshing];
+                self.promptLab.text=@"已加载到最后";
+                [self showPromptLab];
+            }
+        }
+
+    }else{
+        if (isHaveNextPage) {
+            [self getMoreBBSData ];
+        }else{
+            // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+            [self.bbsTableView footerEndRefreshing];
+            self.promptLab.text=@"已加载到最后";
+            [self showPromptLab];
+        }
+        
+
+    }
+    
+   
+    
+    
+}
+-(void)getMoreBBSData
+{
+    
+    
+    // 我的帖子
+    if (self.mylistType == myListMyTopic) {
+        pageIndex++;
+        NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+        [tempDic setObject:@"10" forKey:@"pageSize"];
+        [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+        if(LUNTANUSERID)
+        {
+            [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+        }
+        
+        
+        [[MKHttpExchangeDemo shareMyInstance] requestMyTopicListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"我的帖子--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+            
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+                
+                [self.bbsTableView reloadData];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+                
+                // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                [self.bbsTableView footerEndRefreshing];
+            }
+        } errorHandler:^(NSError *error) {
+            // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+            [self.bbsTableView footerEndRefreshing];
+        }];
+        
+       
+    }else if(self.mylistType == myListPostReply)
+    {
+        
+        
+        
+        if (segmentedControl.selectedSegmentIndex == 1) {//回复我的
+            replyMePageIndex++;
+            NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+            [tempDic setObject:@"10" forKey:@"pageSize"];
+            [tempDic setObject:[NSString stringWithFormat:@"%d",(int)replyMePageIndex] forKey:@"pageNo"];
+            if(LUNTANUSERID)
+            {
+                [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+            }
+            
+            [[MKHttpExchangeDemo shareMyInstance] requestExchangeAppPostReadWithDic:tempDic completionHandler:^(id responseObject) {
+                NSDictionary *responseDic = responseObject;
+                NSLog(@"回复我的--<>>%@-回复我的-%@",responseDic,[responseDic objectForKey:@"message"]);
+                if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                    
+                    [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:self.replyMeDataArray];
+                    [self.bbsTableView reloadData];
+                    
+                    if ([responseDic[@"datasource"] count] > 9) {
+                        replyMeIsHaveNextPage=YES;
+                    }else
+                    {
+                        replyMeIsHaveNextPage=NO;
+                    }
+                }
+                
+                // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                [self.bbsTableView footerEndRefreshing];
+                
+            } errorHandler:^(NSError *error) {
+                
+                // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                [self.bbsTableView footerEndRefreshing];
+                
+            }];
+            
+        }else{//我的回复
+            pageIndex++;
+            NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+            [tempDic setObject:@"10" forKey:@"pageSize"];
+            [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+            if(LUNTANUSERID)
+            {
+                [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+            }
+        
+            [[MKHttpExchangeDemo shareMyInstance] requestPostReplyWithDic:tempDic completionHandler:^(id responseObject) {
+                NSDictionary *responseDic = responseObject;
+                NSLog(@"我的回复--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+                if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                    
+                    [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+                    [self.bbsTableView reloadData];
+                    [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+                    
+                    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                    [self.bbsTableView footerEndRefreshing];
+                }
+            } errorHandler:^(NSError *error) {
+                // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                [self.bbsTableView footerEndRefreshing];
+            }];
+        
+        }
+        
+        
+        
+        
+        
+        
+        // 帖子收藏
+    }if (self.mylistType==myListBBSCollect)
+    {
+        pageIndex++;
+        NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+        [tempDic setObject:@"10" forKey:@"pageSize"];
+        [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+        if(LUNTANUSERID)
+        {
+            [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+        }
+        
+        [[MKHttpExchangeDemo shareMyInstance] requestBBSCollectListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"帖子收藏--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+            if ([responseDic[@"success"] boolValue] && responseDic[@"datasource"]) {
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+                [self.bbsTableView reloadData];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+                
+                // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+                [self.bbsTableView footerEndRefreshing];
+            }
+        } errorHandler:^(NSError *error) {
+            // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+            [self.bbsTableView footerEndRefreshing];
+        }];
+        
+            
+    
+       
+        // 热门话题
+    }else if (self.mylistType == mylistHotBBS)
+    {
+        pageIndex++;
+        NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+        [tempDic setObject:@"10" forKey:@"pageSize"];
+        [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+        if(LUNTANUSERID)
+        {
+            [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+        }
+        
+        [[MKHttpExchangeDemo shareMyInstance] requestAppRecommendedTopicWithDic:tempDic completionHandler:^(id responseObject) {
+            
+            NSDictionary *responseDic=(NSDictionary *)responseObject;
+            NSLog(@"每日热门话题 dic=%@",responseDic);
+            
+        
+            [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+            
+            [self.bbsTableView reloadData];
+            
+            [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+            
+            // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+            [self.bbsTableView footerEndRefreshing];
+            
+        } errorHandler:^(NSError *error) {
+            
+            // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+            [self.bbsTableView footerEndRefreshing];
+        }];
+    }
+
+}
+#pragma mark - 请求网络数据
+
+
+-(void)refreshRequestData
+{
+    // noNetworkView 2.1
+    self.noNetworkView.noNetView.hidden = YES;
+    self.noNetworkView.indicator.hidden = NO;
+    [self.noNetworkView.indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    [self.noNetworkView.indicator startAnimating];
+    
+    self.noDataView.hidden=YES;
+    
+    //提示请求
+    [ShareFunction showHUDInSuperView:self.view];
+    
+    if(segmentedControl.selectedSegmentIndex==0)
+    {
+       
+        pageIndex=1;
+        
+        NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+        [tempDic setObject:@"10" forKey:@"pageSize"];
+        [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+        if (ISLOGIN) {
+            [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+        }
+        
+        [[MKHttpExchangeDemo shareMyInstance] requestPostReplyWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"我的回复--<>>%@-我的回复-%@",responseDic,[responseDic objectForKey:@"message"]);
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                [_dataArray removeAllObjects];//帖子列表内容清空
+                _dataArray = [NSMutableArray array];
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+                [self.bbsTableView reloadData];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+                
+                if([responseDic[@"success"] intValue]==0 || _dataArray.count==0)
+                {
+                    self.noDataView.hidden=NO;
+                    self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+                }
+            }else{
+                self.noDataView.hidden=NO;
+                self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+            }
+            
+            
+            [ShareFunction hiddenHUD];
+            // noNetworkView 2.2
+            [self.noNetworkView.indicator stopAnimating];
+            [self.noNetworkView removeFromSuperview];
+            
+        } errorHandler:^(NSError *error) {
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.3
+            [self.noNetworkView.indicator stopAnimating];
+            self.noNetworkView.indicator.hidden = YES;
+            self.noNetworkView.noNetView.hidden = NO;
+        }];
+        
+    }else
+    {
+        replyMePageIndex=1;
+        
+        NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+        [tempDic setObject:@"10" forKey:@"pageSize"];
+        [tempDic setObject:[NSString stringWithFormat:@"%d",(int)replyMePageIndex] forKey:@"pageNo"];
+        if (ISLOGIN) {
+            [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+        }
+        
+        [[MKHttpExchangeDemo shareMyInstance] requestExchangeAppPostReadWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"回复我的--<>>%@-回复我的-%@",responseDic,[responseDic objectForKey:@"message"]);
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                [self.replyMeDataArray removeAllObjects];//帖子列表内容清空
+                
+                self.replyMeDataArray =[NSMutableArray array];
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:self.replyMeDataArray];
+                [self.bbsTableView reloadData];
+                
+                if ([responseDic[@"datasource"] count] > 9) {
+                    replyMeIsHaveNextPage=YES;
+                }else
+                {
+                    replyMeIsHaveNextPage=NO;
+                }
+                
+                if([responseDic[@"success"] intValue]==0 || self.replyMeDataArray.count==0)
+                {
+                    self.noDataView.hidden=NO;
+                    self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+                }
+            }else{
+                self.noDataView.hidden=NO;
+                self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+            }
+            
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.2
+            [self.noNetworkView.indicator stopAnimating];
+            [self.noNetworkView removeFromSuperview];
+            
+        } errorHandler:^(NSError *error) {
+            
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.3
+            [self.noNetworkView.indicator stopAnimating];
+            self.noNetworkView.indicator.hidden = YES;
+            self.noNetworkView.noNetView.hidden = NO;
+        }];
+        
+    }
+    
+}
+#pragma mark 重新加载
+// noNetworkView 3
+-(void)noNetworkViewRefreshBtnClick
+{
+    
+    [self requestData];
+}
+
+-(void)requestData
+{
+    // noNetworkView 2.1
+    self.noNetworkView.noNetView.hidden = YES;
+    self.noNetworkView.indicator.hidden = NO;
+    [self.noNetworkView.indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    [self.noNetworkView.indicator startAnimating];
+    
+    
+    self.noDataView.hidden=YES;
+    
+    
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:@"10" forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+    if (ISLOGIN) {
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    
+    NSLog(@"我的论坛id=%@",LUNTANUSERID);
+    //提示请求
+//    [ShareFunction showHUDInSuperView:self.view];
+    
+    //我的帖子
+    if(self.mylistType == myListMyTopic){
+       opration = [[MKHttpExchangeDemo shareMyInstance] requestMyTopicListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"我的帖子--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+            
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                 [_dataArray removeAllObjects];//帖子列表内容清空
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+                [self.bbsTableView reloadData];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+                
+                if([responseDic[@"success"] intValue]==0)
+                {
+                    self.noDataView.hidden=NO;
+                    self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+                }
+                
+            }
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.2
+            [self.noNetworkView.indicator stopAnimating];
+            [self.noNetworkView removeFromSuperview];
+            
+           [self.bbsTableView headerEndRefreshing];
+
+        } errorHandler:^(NSError *error) {
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.3
+            [self.noNetworkView.indicator stopAnimating];
+            self.noNetworkView.indicator.hidden = YES;
+            self.noNetworkView.noNetView.hidden = NO;
+            
+            [self.bbsTableView headerEndRefreshing];
+
+        }];
+//    我的回复
+    }else if(self.mylistType == myListPostReply)
+    {
+        if (self.isReplyME) {
+          opration = [[MKHttpExchangeDemo shareMyInstance] requestExchangeAppPostReadWithDic:tempDic completionHandler:^(id responseObject) {
+                NSDictionary *responseDic = responseObject;
+                NSLog(@"回复我的--<>>%@-回复我的-%@",responseDic,[responseDic objectForKey:@"message"]);
+                if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                    [self.replyMeDataArray removeAllObjects];//帖子列表内容清空
+                    
+                    self.replyMeDataArray =[NSMutableArray array];
+                    
+                    [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:self.replyMeDataArray];
+                    [self.bbsTableView reloadData];
+                    
+                    if ([responseDic[@"datasource"] count] > 9) {
+                        replyMeIsHaveNextPage=YES;
+                    }else
+                    {
+                        replyMeIsHaveNextPage=NO;
+                    }
+                    
+                    if([responseDic[@"success"] intValue]==0 || self.replyMeDataArray.count==0)
+                    {
+                        self.noDataView.hidden=NO;
+                        self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+                    }
+                }
+                
+                [ShareFunction hiddenHUD];
+                
+                // noNetworkView 2.2
+                [self.noNetworkView.indicator stopAnimating];
+                [self.noNetworkView removeFromSuperview];
+              
+              [self.bbsTableView headerEndRefreshing];
+
+            } errorHandler:^(NSError *error) {
+                
+                [ShareFunction hiddenHUD];
+                
+                // noNetworkView 2.3
+                [self.noNetworkView.indicator stopAnimating];
+                self.noNetworkView.indicator.hidden = YES;
+                self.noNetworkView.noNetView.hidden = NO;
+                
+                [self.bbsTableView headerEndRefreshing];
+
+            }];
+            
+        }else{
+            
+           opration1 = [[MKHttpExchangeDemo shareMyInstance] requestPostReplyWithDic:tempDic completionHandler:^(id responseObject) {
+                NSDictionary *responseDic = responseObject;
+                NSLog(@"我的回复--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+                if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                    [_dataArray removeAllObjects];//帖子列表内容清空
+                    
+                    [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+                    [self.bbsTableView reloadData];
+                    [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+                    
+                    if([responseDic[@"success"] intValue]==0)
+                    {
+                        self.noDataView.hidden=NO;
+                        self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+                    }
+                }
+                
+                [ShareFunction hiddenHUD];
+                
+                // noNetworkView 2.2
+                [self.noNetworkView.indicator stopAnimating];
+                [self.noNetworkView removeFromSuperview];
+               
+               [self.bbsTableView headerEndRefreshing];
+
+            } errorHandler:^(NSError *error) {
+                [ShareFunction hiddenHUD];
+                
+                // noNetworkView 2.3
+                [self.noNetworkView.indicator stopAnimating];
+                self.noNetworkView.indicator.hidden = YES;
+                self.noNetworkView.noNetView.hidden = NO;
+                
+                [self.bbsTableView headerEndRefreshing];
+
+            }];
+        }
+        
+        
+        
+        
+        
+        
+//   帖子收藏
+    }else if(self.mylistType == myListBBSCollect)
+    {
+        opration=[[MKHttpExchangeDemo shareMyInstance] requestBBSCollectListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"帖子收藏--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+            if ([responseDic[@"success"] boolValue] && responseDic[@"datasource"]) {
+                [_dataArray removeAllObjects];//帖子列表内容清空
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+                [self.bbsTableView reloadData];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+                
+                if([responseDic[@"success"] intValue]==0)
+                {
+                    self.noDataView.hidden=NO;
+                    self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+                }
+            }else{
+                self.noDataView.hidden=NO;
+                self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+            }
+            
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.2
+            [self.noNetworkView.indicator stopAnimating];
+            [self.noNetworkView removeFromSuperview];
+            
+            [self.bbsTableView headerEndRefreshing];
+
+        } errorHandler:^(NSError *error) {
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.3
+            [self.noNetworkView.indicator stopAnimating];
+            self.noNetworkView.indicator.hidden = YES;
+            self.noNetworkView.noNetView.hidden = NO;
+            
+            [self.bbsTableView headerEndRefreshing];
+
+        }];
+    }else if(self.mylistType== mylistHotBBS)//最热帖子
+    {
+       opration= [[MKHttpExchangeDemo shareMyInstance] requestAppRecommendedTopicWithDic:tempDic completionHandler:^(id responseObject) {
+            
+            NSDictionary *responseDic=(NSDictionary *)responseObject;
+            NSLog(@"每日热门话题 dic=%@",responseDic);
+            
+             [_dataArray removeAllObjects];//帖子列表内容清空
+            [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:_dataArray];
+            
+            [self.bbsTableView reloadData];
+            
+            [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+            
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.2
+            [self.noNetworkView.indicator stopAnimating];
+            [self.noNetworkView removeFromSuperview];
+            
+            
+            if([responseDic[@"success"] intValue]==0)
+            {
+                self.noDataView.hidden=NO;
+                self.noDataView.noDataLab.text=@"当前还是空白，去论坛逛逛吧~";
+            }
+           
+           [self.bbsTableView headerEndRefreshing];
+
+        } errorHandler:^(NSError *error) {
+            [ShareFunction hiddenHUD];
+            
+            // noNetworkView 2.3
+            [self.noNetworkView.indicator stopAnimating];
+            self.noNetworkView.indicator.hidden = YES;
+            self.noNetworkView.noNetView.hidden = NO;
+            
+            [self.bbsTableView headerEndRefreshing];
+
+        }];
+    }
+}
+
+//添加触底刷新
+-(void)JudgePageNumAndToalPage:(NSArray *)dataSource
+{
+    if ([dataSource count] > 9) {
+
+        isHaveNextPage=YES;
+    }else
+    {
+        isHaveNextPage=NO;
+    }
+}
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+  
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if(self.mylistType==myListPostReply && segmentedControl.selectedSegmentIndex==1)
+    {
+        return self.replyMeDataArray.count;
+    }
+    return _dataArray.count;
+
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    //回复我的
+    if(self.mylistType==myListPostReply && segmentedControl.selectedSegmentIndex==1)
+    {
+        if (self.replyMeDataArray.count>0) {
+            NSString *contentStr=self.replyMeDataArray[indexPath.row][@"content"];
+            CGSize labelsize = [contentStr sizeWithFont:[UIFont systemFontOfSize:14] constrainedToSize:CGSizeMake(250,2000) lineBreakMode:NSLineBreakByCharWrapping];
+            
+           
+           return 56+labelsize.height+13 +30;
+            
+        }else return 88;
+        
+        
+    }else
+    {
+        if (_dataArray.count>0) {
+            if ([_dataArray[indexPath.row][@"contentHtml"] count]>0) {
+                return  238+12;
+            }else return 140+12;
+        }else return 238;
+    }
+    
+    
+}
+
+
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (self.mylistType == myListBBSCollect) {
+        return TRUE;
+    }
+    else
+        return NO;
+}
+
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return UITableViewCellEditingStyleDelete;
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    
+    
+    
+    [ShareFunction showHUDWithText:@"正在取消收藏"];
+    [self cancleCollect:(int)indexPath.row];
+    
+   
+    
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    //回复我的
+    if(self.mylistType==myListPostReply && segmentedControl.selectedSegmentIndex==1)
+    {
+        static NSString *CellIdentifier = @"BBSReplyMeCell";
+        BBSReplyMeCell *cell = (BBSReplyMeCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"BBSReplyMeCell" owner:self options:nil] lastObject];
+            
+        }
+        
+        cell.backgroundColor = [UIColor whiteColor];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        //头像
+        cell.headImage.layer.cornerRadius=5;
+        cell.headImage.layer.masksToBounds = YES;
+        
+        [cell configCellWithArrayForNvShenDaoGou:self.replyMeDataArray indexRow:(int)indexPath.row];
+        
+        
+        
+        //二级回复
+        if(1)
+        {
+           
+            // 显示一条回复
+            UILabel *huifu1=[[UILabel alloc]initWithFrame:CGRectMake(51,CGRectGetMaxY(cell.contentLab.frame) +2 , SCREEN_WIDTH-51, 30)];
+            huifu1.text=@"测试用户：用户留言内容";
+            huifu1.backgroundColor=[UIColor clearColor];
+            huifu1.font=[UIFont systemFontOfSize:13];
+            [cell addSubview:huifu1];
+            
+            UILabel *timeLab=[[UILabel alloc]initWithFrame:CGRectMake(51,CGRectGetMaxY(cell.contentLab.frame) +2 , SCREEN_WIDTH-10-51, 30)];
+            timeLab.text=@"2015-09-23";
+            timeLab.backgroundColor=[UIColor clearColor];
+            timeLab.textAlignment=NSTextAlignmentRight;
+            timeLab.textColor=[UIColor lightGrayColor];
+            timeLab.font=[UIFont systemFontOfSize:10];
+            [cell addSubview:timeLab];
+//
+            NSString *timeStr=@"";
+            timeLab.text=timeStr;
+            
+            CGSize labelsize = [timeStr sizeWithFont:[UIFont systemFontOfSize:10] constrainedToSize:CGSizeMake(250,30) lineBreakMode:NSLineBreakByCharWrapping];
+            CGFloat length=labelsize.width;
+            CGRect huifuRect=huifu1.frame;
+            huifu1.frame=CGRectMake(huifuRect.origin.x, huifuRect.origin.y, SCREEN_WIDTH-10-51-length-2, huifuRect.size.height);
+            
+            NSString *secondaryContent=@"";
+            if (self.replyMeDataArray[indexPath.row][@"title"]) {
+                secondaryContent=self.replyMeDataArray[indexPath.row][@"title"];
+            }
+            
+            NSString *contentAll=[NSString stringWithFormat:@"来自：%@",secondaryContent];
+            
+            //用户名加颜色
+            NSMutableAttributedString *str7 = [[NSMutableAttributedString alloc] initWithString:contentAll];
+            [str7 addAttribute:NSForegroundColorAttributeName value:ColorSecondName range:NSMakeRange(0,3)];
+            huifu1.attributedText = str7;
+            
+            
+            //更多评论个数
+            if (self.replyMeDataArray[indexPath.row][@"title"])
+            {
+                NSInteger num=[self.replyMeDataArray[indexPath.row][@"secondaryCount"] integerValue];
+                
+                if (num>1) {
+                    //背景
+                    UIImageView *cellBgView=[[UIImageView alloc]initWithFrame:CGRectMake(45,CGRectGetMaxY(cell.contentLab.frame) +2, SCREEN_WIDTH-50, 60)];
+                    
+                    UIImage *img=[UIImage imageNamed:@"BBSCellSecondBg"];
+                    img=[img stretchableImageWithLeftCapWidth:150 topCapHeight:15];
+                    cellBgView.image=img;
+                    [cell addSubview:cellBgView];
+                    
+                    
+                    //查看全部评论上面的横线
+              
+                    UIButton *moreHuiFu=[UIButton buttonWithType:0];
+                    moreHuiFu.frame=CGRectMake(200, CGRectGetMaxY(huifu1.frame) +2, 120, 30) ;
+                    [moreHuiFu setTitleColor:ColorSecondName forState:0];
+                    [moreHuiFu setTitle:[NSString stringWithFormat:@"查看全部%d条评论",(int)num ] forState:0];
+                    [moreHuiFu.titleLabel setFont:[UIFont systemFontOfSize:12]];
+                    [moreHuiFu addTarget:self action:@selector(moreHuiFuClick:) forControlEvents:UIControlEventTouchUpInside];
+                    moreHuiFu.tag=indexPath.row;
+                    [cell addSubview:moreHuiFu];
+                }else{
+                    
+                    // 背景
+                    UIImageView *cellBgView=[[UIImageView alloc]initWithFrame:CGRectMake(45, CGRectGetMaxY(cell.contentLab.frame) +2, SCREEN_WIDTH-50, 30)];
+                    
+                    UIImage *img=[UIImage imageNamed:@"BBSCellSecondBg"];
+                    img=[img stretchableImageWithLeftCapWidth:150 topCapHeight:15];
+                    cellBgView.image=img;
+                    [cell addSubview:cellBgView];
+                    
+                }
+                
+            }
+            
+        }
+        
+        return cell;
+        
+        
+    }else
+        
+    {
+        static NSString *CellIdentifier = @"BBSCell";
+        
+        BBSCell *cell = (BBSCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        
+        
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"BBSCell" owner:self options:nil] lastObject];
+         
+        }
+        
+        [cell configCellWithArray:_dataArray indexRow:(int)indexPath.row];
+        if (self.mylistType == myListMyTopic)
+            cell.statusLab.hidden=NO;// 审核状态的帖子显示
+        
+        if (indexPath.row== _dataArray.count-1) {
+            //画白线
+            UIImageView *line1=[[UIImageView alloc]initWithFrame:CGRectMake(0, cell.frame.size.height-0.5, SCREEN_WIDTH, 0.5)];
+            line1.backgroundColor=[UIColor lightGrayColor];
+            line1.tag=10000;
+            [cell addSubview:line1];
+        }
+        
+        
+        return cell;
+    }
+        
+   
+  
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if(self.mylistType==myListPostReply && segmentedControl.selectedSegmentIndex==1)
+    {
+        BBSDetailCellViewController *moreCellDetail=[[BBSDetailCellViewController alloc]initWithNibName:@"BBSDetailCellViewController" bundle:[NSBundle mainBundle]];
+        moreCellDetail.hidesBottomBarWhenPushed=YES;
+        moreCellDetail.postId=self.replyMeDataArray[indexPath.row][@"postId"];
+        moreCellDetail.detailDic=self.replyMeDataArray[indexPath.row];
+        NSLog(@"forumId=%@",self.replyMeDataArray[indexPath.row][@"forumId"]);
+        moreCellDetail.forumId=self.replyMeDataArray[indexPath.row][@"forumId"];
+        moreCellDetail.isFirstShowKeyboard=YES;
+        [self.navigationController pushViewController:moreCellDetail animated:YES];
+        
+    }else
+    {
+        NSString *topicId=@"0";
+        if (_dataArray.count>indexPath.row) {
+            topicId=_dataArray[indexPath.row][@"id"];
+        }
+        
+        BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+        if (_dataArray[indexPath.row][@"forumId"]) {
+            controller.forumId=_dataArray[indexPath.row][@"forumId"];
+        }
+        //    controller.detailDic=_dataArray[indexPath.row];
+        controller.topicId=topicId;
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController: controller animated:YES];
+    }
+    
+    
+
+    
+}
+
+
+-(void)moreHuiFuClick:(UIButton *)sender
+{
+    BBSDetailCellViewController *moreCellDetail=[[BBSDetailCellViewController alloc]initWithNibName:@"BBSDetailCellViewController" bundle:[NSBundle mainBundle]];
+    moreCellDetail.hidesBottomBarWhenPushed=YES;
+    
+    moreCellDetail.postId=self.replyMeDataArray[sender.tag][@"postId"];
+    moreCellDetail.detailDic=self.replyMeDataArray[sender.tag];
+    moreCellDetail.forumId=self.replyMeDataArray[sender.tag][@"forumId"];
+    
+    [self.navigationController pushViewController:moreCellDetail animated:YES];
+    
+}
+
+
+#pragma mark - cancle 
+-(void)cancleCollect:(int )index
+{
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc]init];
+    [dic setObject:LUNTANUSERID forKey:@"userId"];
+    [dic setObject:_dataArray[index][@"id"] forKey:@"topicId"];
+
+    [[MKHttpExchangeDemo shareMyInstance] requestBBSCancleCollectListWithDic:dic completionHandler:^(id responseObject) {
+
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+
+        self.promptLab.text=responseDic[@"message"];
+        [self showPromptLab ];
+
+        if ([responseDic[@"success"] boolValue]) {
+
+            
+            
+            [_dataArray removeObjectAtIndex:index];
+        }
+        
+        
+        [self.bbsTableView reloadData];
+        [ShareFunction hiddenHUD];
+    } errorHandler:^(NSError *error) {
+        
+        [self.bbsTableView reloadData];
+        [ShareFunction hiddenHUD];
+    }];
+    
+    
+   
+}
+
+
+
+
+
+#pragma mark -
+#pragma mark UIScrollViewDelegate Methods
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+	
+
+    [goTopView scrollViewDidScroll:scrollView];
+}
+
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+//显示提示
+-(void)showPromptLab
+{
+    [self.view addSubview:self.promptLab];
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:0.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:^(BOOL finished) {
+        [self.promptLab removeFromSuperview];
+    }];
+    
+    
+}
+@end

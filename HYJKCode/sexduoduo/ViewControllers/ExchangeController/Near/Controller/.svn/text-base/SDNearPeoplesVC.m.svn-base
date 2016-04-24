@@ -1,0 +1,270 @@
+//
+//  SDNearPeoplesVC.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  附近的人, 附近的帖
+
+#import "SDNearPeoplesVC.h"
+#import "MyCLController.h"
+#import "SDNearPeopleModel.h"
+#import "SDNearPeopleTableView.h"
+#import "SDScreeningVC.h"
+#import "SDNearPostModel.h"
+
+@interface SDNearPeoplesVC ()
+{
+    NSUInteger pageNo;
+}
+
+@property (nonatomic, strong) NSMutableArray *dataArr;
+
+@property (nonatomic, strong) SDNearPeopleTableView *tableView;
+
+@end
+
+@implementation SDNearPeoplesVC
+
+- (instancetype)initWithType:(SDNearType)type {
+    if (self = [super init]) {
+        self.type = type;
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    pageNo = 1;
+    
+    [self setTopNavView];
+    
+    [self requestData];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    UIButton *rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightBtn.frame = CGRectMake(SCREEN_WIDTH - QZMake(32), 20+44/2. - QZMake(22)/2., QZMake(22), QZMake(22));
+    [rightBtn setImage:[UIImage imageNamed:@"btn-screening"] forState:UIControlStateNormal];
+    [rightBtn addTarget:self action:@selector(rightBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:rightBtn];
+    
+    if (self.type == PeopleType) {
+        [navView setTitleStr:@"附近的人"];
+    }else {
+        [navView setTitleStr:@"附近的帖"];
+    }
+    
+    self.unDataView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y);
+    [self.view addSubview:self.unDataView];
+    [self.view bringSubviewToFront:self.unDataView];
+}
+//返回
+-(void)toBackView
+{
+    if ([self.navigationController respondsToSelector:@selector(popViewControllerAnimated:)]) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+}
+/**
+ *  筛选按钮事件
+ */
+- (void)rightBtnAction {
+
+    __weak typeof(self) weakSelf = self;
+    SDScreeningVC *vc = [[SDScreeningVC alloc] init];
+    vc.screeningBlock = ^(NSString *sexStr, NSString *lastTimeStr){
+        if ([sexStr isEqualToString:@"全部"]) {
+            weakSelf.gender = nil;
+        }else {
+            weakSelf.gender = sexStr;
+        }
+        
+        if ([lastTimeStr isEqualToString:@"3天内"]) {
+            weakSelf.ahead = nil;
+        }else {
+            weakSelf.ahead = lastTimeStr;
+        }
+        pageNo = 1;
+        [weakSelf requestData];
+    };
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+
+/**
+ *  初始化方法
+ */
+- (void)initView {
+    
+    if (_tableView == nil) {
+        if (self.type == PeopleType) {
+            _tableView = [[SDNearPeopleTableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) style:UITableViewStylePlain Controller:self Type:NearPeople];
+        }else {
+            _tableView = [[SDNearPeopleTableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) style:UITableViewStylePlain Controller:self Type:NearPost];
+        }
+        
+        [self.view addSubview:_tableView];
+        
+        [_tableView addHeaderWithTarget:self action:@selector(headRefresh)];
+        if (self.isNextPage) {
+            [_tableView addFooterWithTarget:self action:@selector(footRefresh)];
+        }
+    }
+    _tableView.dataArr = self.dataArr;
+    [_tableView reloadData];
+}
+
+#pragma mark --- 网络请求 
+/**
+ *  请求附近的人数据
+ */
+- (void)requestData {
+    
+    __weak typeof(self)weakSelf = self;
+    
+    MyCLController *myCLController = [MyCLController sharedInstance];
+
+    NSMutableDictionary *tempDic = [[NSMutableDictionary alloc] initWithDictionary:@{
+                                    @"pageNo":[NSString stringWithFormat:@"%zi",pageNo],
+                                    @"pageSize":@"10",
+                                    @"lng":myCLController.longitudeStr ? myCLController.longitudeStr : @"0.0",
+                                    @"lat":myCLController.latitudeStr ? myCLController.latitudeStr :@"0.0"}];
+    if (self.gender) {
+        [tempDic setObject:self.gender forKey:@"gender"];
+    }
+    if (self.ahead) {
+        [tempDic setObject:self.ahead forKey:@"ahead"];
+    }
+    
+    if (self.type == PeopleType) {
+        [AFHTTPClient getJSONPath:SDINTERFACE_appLocationUserList httpHost:BBS_IP params:tempDic success:^(id json) {
+            
+            
+            NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:json options:NSJSONReadingAllowFragments error:nil ];
+            if (JudgeDatasourceHaveArrayData(dict)) {
+                weakSelf.unDataView.hidden = YES;
+                if (weakSelf.dataArr != nil && pageNo == 1) {
+                    [weakSelf.dataArr removeAllObjects];
+                }
+                
+                NSMutableArray *arr = [[NSMutableArray alloc] initWithCapacity:1];
+                
+                for (NSDictionary *dic in dict[DATASOURCE]) {
+                    
+                    
+                    SDNearPeopleModel *model = [SDNearPeopleModel SDPublicModelWithDictionary:dic];
+                    
+                    [arr addObject:model];
+                }
+                weakSelf.isNextPage = arr.count == 10 ? YES : NO;
+                
+                [weakSelf.dataArr addObjectsFromArray:arr];
+                [weakSelf initView];
+                
+            }else {
+                weakSelf.unDataView.hidden = NO;
+            }
+            [weakSelf.tableView headerEndRefreshing];
+            [weakSelf.tableView footerEndRefreshing];
+        } fail:^{
+            [weakSelf.tableView headerEndRefreshing];
+            [weakSelf.tableView footerEndRefreshing];
+        }];
+    }else {
+        [AFHTTPClient getJSONPath:SDINTERFACE_appLocationPostList httpHost:BBS_IP params:tempDic success:^(id json) {
+            
+            NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:json];
+            if (JudgeDatasourceHaveArrayData(dict)) {
+                weakSelf.unDataView.hidden = YES;
+                if (weakSelf.dataArr != nil &&  pageNo == 1) {
+                    [weakSelf.dataArr removeAllObjects];
+                }
+                
+                NSMutableArray *arr = [[NSMutableArray alloc] initWithCapacity:1];
+                
+                for (NSDictionary *dic in dict[DATASOURCE]) {
+                    
+                    SDNearPostModel *model = [SDNearPostModel SDPublicModelWithDictionary:dic];
+                    
+                    [arr addObject:model];
+                }
+                weakSelf.isNextPage = arr.count == 10 ? YES : NO;
+                
+                if (!weakSelf.isNextPage) {
+                    [_tableView removeFooter];
+                }
+                
+                [weakSelf.dataArr addObjectsFromArray:arr];
+                [weakSelf initView];
+                
+            }else {
+                weakSelf.unDataView.hidden = NO;
+            }
+            [weakSelf.tableView headerEndRefreshing];
+            [weakSelf.tableView footerEndRefreshing];
+        } fail:^{
+            [weakSelf.tableView headerEndRefreshing];
+            [weakSelf.tableView footerEndRefreshing];
+        }];
+    }
+    
+}
+
+
+#pragma mark --- refresh
+/**
+ *  下拉刷新
+ */
+-(void)headRefresh
+{
+    pageNo = 1;
+    [self requestData];
+}
+-(void)endHeadFresh
+{
+    [_tableView headerEndRefreshing];
+}
+/**
+ *  上拉刷新
+ */
+-(void)footRefresh
+{
+    if (self.isNextPage) {
+        pageNo += 1;
+        [self requestData];
+        return;
+    }
+    [ShareFunction showToast:@"已加载到最后" inSuperview:self.view];
+    [_tableView footerEndRefreshing];
+}
+
+#pragma mark --- get
+
+- (NSMutableArray *)dataArr {
+    if (_dataArr == nil) {
+        _dataArr = [[NSMutableArray alloc] initWithCapacity:1];
+    }
+    return _dataArr;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

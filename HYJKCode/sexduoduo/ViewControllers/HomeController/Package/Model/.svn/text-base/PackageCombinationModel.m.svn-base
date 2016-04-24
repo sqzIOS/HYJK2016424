@@ -1,0 +1,37 @@
+//
+//  PackageCombinationModel.m
+//  
+//
+//  Created by apple on 15/12/14.
+//
+//
+
+#import "PackageCombinationModel.h"
+
+@implementation PackageCombinationModel
+
++ (instancetype)packageCombinationModelWithDict:(NSDictionary *)dict
+{
+    PackageCombinationModel *model = [[PackageCombinationModel alloc] init];
+    
+    model.thumbnailGoodsImagePath = dict[@"thumbnailGoodsImagePath"];
+    model.marketPrice = dict[@"marketPrice"];
+    model.otherThumbnailGoodsImagePath = dict[@"newThumbnailGoodsImagePath"];
+    model.salesVolume = dict[@"salesVolume"];
+    model.smallGoodsImagePath = dict[@"SmallGoodsImagePath"];
+    model.productId = dict[@"productId"];
+    model.goodtype_id = dict[@"goodtype_id"];
+    model.ID = dict[@"id"];
+    model.subTypeId = dict[@"subTypeId"];
+    model.goods_price = dict[@"goods_price"];
+    model.goodsCategoryId = dict[@"goodsCategoryId"];
+    model.name = dict[@"name"];
+    model.goodsSubType = dict[@"goodsSubType"];
+    model.otherSmallGoodsImagePath = dict[@"newSmallGoodsImagePath"];
+    model.goodsSn = dict[@"goodsSn"];
+    
+    
+    return model;
+}
+
+@end

@@ -1,0 +1,20 @@
+//
+//  HomeThreeView2.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/6.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeThreeView.h"
+
+@interface HomeThreeView2 : HomeThreeView
+
+
+@property (strong, nonatomic)  UIButton *btn;
+
+
+-(CGFloat)getViewHeight;
+-(void)reset;
+
+@end

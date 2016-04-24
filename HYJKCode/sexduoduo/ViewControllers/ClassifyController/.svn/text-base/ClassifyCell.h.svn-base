@@ -1,0 +1,28 @@
+//
+//  ClassifyCell.h
+//  sexduoduo
+//
+//  Created by showm on 14-6-10.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@protocol ClassifyCellDelegate
+
+- (void)goodsBtnClick:(NSUInteger)row;
+
+
+@end
+
+@interface ClassifyCell : UITableViewCell
+@property (weak, nonatomic) IBOutlet UIButton *firBtn;
+@property (weak, nonatomic) IBOutlet UIButton *secBtn;
+@property (weak, nonatomic) IBOutlet UILabel *firLab;
+@property (weak, nonatomic) IBOutlet UILabel *secLab;
+@property (weak, nonatomic) IBOutlet UILabel *firDetaiLab;
+@property (weak, nonatomic) IBOutlet UILabel *secDetailLab;
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row;
+@property (nonatomic, assign) id <ClassifyCellDelegate> delegate;
+
+@end

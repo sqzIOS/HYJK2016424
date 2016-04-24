@@ -1,0 +1,67 @@
+//
+//  GoodsViewCell2.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/10.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "GoodsViewCell2.h"
+
+@implementation GoodsViewCell2
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row
+{
+//    UIView *lineFir = [[UIView alloc] initWithFrame:CGRectMake(159.75, 0, 0.5, 195)];
+//    lineFir.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+//    [self.contentView addSubview:lineFir];
+    
+    int index=row;
+    
+    self.titleLeft.text = [NSString stringWithFormat:@"%@",[[arry objectAtIndex:index] objectForKey:@"name"]];
+    
+    self.titleLeft.numberOfLines=2;
+    
+    NSLog(@"-->%@",[PublicMethod imgWithUrl:[[arry objectAtIndex:row] objectForKey:@"SmallGoodsImagePath"]]);
+    
+    
+    if(judgeUrlIsHave(arry[index], @"newSmallGoodsImagePath"))
+    {
+        [self.leftImg sd_setImageWithURL:[NSURL URLWithString:[[arry objectAtIndex:index] objectForKey:@"newSmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    }else
+    {
+        [self.leftImg sd_setImageWithURL:[PublicMethod imgWithUrl:[[arry objectAtIndex:index] objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    }
+    
+
+
+    self.leftImg.layer.cornerRadius = 3.5;
+    self.leftImg.layer.borderColor = btnBorderColor;
+    self.leftImg.layer.borderWidth = 0.5;
+    self.leftImg.clipsToBounds=YES;
+    
+    self.leftPrice.text = [NSString stringWithFormat:@"￥%.2f",[[[arry objectAtIndex:index] objectForKey:@"goods_price"] floatValue]];
+
+    
+    self.salesNumLeft.text = [NSString stringWithFormat:@"销量%@",[[arry objectAtIndex:index] objectForKey:@"salesVolume"]];
+    
+    
+    
+    
+    if (arry[index][@"isMarketable"] && [arry[index][@"isMarketable"] intValue]==0) {
+        self.leftIconOffline.hidden=NO;
+    }else self.leftIconOffline.hidden=YES;
+        
+       
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

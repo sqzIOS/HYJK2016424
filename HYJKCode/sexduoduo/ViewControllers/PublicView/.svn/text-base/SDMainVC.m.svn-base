@@ -1,0 +1,66 @@
+//
+//  SDMainVC.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDMainVC.h"
+
+@interface SDMainVC ()
+
+@end
+
+@implementation SDMainVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    pageIndex = 1;
+    pageNum = 10;
+    
+    
+    
+    self.noDataView =(NoDataView *)[[[NSBundle mainBundle] loadNibNamed:@"NoDataView" owner:self options:nil] lastObject];
+    self.noDataView.frame = CGRectMake(0, STAR_Y, self.view.width, SCREEN_HEIGHT-STAR_Y);
+    self.noDataView.hidden = YES;
+    [self.view addSubview:self.noDataView];
+
+}
+
+
+-(void)judgeIsHaveNextPageWithDownDataNum:(NSInteger )dataNum
+{
+    if(dataNum == pageNum)
+    {
+        isHaveNextPage = YES;
+    }else isHaveNextPage = NO;
+}
+
+
+#pragma mark 返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

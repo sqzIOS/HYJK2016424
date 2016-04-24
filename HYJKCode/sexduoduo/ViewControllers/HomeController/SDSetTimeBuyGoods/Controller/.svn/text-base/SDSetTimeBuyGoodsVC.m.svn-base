@@ -1,0 +1,245 @@
+//
+//  SDSetTimeBuyGoodsVC.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/1.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  限时抢购 －lct
+
+#import "SDSetTimeBuyGoodsVC.h"
+#import "SDSetTimeBuyGoodsTableView.h"
+#import "SDSetTimeModel.h"
+#import "SDGoodsModel.h"
+
+@interface SDSetTimeBuyGoodsVC ()
+{
+    BOOL isYes;
+}
+@property (nonatomic, strong) SDSetTimeBuyGoodsTableView *tableView;
+
+
+@end
+
+@implementation SDSetTimeBuyGoodsVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    [self setTopNavView];
+    
+    [self requestTime];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [ShareFunction hiddenHUD];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"限时抢购"];
+    
+}
+//返回
+-(void)toBackView
+{
+    if ([self.navigationController respondsToSelector:@selector(popViewControllerAnimated:)]) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+}
+
+/**
+ *  初始化视图
+ */
+- (void)initView {
+    
+    if (_tableView == nil) {
+        _tableView = [[SDSetTimeBuyGoodsTableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) style:UITableViewStylePlain ControllerView:self];
+        [self.view addSubview:_tableView];
+        
+        [_tableView addHeaderWithTarget:self action:@selector(headRefresh)];
+        
+        [_tableView addFooterWithTarget:self action:@selector(footRefresh)];
+        
+        __weak typeof(self) weadSelf = self;
+        _tableView.tableViewBlock = ^(NSString *idStr, NSString *currentStr, NSString *selectTimeId){
+            
+            weadSelf.selectTimeId = selectTimeId;
+            weadSelf.currentStr = currentStr;
+            if (weadSelf.goodsDataArr != nil) {
+                [weadSelf.goodsDataArr removeAllObjects];
+            }
+            [weadSelf requestGoods:idStr Num:1];
+        };
+    }
+    
+    _tableView.selectTimeId = _selectTimeId;
+    
+    _tableView.sectionDataArr = _sectionDataArr;
+
+    _tableView.goodsDataArr = _goodsDataArr;
+    
+    [self.tableView reloadData];
+    
+    isYes = NO;
+    
+    if (self.isNextPage) {
+        _tableView.footerHidden = YES;
+    } else {
+        _tableView.footerHidden = YES;
+    }
+}
+
+#pragma mark --- network request
+/**
+ *  请求时间段
+ */
+- (void)requestTime {
+    
+    __weak typeof(self) weakSelf = self;
+    [AFHTTPClient getJSONPath:SDINTERFACE_getActivityCuttings httpHost:sexHealthIP params:nil success:^(id json) {
+        
+      NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:json];
+        
+        if (JudgeDatasourceHaveArrayData(dict)) {
+            
+            if (_sectionDataArr == nil) {
+                _sectionDataArr = [[NSMutableArray alloc] initWithCapacity:1];
+            }else {
+                [_sectionDataArr removeAllObjects];
+            }
+            
+            int index = 0;
+            for (NSDictionary *dic in dict[DATASOURCE]) {
+                
+                SDSetTimeModel *setTimeModel = [[SDSetTimeModel alloc] initWithDict:dic];
+                
+                if (weakSelf.selectTimeId != nil && [weakSelf.selectTimeId isEqualToString:setTimeModel.timeId]) {
+                    isYes = YES;
+                    
+                }
+                
+                if (!isYes) {
+                    index += 1;
+                }
+                
+                [_sectionDataArr addObject:setTimeModel];
+            }
+
+            if (_sectionDataArr.count > 0) {
+             
+                SDSetTimeModel *setTimeModel;
+                if (isYes) {
+                    setTimeModel = _sectionDataArr[index];
+                }else {
+                    setTimeModel = _sectionDataArr[0];
+                }
+                weakSelf.currentStr = setTimeModel.label;
+                weakSelf.selectTimeId = setTimeModel.timeId;
+                [weakSelf requestGoods:setTimeModel.timeId Num:1];
+            }
+        }
+    } fail:^{
+    }];
+}
+
+
+
+/**
+ *  请求商品数据
+ *
+ *  @param idStr   抢购时段id
+ *  @param pageApp 第几页
+ */
+- (void)requestGoods:(NSString *)idStr Num:(int)pageApp {
+    
+    __weak typeof(self) weakSelf = self;
+    
+    self.aid = idStr;
+    
+    self.pageApp = pageApp;
+    
+    [ShareFunction showHUDInSuperView:self.view];
+    
+    NSDictionary *dict = @{@"aid":_aid,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%zi",_pageApp]};
+    
+    [AFHTTPClient getJSONPath:SDINTERFACE_getFlashSaleGoods httpHost:sexHealthIP params:dict success:^(id json) {
+        
+        NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:json];
+        
+        if (JudgeDatasourceHaveArrayData(dict)) {
+            if (_goodsDataArr == nil) {
+                _goodsDataArr = [[NSMutableArray alloc] initWithCapacity:1];
+            }
+            
+            if (pageApp==1) {
+                if (self.goodsDataArr != nil) {
+                    [self.goodsDataArr removeAllObjects];
+                }
+            }
+            for (NSDictionary *dic in dict[DATASOURCE]) {
+                
+                SDGoodsModel *goodsModel = [[SDGoodsModel alloc] initWithDict:dic];
+                goodsModel.currentStr = weakSelf.currentStr;
+                [_goodsDataArr addObject:goodsModel];
+            }
+            
+            weakSelf.isNextPage = (_goodsDataArr.count % 10 == 0) ? YES : NO;
+            
+            [weakSelf initView];
+        }
+    
+        [_tableView headerEndRefreshing];
+        [_tableView footerEndRefreshing];
+        [ShareFunction hiddenHUD];
+    } fail:^{
+        [_tableView headerEndRefreshing];
+        [_tableView footerEndRefreshing];
+        [ShareFunction hiddenHUD];
+    }];
+}
+
+#pragma mark --- refresh
+/**
+ *  下拉刷新
+ */
+-(void)headRefresh
+{
+    [self requestTime];
+}
+-(void)endHeadFresh
+{
+    [_tableView headerEndRefreshing];
+}
+/**
+ *  上拉刷新
+ */
+-(void)footRefresh
+{
+    if (self.isNextPage) {
+        _pageApp += 1;
+        [self requestGoods:self.aid Num:_pageApp];
+        
+        return;
+    }
+    [ShareFunction showToast:@"已加载到最后" inSuperview:self.view];
+    [_tableView footerEndRefreshing];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

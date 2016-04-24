@@ -1,0 +1,16 @@
+//
+//  CouponsViewController.h
+//  
+//
+//  Created by apple on 15/12/15.
+//
+//  领取优惠券
+
+#import <UIKit/UIKit.h>
+#import "SDMainVC.h"
+
+@interface CouponsViewController : SDMainVC
+
+@end
+
+

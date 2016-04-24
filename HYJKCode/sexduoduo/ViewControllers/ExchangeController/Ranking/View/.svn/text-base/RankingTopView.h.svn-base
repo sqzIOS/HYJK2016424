@@ -1,0 +1,25 @@
+//
+//  DayRankingTopView.h
+//  
+//
+//  Created by sqz on 15/12/1.
+//
+//
+
+#import <UIKit/UIKit.h>
+
+@class RankingModel;
+
+@interface DayRankingTopView : UIView
+
+// 背景图片
+@property (nonatomic,copy) NSString *bgImage;
+@property (nonatomic,copy) NSString *titleImage;
+
+// 设置前三名的信息
+- (void)setInfoWithModel:(RankingModel *)model byRanking:(int)ranking;
+
+// 设置内容
+- (void)setContent;
+
+@end

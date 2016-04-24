@@ -1,0 +1,13 @@
+//
+//  GoodListLongTimeController.h
+//  
+//
+//  Created by apple on 15/12/31.
+//
+//
+
+#import "GoodListBaseController.h"
+
+@interface GoodListLongTimeController : GoodListBaseController
+
+@end

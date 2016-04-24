@@ -1,0 +1,34 @@
+//
+//  RankingModel.h
+//  
+//
+//  Created by sqz on 15/12/2.
+//
+//
+
+// "sex":true,"nickname":"你妹的。","age":0,"userId":50,"sumPoint":13,"realName":"艹爷的","avatar":"http://www.xingduoduo.com/shopxx/upload/userheadimg/14467740298569ab05f90d940.jpg","ranking":1,"comefrom":""
+
+typedef enum {
+    SexMan = 0,
+    SexWomen,
+} Sex;
+
+#import <Foundation/Foundation.h>
+
+@interface RankingModel : NSObject
+
+@property (nonatomic) Sex sex;
+@property (nonatomic,copy) NSString *nickname;
+@property (nonatomic,copy) NSString *age;
+@property (nonatomic,copy) NSString *userId;
+@property (nonatomic,copy) NSString *sumPoint;
+@property (nonatomic,copy) NSString *realName;
+@property (nonatomic,copy) NSString *avatar;
+@property (nonatomic,copy) NSString *comefrom;
+@property (nonatomic,copy) NSString *sumPrestige;
+@property (nonatomic,copy) NSString *totalPrestige;
+@property (nonatomic) int ranking;
+
++ (instancetype)rankingModelWithDict:(NSDictionary *)dict;
+
+@end

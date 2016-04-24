@@ -1,0 +1,113 @@
+//
+//  GoodListManController.m
+//  
+//
+//  Created by apple on 15/12/31.
+//
+//
+
+#import "GoodListManController.h"
+
+@interface GoodListManController ()
+
+@end
+
+@implementation GoodListManController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    [self createScrollView];
+    [self loadData];
+}
+
+- (void)createScrollView
+{
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    [self.view addSubview:scrollView];
+    scrollView.bounces = YES;
+    scrollView.showsVerticalScrollIndicator = NO;
+    scrollView.frame = CGRectMake(0,self.topView.bottom, SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.height);
+    
+    UIImageView *bgimageView1 = [[UIImageView alloc] init];
+    bgimageView1.frame = CGRectMake(0, 0, SCREEN_WIDTH, QZMake(318));
+    [scrollView addSubview:bgimageView1];
+    [self.bgimageViews addObject:bgimageView1];
+    
+    GoodBtn *btn1 = [[GoodBtn alloc] init];
+    btn1.frame = CGRectMake(0, QZMake(318), SCREEN_WIDTH, QZMake(100));
+    [scrollView addSubview:btn1];
+    [self.goodBtns addObject:btn1];
+    
+    GoodBtn *btn2 = [[GoodBtn alloc] init];
+    btn2.frame = CGRectMake(0, btn1.bottom, SCREEN_WIDTH, QZMake(130));
+    [scrollView addSubview:btn2];
+    [self.goodBtns addObject:btn2];
+    
+    for (int i = 0; i < 2; i++) {
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        btn.frame = CGRectMake(SCREEN_WIDTH / 2 * i, btn2.bottom, SCREEN_WIDTH / 2, QZMake(214));
+        [scrollView addSubview:btn];
+        [self.goodBtns addObject:btn];
+    }
+    for (int i = 0; i < 2; i++) {
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        btn.frame = CGRectMake(SCREEN_WIDTH / 2 * i, btn2.bottom + QZMake(214), SCREEN_WIDTH / 2, QZMake(140));
+        [scrollView addSubview:btn];
+        [self.goodBtns addObject:btn];
+    }
+    
+    UIImageView *bgimageView2 = [[UIImageView alloc] init];
+    bgimageView2.frame = CGRectMake(0,  btn2.bottom + QZMake(354), SCREEN_WIDTH, QZMake(80));
+    [scrollView addSubview:bgimageView2];
+    [self.bgimageViews addObject:bgimageView2];
+    
+    for (int i = 0; i<4; i++) {
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        btn.frame = CGRectMake(i % 2 * SCREEN_WIDTH / 2, i / 2 * QZMake(210) + bgimageView2.bottom, SCREEN_WIDTH / 2, QZMake(210));
+        [scrollView addSubview:btn];
+        [self.goodBtns addObject:btn];
+    }
+    
+    UIImageView *bgimageView3 = [[UIImageView alloc] init];
+    bgimageView3.frame = CGRectMake(0,  bgimageView2.bottom + QZMake(420) , SCREEN_WIDTH, QZMake(65));
+    [scrollView addSubview:bgimageView3];
+    [self.bgimageViews addObject:bgimageView3];
+  
+    GoodBtn *btn11 = [[GoodBtn alloc] init];
+    btn11.frame = CGRectMake(0, bgimageView3.bottom , SCREEN_WIDTH, QZMake(134));
+    [self.goodBtns addObject:btn11];
+    [scrollView addSubview:btn11];
+    
+    GoodBtn *btn12 = [[GoodBtn alloc] init];
+    btn12.frame = CGRectMake(0, btn11.bottom, SCREEN_WIDTH, QZMake(134));
+    [self.goodBtns addObject:btn12];
+    [scrollView addSubview:btn12];
+    
+    GoodBtn *btn13 = [[GoodBtn alloc] init];
+    btn13.frame = CGRectMake(0, btn12.bottom, SCREEN_WIDTH, QZMake(128));
+    [self.goodBtns addObject:btn13];
+    [scrollView addSubview:btn13];
+    
+
+    
+    // 分类按钮
+    UIView *pinkView = [[UIView alloc] init];
+    pinkView.frame = CGRectMake(0, btn13.bottom, SCREEN_WIDTH, QZMake(200));
+    [scrollView addSubview:pinkView];
+    pinkView.backgroundColor = [UIColor colorWithRed:225/255.0 green:102/255.0 blue:144/255.0 alpha:1];
+    for (int i = 0; i < 6; i++) {
+        CGFloat btnX = QZMake(45) + i % 3 * QZMake(110);
+        CGFloat btnY = i / 3 * QZMake(85) + QZMake(30);
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        [self.goodBtns addObject:btn];
+        btn.frame = CGRectMake(btnX, btnY,QZMake(52),QZMake(72));
+        [pinkView addSubview:btn];
+    }
+    
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, pinkView.bottom );
+
+}
+
+
+@end

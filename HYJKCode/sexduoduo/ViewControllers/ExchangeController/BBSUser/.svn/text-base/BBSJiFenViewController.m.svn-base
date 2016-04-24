@@ -1,0 +1,583 @@
+//
+//  BBSJiFenViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-11-12.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSJiFenViewController.h"
+
+@interface BBSJiFenViewController ()<UITableViewDataSource,UITableViewDelegate>
+{
+    NSInteger segmentSelectIndex;
+    UIView *footView0;
+    UIView *footView1;
+    UIView *footView21;
+    UIView *footView22;//没有购买记录时的 footView
+    
+    NSInteger recordIndex;//购买记录的请求页码
+}
+@end
+
+@implementation BBSJiFenViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+-(void)dealloc
+{
+    
+}
+
+-(void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    
+    [opration cancel];
+    [oprationMore cancel];
+    opration=nil;
+    oprationMore=nil;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    segmentSelectIndex=0;
+    self.listAry = [NSArray arrayWithObjects:@"",@"",@"",@"",@"完善个人资料",@"每日签到",@"每日发帖",@"分享帖子",@"帖子加精", nil];
+    
+    self.detailArray = [[NSMutableArray alloc] initWithCapacity:0];
+//    int i=0;
+//    while (i<20) {
+//        i++;
+//        NSMutableDictionary *dic=[[NSMutableDictionary alloc] init];
+//        [dic setObject:[NSString stringWithFormat:@"2014-05-%d",i] forKey:@"time"];
+//        [dic setObject:[NSString stringWithFormat:@"注册性多多账号%d",i] forKey:@"caozuo"];
+//        [dic setObject:[NSString stringWithFormat:@"%d",i+10] forKey:@"duobi"];
+//        
+//        [self.detailArray addObject:dic];
+//    }
+//    
+    
+    
+    self.recordArray = [[NSMutableArray alloc] initWithCapacity:0];
+    [self setTopNavView];
+    [self initMySetTableV];
+    
+    
+    
+    recordIndex=1;
+    [self requestRecordArray];
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    //设置segment的title的选中的属性 相应的也可以设置其他状态的属性
+    NSDictionary *textAttibutesSelected = [NSDictionary dictionaryWithObjectsAndKeys:
+                                           [UIFont fontWithName:k_Font size:16],UITextAttributeFont,
+                                           NAV_COLOR,UITextAttributeTextColor,
+                                           NAV_RED_COLOR,UITextAttributeTextShadowColor,
+                                           [NSValue valueWithCGSize:CGSizeMake(0, 0)],UITextAttributeTextShadowOffset,nil];
+    [[UISegmentedControl appearance] setTitleTextAttributes:textAttibutesSelected
+                                                   forState:UIControlStateSelected];
+    
+    
+}
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"我的积分"];
+    
+
+    
+}
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+-(void)initMySetTableV
+{
+    self.setTableView0 = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y)];
+    self.setTableView0.dataSource = self;
+    self.setTableView0.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.setTableView0 setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.setTableView0.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.setTableView0];
+    
+    
+    footView0 = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    footView0.backgroundColor = [UIColor lightGrayColor];
+    self.setTableView0.tableFooterView = footView0;
+    
+    
+    self.setTableView1 = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y)];
+    self.setTableView1.dataSource = self;
+    self.setTableView1.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.setTableView1 setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.setTableView1.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.setTableView1];
+    self.setTableView1.hidden=YES;
+    
+    footView1 = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    footView1.backgroundColor = [UIColor lightGrayColor];
+    self.setTableView1.tableFooterView = footView1;
+    
+    
+    self.setTableView2 = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y)];
+    self.setTableView2.dataSource = self;
+    self.setTableView2.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.setTableView2 setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.setTableView2.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.setTableView2];
+    self.setTableView2.hidden=YES;
+    
+    footView21 = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    footView21.backgroundColor = [UIColor lightGrayColor];
+    self.setTableView2.tableFooterView = footView21;
+    
+    
+    
+    
+    footView22 = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH,180)];
+    UIImageView *imageView=FastCreatImageView(CGRectMake(55, 30, 210, 100), UIImageByName(@"BBSUser_noRecord"));
+    [footView22 addSubview:imageView];
+    
+    UILabel *downLab=FastCreatLabel(CGRectMake(0, 150,SCREEN_WIDTH, 20), NAV_RED_COLOR, [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentCenter);
+    downLab.text=@"您还没有兑换过商品奥~";
+    [footView22 addSubview:downLab];
+    
+    
+    
+}
+
+#pragma mark - tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (tableView==self.setTableView0) {
+        return self.listAry.count;
+    }else if (tableView==self.setTableView1)
+    {
+        return 4 + self.detailArray.count +2;
+    }else
+        return 4 + self.recordArray.count;
+    
+    
+//    if (segmentSelectIndex==0) {
+//        return self.listAry.count;
+//    }else if (segmentSelectIndex==1)
+//        return 4 + self.detailArray.count +2;
+//    else
+//        return 4 + self.recordArray.count;
+    
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    
+    if (indexPath.row == 0 || indexPath.row==3 ) {
+        return 20;
+    }else if(indexPath.row == 1)
+    {
+        return 90;
+    }
+    
+    //4行后
+    
+    if (segmentSelectIndex==2 && indexPath.row>3) {
+        return 80;
+    }
+    return 45;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"ClassifyCell";
+    //    UITableViewCell *cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    UITableViewCell *cell=nil;
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+    }
+    
+    // 辅助按钮
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    // 背景颜色
+    if (indexPath.row == 0 || indexPath.row == 3 ) {
+        cell.backgroundColor = [UIColor colorWithRed:244/255.f green:244/255.f blue:244/255.f alpha:1.0];
+        [cell.imageView setImage:nil];
+    }else
+    {
+        cell.backgroundColor = [UIColor whiteColor];
+    }
+    
+    
+    // 单元格1  个人介绍
+    if (indexPath.row==1) {
+        
+        UIImageView *leftImage=FastCreatImageView(CGRectMake(10, 10, 60, 60), [PublicMethod getHeaderImage]);
+        [cell addSubview:leftImage];
+        leftImage.layer.borderColor=[UIColor grayColor].CGColor;
+        leftImage.layer.borderWidth=1;
+        leftImage.layer.cornerRadius=30;
+        leftImage.layer.masksToBounds=YES;
+        
+        
+        UILabel *upLab=FastCreatLabel(CGRectMake(90, 20, 210, 20), [UIColor grayColor], [UIFont systemFontOfSize:18], [UIColor clearColor],NSTextAlignmentLeft);
+        upLab.text=@"***";
+        [cell addSubview:upLab];
+        if (self.userInfo && self.userInfo[@"nickname"] && ![self.userInfo[@"nickname"] isKindOfClass:[NSNull class]]) {
+            upLab.text=[NSString stringWithFormat:@"%@",self.userInfo[@"nickname"]];
+        }
+        
+        
+        UIImageView *jiFenImage=FastCreatImageView(CGRectMake(90, 45, 30, 18),UIImageByName(@"BBSUser_jiFen1"));
+        [cell addSubview:jiFenImage];
+        
+        
+        UILabel *downLab=FastCreatLabel(CGRectMake(125, 45, 210, 20), NAV_RED_COLOR, [UIFont systemFontOfSize:18], [UIColor clearColor],NSTextAlignmentLeft);
+        downLab.text=@"*";
+        [cell addSubview:downLab];
+        if (self.userInfo) {
+            NSString *str=[NSString stringWithFormat:@"%@",self.userInfo[@"prestige"]];
+            downLab.text = str;
+        }
+        
+    }
+    // 单元格2 segment选择
+    if (indexPath.row==2) {
+        
+        UISegmentedControl *segmentedControl=[[UISegmentedControl alloc] initWithItems:@[@"多币任务",@"多币明细",@"兑换记录"]];
+        segmentedControl.frame=CGRectMake(10., 7.5, SCREEN_WIDTH-20, 30);
+        segmentedControl.tintColor=NAV_RED_COLOR;
+        segmentedControl.selectedSegmentIndex=segmentSelectIndex;
+        [segmentedControl setSegmentedControlStyle:UISegmentedControlStyleBordered];
+        [segmentedControl addTarget:self action:@selector(segmentedControlChanged:) forControlEvents:UIControlEventValueChanged];
+        [cell addSubview:segmentedControl];
+    }
+    
+    if (indexPath.row>=4) {
+        
+        // 多币任务
+        if (tableView==self.setTableView0) {
+            // left图片
+            if (indexPath.row >= 4 && indexPath.row<=8) {
+                [cell.imageView setImage:[UIImage imageNamed:[NSString stringWithFormat:@"BBSUserLevel_%d.png",(int)indexPath.row - 3]]];
+            }
+            
+            cell.textLabel.text = [self.listAry objectAtIndex:indexPath.row];
+            cell.textLabel.font = [UIFont systemFontOfSize:14.0];
+            cell.textLabel.textColor=[UIColor grayColor];
+            
+            
+            UIImageView *jiFenImage=FastCreatImageView(CGRectMake(SCREEN_WIDTH/2.+10, 15, 17, 15),UIImageByName(@"BBSUser_jiFen2"));
+            [cell addSubview:jiFenImage];
+            
+            
+            UILabel *centerLab=FastCreatLabel(CGRectMake(jiFenImage.right +5, 10, 100, 25), NAV_RED_COLOR, [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentLeft);
+            centerLab.text=@"10";
+            [cell addSubview:centerLab];
+            
+            UILabel *rightLab=FastCreatLabel(CGRectMake(SCREEN_WIDTH-20 - 75, 10, 75, 25), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentRight);
+            rightLab.text=@"0/10";
+            [cell addSubview:rightLab];
+            switch (indexPath.row-3) {
+                case 1:
+                {
+                    centerLab.text=@"5";
+                    rightLab.text=@"1";
+                }
+                    break;
+                case 2:
+                {
+                    centerLab.text=@"1";
+                    rightLab.text=@"1";
+                }
+                    break;
+                case 3:
+                {
+                    centerLab.text=@"2";
+                    rightLab.text=@"10";
+                }
+                    break;
+                case 4:
+                {
+                    centerLab.text=@"1";
+                    rightLab.text=@"无上限";
+                }
+                    break;
+                case 5:
+                {
+                    centerLab.text=@"5";
+                    rightLab.text=@"12";
+                }
+                    break;
+                default:
+                    break;
+            }
+        }
+  
+        // 多币明细
+//        else if (segmentSelectIndex == 1)
+         else if (tableView==self.setTableView1)
+        {
+            cell.accessoryType = UITableViewCellAccessoryNone;
+            
+            // 日期 操作 多币
+            if (indexPath.row==4) {
+                UILabel *leftLab=FastCreatLabel(CGRectMake(10, 10, 70, 30), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentCenter);
+                leftLab.text=@"日期";
+                [cell addSubview:leftLab];
+                
+                UILabel *centerLab=FastCreatLabel(CGRectMake(110, 10,100, 30), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentCenter);
+                centerLab.centerX = SCREEN_WIDTH/2.;
+                centerLab.text=@"操作";
+                [cell addSubview:centerLab];
+                
+                UILabel *rightLab=FastCreatLabel(CGRectMake(SCREEN_WIDTH- 20 - 50, 10, 50 ,30), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentCenter);
+                rightLab.text=@"多币";
+                [cell addSubview:rightLab];
+            }
+            
+            if (indexPath.row-5 <self.detailArray.count) {
+                UILabel *leftLab=FastCreatLabel(CGRectMake(10, 10, 100, 30), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentLeft);
+                leftLab.text=self.detailArray[indexPath.row-5][@"time"];
+                [cell addSubview:leftLab];
+                
+                UILabel *centerLab=FastCreatLabel(CGRectMake(90, 10,180, 30), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentCenter);
+                centerLab.text=self.detailArray[indexPath.row-5][@"caozuo"];
+                [cell addSubview:centerLab];
+                
+                
+                UIImageView *jiFenImage=FastCreatImageView(CGRectMake(270, 15, 17, 15),UIImageByName(@"BBSUser_jiFen2"));
+                [cell addSubview:jiFenImage];
+                
+                UILabel *rightLab=FastCreatLabel(CGRectMake(290, 10, 100,30), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentLeft);
+                rightLab.text=self.detailArray[indexPath.row-5][@"duobi"];
+                [cell addSubview:rightLab];
+            }
+            
+            // 没有更多了
+            if (indexPath.row-5==self.detailArray.count) {
+                UILabel *centerLab=FastCreatLabel(CGRectMake(110, 10,100, 30), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentCenter);
+                centerLab.centerX = SCREEN_WIDTH/2.;
+                centerLab.text=@"没有更多了呦";
+                [cell addSubview:centerLab];
+            }
+            
+            
+            
+            
+        }
+        
+            // 兑换记录
+          else if (tableView==self.setTableView2)
+        {
+            cell.accessoryType = UITableViewCellAccessoryNone;
+            
+            static NSString *CellIdentifier = @"OrderCell";
+            OrderCell *cell = (OrderCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+            if (cell == nil) {
+                cell = [[[NSBundle mainBundle] loadNibNamed:@"OrderCell" owner:self options:nil] lastObject];
+            }
+            
+            cell.backgroundColor = [UIColor whiteColor];
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            
+            if (indexPath.row>=4) {
+               [cell initCellWithDic:[self.recordArray objectAtIndex:indexPath.row-4]];
+            }
+            
+            return cell;
+        }
+            
+    }
+    
+    
+    
+    
+    
+    
+    return cell;
+    
+    
+    
+}
+#pragma mark segment选择
+-(void)segmentedControlChanged:(UISegmentedControl *)sender
+{
+    NSLog(@"选择%d",(int)sender.selectedSegmentIndex);
+    segmentSelectIndex=sender.selectedSegmentIndex;
+    
+    switch (sender.selectedSegmentIndex) {
+        case 0:
+        {
+            self.setTableView0.hidden=NO;
+            self.setTableView1.hidden=YES;
+            self.setTableView2.hidden=YES;
+            
+            [self.setTableView0 reloadData];
+        }
+            break;
+        case 1:
+        {
+            self.setTableView0.hidden=YES;
+            self.setTableView1.hidden=NO;
+            self.setTableView2.hidden=YES;
+            
+            [self.setTableView1 reloadData];
+        }
+            break;
+        case 2:
+        {
+            self.setTableView0.hidden=YES;
+            self.setTableView1.hidden=YES;
+            self.setTableView2.hidden=NO;
+            if (self.recordArray.count>0) {
+                self.setTableView2.tableFooterView = footView21;
+            }else
+                self.setTableView2.tableFooterView = footView22;
+            
+            [self.setTableView2 reloadData];
+        }
+            break;
+        default:
+            break;
+    }
+    
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+ 
+}
+
+
+-(void)requestRecordArray
+{
+    recordIndex=1;
+    
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc] init];
+    [dic setObject:USERID forKey:@"usernameid"];
+    [dic setObject:[NSString stringWithFormat:@"%d",(int)recordIndex] forKey:@"pageApp"];
+    [dic setObject:@"10" forKey:@"pageSizeApp"];
+    
+    NSLog(@"请求的参数=%@",dic);
+    opration=[[MKHttpServiceEngine shareMyInstance] requestMyJiFenOrderListWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *reDic=responseObject;
+        NSLog(@"积分记录=%@",reDic);
+        if ([reDic[@"success"] intValue]==1) {
+            
+            [self.recordArray removeAllObjects];
+            [self.recordArray addObjectsFromArray:reDic[@"datasource"]];
+            recordIndex++;
+            [self JudgePageNumAndToalPage:reDic[@"datasource"]];
+            
+            [self.setTableView2 reloadData];
+            
+        
+        }
+        
+    } errorHandler:^(NSError *error) {
+        
+    }];
+}
+
+-(void)requestMoreRecordArray
+{
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc] init];
+    [dic setObject:USERID forKey:@"usernameid"];
+    [dic setObject:[NSString stringWithFormat:@"%d",(int)recordIndex] forKey:@"pageApp"];
+    [dic setObject:@"10" forKey:@"pageSizeApp"];
+    
+   oprationMore= [[MKHttpServiceEngine shareMyInstance] requestMyJiFenOrderListWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *reDic=responseObject;
+        NSLog(@"积分记录more=%@",reDic);
+        if ([reDic[@"success"] intValue]==1) {
+            [self.recordArray  addObjectsFromArray: reDic[@"datasource"]] ;
+            
+            [self JudgePageNumAndToalPage:reDic[@"datasource"]];
+            
+            [self.setTableView2 reloadData];
+            
+            
+        }
+        
+    } errorHandler:^(NSError *error) {
+        
+    }];
+}
+
+//添加触底刷新
+-(void)JudgePageNumAndToalPage:(NSArray *)dataSource
+{
+    
+    
+    __weak typeof(self) weakSelf = self;
+    if ([dataSource count] > 9) {
+        //        self.bbsTableView.showsInfiniteScrolling=YES;
+        weakSelf.setTableView2.infiniteScrollingView.enabled = YES;
+        
+        [self.setTableView2 addInfiniteScrollingWithActionHandler:^{
+            [weakSelf requestMoreRecordArray];
+            [weakSelf.setTableView2.infiniteScrollingView stopAnimating];
+        }];
+        
+    }else
+    {
+        if (self.setTableView2.infiniteScrollingView != nil) {
+            //                [goodsTableView triggerInfiniteScrolling];
+            weakSelf.setTableView2.infiniteScrollingView.enabled = NO;
+        }
+        
+        //        self.bbsTableView.showsInfiniteScrolling=NO;
+    }
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

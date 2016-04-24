@@ -1,0 +1,18 @@
+//
+//  DetailNavRightPopView.h
+//  sexduoduo
+//
+//  Created by sqz on 14-12-15.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@protocol DetailNavRightViewDelegate
+
+-(void)detailNavRightViewButtonClick:(NSInteger )index;
+
+@end
+@interface DetailNavRightPopView : UIView
+@property(nonatomic)id<DetailNavRightViewDelegate>topAlertViewDelegate;
+
+@end

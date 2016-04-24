@@ -1,0 +1,34 @@
+//
+//  CustomGoodsDetailSegment.h
+//  sexduoduo
+//
+//  Created by dsz on 15-5-7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  自定义商品详情里面的 详情 评价 商品推荐按钮
+
+#import <UIKit/UIKit.h>
+
+typedef void (^CustomGoodsDetailSegmentClickIndex)(int responseObject);
+
+@interface CustomGoodsDetailSegment : UIView
+
+{
+    //
+    UIButton *detailBtn;
+    UIButton *pingJiaBtn;
+    UIButton *tuiJianBtn;
+    
+    UIView *selectedView;
+    
+    CGFloat viewHeight;
+}
+
+@property(strong ,nonatomic)CustomGoodsDetailSegmentClickIndex btnClickBlock;//
+@property(assign ,nonatomic)int selectedSegmentIndex;//从0开始
+
+-(id)initWithBlock:(CustomGoodsDetailSegmentClickIndex )clickBlock;
+
+
+
+
+@end

@@ -1,0 +1,27 @@
+//
+//  SDOrderModel.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/28.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface SDOrderModel : NSObject
+
+@property (copy,nonatomic)NSString *onlineTotalPrice;//在线支付总金额
+@property (copy,nonatomic)NSString *totalPrice;//货到付款总金额
+@property (copy,nonatomic)NSString *productPrice;//商品金额
+@property (copy,nonatomic)NSString *preferentialPrice;//优惠金额
+@property (copy,nonatomic)NSString *onlinePostage;//在线支付邮费
+@property (copy,nonatomic)NSString *postage;//货到付款邮费
+@property (copy,nonatomic)NSArray *activityDetail;//满减优惠详情
+@property (copy,nonatomic)NSString *couponsDetail;//优惠券详情
+
+
++(instancetype)builtWithDict:(NSDictionary *)dict;
+
+-(instancetype)initWithDict:(NSDictionary *)dict;
+
+@end

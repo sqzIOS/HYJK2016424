@@ -1,0 +1,281 @@
+//
+//  GoodListBaseController.m
+//  
+//
+//  Created by apple on 15/12/31.
+//
+//
+
+#import "GoodListBaseController.h"
+#import "GoodListtTTController.h"
+#import "GoodListMainController.h"
+#import "GoodListManController.h"
+#import "GoodListLongTimeController.h"
+#import "GoodListTiaoQingontroller.h"
+#import "GoodListWomenController.h"
+#import "GoodListUnderwearController.h"
+
+#import "CouponsViewController.h"
+@interface GoodListBaseController ()
+
+@end
+
+@implementation GoodListBaseController
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    self.view.backgroundColor = [UIColor whiteColor];
+    
+//    [self.navigationController setNavigationBarHidden:YES];
+    
+    [self setTopView];
+}
+
+#pragma mark - 返回上一个界面
+- (void)back
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark - 创建和设置背景
+- (void)createBgimageViewWithFrame:(CGRect)frame inSuperView:(UIView *)superView
+{
+    UIImageView *bgimageView = [[UIImageView alloc] init];
+    bgimageView.frame = frame;
+    [self.bgimageViews addObject:bgimageView];
+    bgimageView.userInteractionEnabled = YES;
+    [superView addSubview:bgimageView];
+}
+
+- (void)setBgimage
+{
+    self.bgimageViewPaths = [NSMutableArray array];
+    for (int i = 0; i < self.modelArry.count; i++) {
+        GoodsModel *model = [self.modelArry objectAtIndex:i];
+        NSString *theNewGuardPath = model.theNewGuardPath;
+        if ( ![theNewGuardPath isKindOfClass:[NSNull class]] && theNewGuardPath.length > 0 && ![theNewGuardPath isEqualToString:@"<null>"]) {
+            [self.bgimageViewPaths addObject:model.theNewGuardPath];
+        }
+    }
+    
+    for (int i = 0; i < self.bgimageViews.count; i++) {
+        UIImageView *bgimageView = [self.bgimageViews objectAtIndex:i];
+        NSString *theNewGuardPath = [self.bgimageViewPaths objectAtIndex:i];
+        NSURL *url = [NSURL URLWithString:theNewGuardPath];
+        [bgimageView sd_setImageWithURL:url];
+    }
+}
+
+#pragma mark - 创建顶部View
+- (void)setTopView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *topView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    self.topView = topView;
+    [self.view addSubview:topView];
+    [topView setTitleStr:self.name];
+    [topView addLeftBtnTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+}
+
+#pragma mark - 初始化
+- (NSMutableArray *)bgimageViews
+{
+    if (_bgimageViews == nil) {
+        _bgimageViews = [NSMutableArray array];
+    }
+    return _bgimageViews;
+}
+
+- (NSMutableArray *)bgimageViewPaths
+{
+    if (_bgimageViewPaths == nil) {
+        _bgimageViewPaths = [NSMutableArray array];
+    }
+    return _bgimageViewPaths;
+}
+
+- (NSMutableArray *)goodBtns
+{
+    if (_goodBtns == nil) {
+        _goodBtns = [NSMutableArray array];
+    }
+    return _goodBtns;
+}
+
+#pragma mark - 设置按钮
+- (void)setGoodBtn
+{
+    for (int i = 0; i < self.goodBtns.count; i++) {
+        GoodBtn *goodbtn = [self.goodBtns objectAtIndex:i];
+        [goodbtn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        GoodsModel *model = [self.modelArry objectAtIndex:i];
+        NSString *theNewLogoPath = model.theNewLogoPath;
+        NSURL *url = [NSURL URLWithString:theNewLogoPath];
+        [goodbtn setInfoWithModel:model];
+        [goodbtn sd_setImageWithURL:url forState:UIControlStateNormal];
+    }
+}
+
+
+#pragma mark - 点击商品按钮
+- (void)btnClick:(GoodBtn *)btn
+{
+    // 统计 计数事件
+//    [MobClick event:[NSString stringWithFormat:@"ThemeActivity_%d",(int)sender.tag-10000]];
+    
+    if ([btn.gdCategory isEqualToString:@"1"]) {  // 跳商品详情界面
+        GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.goodsIdStr = [NSString stringWithFormat:@"%@",btn.homeId];
+        //        ctrVc.classifyIdStr = [NSString stringWithFormat:@"%@",[[taotaoArray objectAtIndex:0] objectForKey:@"goodsCategoryId"]];
+        [self.navigationController pushViewController:ctrVc animated:YES];
+        return;
+
+        
+    }else if([btn.gdCategory isEqualToString:@"2"]){//分类
+        
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        
+        if (1) {
+            ctrVc.isHiddenSort=YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.classifyId = btn.homeId;
+            ctrVc.titleStr = btn.name;
+            ctrVc.requestType = classifyType;
+            
+        }else{
+            ctrVc.disPlayOne = YES;
+            ctrVc.classifyStr = btn.homeId;
+            ctrVc.titleStr = btn.name;
+            ctrVc.requestType = homeViewType;
+            
+        }
+        [self.navigationController pushViewController:ctrVc animated:YES];
+        return;
+
+    }else if([btn.gdCategory isEqualToString:@"3"])//论坛帖子
+    {
+        
+        BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+        //论坛主题id
+        controller.forumId = btn.introduction;
+        controller.topicId = btn.homeId;
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:controller animated:YES];
+        return;
+        
+    }else if([btn.gdCategory isEqualToString:@"4"])//专区活动
+    {
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.disPlayOne = YES;
+        ctrVc.classifyStr = btn.homeId;
+        ctrVc.titleStr = btn.name;
+        ctrVc.requestType = homeViewType;
+        [self.navigationController pushViewController:ctrVc animated:YES];
+        return;
+    }
+    
+    
+    // 跳转分类
+    if (btn.introduction.length < 1) {
+        return;
+    }
+    
+    int introduction = [btn.introduction intValue];
+    GoodListBaseController *vc;
+    switch (introduction) {
+        case 0: // 主会场
+            vc = [[GoodListMainController alloc] init];
+            break;
+        case 1: // 内衣专区
+            vc = [[GoodListUnderwearController alloc] init];
+            break;
+        case 2: // 女性道具
+            vc = [[GoodListWomenController alloc] init];
+            break;
+        case 3: // 男性道具
+            vc = [[GoodListManController alloc] init];
+            break;
+        case 4: // 延时润滑
+            vc = [[GoodListLongTimeController alloc] init];
+            break;
+        case 5: // 套套天堂
+            vc = [[GoodListtTTController alloc] init];
+            break;
+        case 6: // 调情助兴
+            vc = [[GoodListTiaoQingontroller alloc] init];
+            break;
+    }
+    vc.name = btn.name;
+    vc.homeId = btn.homeId;
+    if (vc.homeId.intValue >= 18 && vc.homeId.intValue <= 26 && vc.homeId!=self.homeId) {
+        NSMutableArray *vcArry = [NSMutableArray arrayWithArray:self.navigationController.viewControllers];
+        [vcArry removeLastObject];
+        [vcArry addObject:vc];
+        [self.navigationController setViewControllers:vcArry animated:YES];
+    }
+    
+    
+}
+
+#pragma mark - 跳转到优惠券
+- (void)couponBtnClick
+{
+    NSLog(@"跳转优惠券");
+    
+    CouponsViewController *vc =[[CouponsViewController alloc] init];
+    
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+#pragma mark - 跳转到限时抢购
+- (void)xsqgBtnClick
+{
+    NSLog(@"跳转到限时抢购");
+}
+
+#pragma mark - 获取数据
+- (void)loadData
+{
+    
+    NSString *host = @"http://www.xingduoduo.com";
+    NSString *path = @"/shopxx/shop/goods!getIndexUi.action";
+    NSDictionary *params = @{@"showAdress":self.homeId};
+    
+    [AFHTTPClient getJSONPath:path httpHost:host params:params success:^(id json) {
+        
+        NSDictionary *response = [NSJSONSerialization JSONObjectWithData:json options:NSJSONReadingAllowFragments error:nil];
+        NSArray *responseData = response[@"datasource"];
+        
+        self.modelArry = [NSMutableArray array];
+        for (int i = 0; i<responseData.count; i++) {
+            NSDictionary *dict = [responseData objectAtIndex:i];
+            GoodsModel *model = [GoodsModel goodsModelWithDict:dict];
+            [self.modelArry addObject:model];
+        }
+        
+        [self setBgimage];
+        [self setGoodBtn];
+        
+    } fail:^{
+        
+    }];
+}
+
+- (void)createGoodBtnWithFrame:(CGRect)frame inSuperView:(UIView *)superView
+{
+    GoodBtn *goodBtn = [[GoodBtn alloc] init];
+    goodBtn.frame = frame ;
+    [superView addSubview:goodBtn];
+    [self.goodBtns addObject:goodBtn];
+}
+
+@end

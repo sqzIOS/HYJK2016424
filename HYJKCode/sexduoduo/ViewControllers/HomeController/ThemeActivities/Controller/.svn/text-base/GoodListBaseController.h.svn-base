@@ -1,0 +1,54 @@
+//
+//  GoodListBaseController.h
+//  
+//
+//  Created by apple on 15/12/31.
+//
+//
+
+#import <UIKit/UIKit.h>
+#import "GoodBtn.h"
+#import "UIButton+WebCache.h"
+#import "AFHTTPClient.h"
+#import "ShareFunction.h"
+#import "UIView+Extend.h"
+#import "UIView+QZCategory.h"
+#import "TopNavView.h"
+#import "GoodsModel.h"
+#import "UIImageView+WebCache.h"
+
+@interface GoodListBaseController : UIViewController
+
+
+@property (nonatomic,weak) TopNavView *topView;
+
+@property (nonatomic,copy) NSString *homeId;
+@property (nonatomic,copy) NSString *name;
+
+@property (nonatomic,strong) NSMutableArray *modelArry;
+
+@property (nonatomic,strong) NSMutableArray *bgimageViews;
+@property (nonatomic,strong) NSMutableArray *bgimageViewPaths;
+
+@property (nonatomic,strong) NSMutableArray *goodBtns;
+
+// 获取数据
+- (void)loadData;
+
+// 设置按钮
+- (void)setGoodBtn;
+
+// 创建和设置背景
+- (void)createBgimageViewWithFrame:(CGRect)frame inSuperView:(UIView *)superView;
+- (void)setBgimage;
+
+// 跳转到优惠券
+- (void)couponBtnClick;
+
+// 跳转到限时抢购
+- (void)xsqgBtnClick;
+
+// 创建GoodBtn
+- (void)createGoodBtnWithFrame:(CGRect)frame inSuperView:(UIView *)superView;
+
+@end

@@ -1,0 +1,26 @@
+//
+//  MyInfoViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-7-1.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "ChangePWViewController.h"
+#import "AddrManageController.h"
+#import "ChangeNicknameViewController.h"
+@interface MyInfoViewController : UIViewController<UIImagePickerControllerDelegate,UIActionSheetDelegate,UINavigationControllerDelegate>
+{
+    UIImage  *selectImage;
+}
+@property (strong, nonatomic) UIActionSheet *myActionSheet;
+@property (strong, nonatomic) UIActionSheet *sexActionSheet;
+@property (strong, nonatomic) NSString* filePath;
+@property (weak, nonatomic) IBOutlet UIButton *logOutBtn;
+@property (weak, nonatomic) IBOutlet UILabel *sexLab;
+@property (weak, nonatomic) IBOutlet UILabel *userNameLab;
+@property (weak, nonatomic) IBOutlet UIImageView *userHeaderImg;
+@property (weak, nonatomic) IBOutlet UIView *myInfoView;
+
+@end

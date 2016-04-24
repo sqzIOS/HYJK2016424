@@ -1,0 +1,59 @@
+//
+//  GoodsListVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+/*
+ 4.0版本之后的 商品列表
+ 
+ */
+
+#import <UIKit/UIKit.h>
+#import "MMGridView.h"
+#import "MMGridViewCell.h"
+#import "MMGridViewDefaultCell.h"
+
+#import "GoodsViewCell.h"
+#import "GoodsViewCell2.h"
+
+@interface GoodsListVC : UIViewController<UITableViewDataSource,UITableViewDelegate,GoodsViewCellDelegate,MMGridViewDataSource,MMGridViewDelegate>
+{
+  
+    NSMutableArray *goodsDataArray;
+    int currentPage;
+    BOOL isAscSort;
+}
+
+@property (strong, nonatomic) UITableView *goodsTableView;
+
+@property (assign, nonatomic) BOOL disPlayOne;  //是否从home跳转过来  并将值传递到详情页面  为了区别隐藏tabbar
+@property (assign, nonatomic) BOOL disPlayTwo;   //是否从分类页跳转过来  并将值传递到详情页面  为了区别隐藏tabbar
+
+@property (strong, nonatomic) IBOutlet UIView *loadingView;
+@property (strong, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
+@property (strong, nonatomic) IBOutlet UIView *noNetView;
+
+@property (strong, nonatomic) NSString *classifyStr;// 专区 品牌街 id
+
+@property (strong, nonatomic) NSString *classifyId;
+
+@property (strong, nonatomic) NSString *titleStr;
+
+@property (strong, nonatomic) NSString *searchStr;
+
+@property (nonatomic) theRequestType requestType;
+//@property (nonatomic) topType theTopType;
+
+@property (strong, nonatomic) UILabel *promptLab;
+
+
+@property (assign, nonatomic) BOOL isHiddenSort;
+
+@property (strong, nonatomic) IBOutlet UIView *noCollectView;
+
+@property (strong, nonatomic) NSMutableArray *subClassifyArray;
+
+@property (strong, nonatomic)MMGridView * gridView;
+@end

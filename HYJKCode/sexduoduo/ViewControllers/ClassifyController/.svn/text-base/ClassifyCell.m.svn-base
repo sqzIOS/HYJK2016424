@@ -1,0 +1,93 @@
+//
+//  ClassifyCell.m
+//  sexduoduo
+//
+//  Created by showm on 14-6-10.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "ClassifyCell.h"
+
+
+@implementation ClassifyCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+    
+
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row
+{
+    
+//    NSArray *desArry = nil;
+//    desArry = [NSArray arrayWithObjects:@"尽情享受爱",@"尽显妖娆妩媚",@"放纵与享乐的情欲之旅",@"变化无穷的体验",@"更深层的感受爱",@"野性全开",@"零距离接触",@"让你无负担享受", nil];
+    if ([arry count] == 2)
+    {
+        self.secBtn.adjustsImageWhenHighlighted = NO;
+        self.firBtn.adjustsImageWhenHighlighted = NO;
+//        self.secLab.hidden = NO;
+//        self.firLab.hidden = NO;
+//        self.firLab.text = [arry objectAtIndex:0];
+//        self.secLab.text = [arry objectAtIndex:1];
+        self.firBtn.tag = row * 2;
+        self.secBtn.tag = row * 2 + 1;
+        self.firBtn.hidden = NO;
+        self.secBtn.hidden = NO;
+        
+//        [self.firBtn sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:[[arry objectAtIndex:0] objectForKey:@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+//        [self.secBtn sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:[[arry objectAtIndex:1] objectForKey:@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        
+        
+        if (judgeUrlIsHave(arry[0],@"newLogoPath")) {
+            NSURL * url = [NSURL URLWithString:arry[0][@"newLogoPath"]];
+            
+            [self.firBtn sd_setBackgroundImageWithURL:url forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }else
+        {
+            NSURL * url = [PublicMethod imgWithUrl:arry[0][@"logoPath"]];
+            
+            [self.firBtn sd_setBackgroundImageWithURL:url forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }
+        
+        
+        if (judgeUrlIsHave(arry[1],@"newLogoPath")) {
+            NSURL * url = [NSURL URLWithString:arry[1][@"newLogoPath"]];
+            
+            [self.secBtn sd_setBackgroundImageWithURL:url forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }else
+        {
+            NSURL * url = [PublicMethod imgWithUrl:arry[1][@"logoPath"]];
+            
+            [self.secBtn sd_setBackgroundImageWithURL:url forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }
+        
+    }else
+    {
+
+        self.firBtn.hidden = NO;
+        self.secBtn.hidden = YES;
+        self.firBtn.tag = row * 2;
+        
+        self.firBtn.adjustsImageWhenHighlighted = NO;
+        
+        [self.firBtn sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:[[arry objectAtIndex:0] objectForKey:@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+
+    }
+    
+}
+- (IBAction)btnClick:(id)sender {
+    UIButton *btn = (UIButton *)sender;
+    btn.adjustsImageWhenHighlighted = NO;
+    [self.delegate goodsBtnClick:btn.tag];
+}
+
+@end

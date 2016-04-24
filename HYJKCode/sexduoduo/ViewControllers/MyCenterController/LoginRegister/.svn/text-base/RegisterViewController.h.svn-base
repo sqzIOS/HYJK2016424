@@ -1,0 +1,54 @@
+//
+//  RegisterViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-6-25.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  注册
+
+#import <UIKit/UIKit.h>
+#import "MyCenterVC.h"
+#import "ProtocolViewController.h"
+
+
+@interface RegisterViewController : UIViewController
+{
+//    int  CountDownNum;
+//    NSTimer  *_timer;
+    
+    MKNetworkOperation *opration;
+}
+//@property (weak, nonatomic) IBOutlet UIScrollView *registerScrollview;
+//@property (weak, nonatomic) IBOutlet UIButton *codeBtn;
+//@property (weak, nonatomic) IBOutlet UITextField *phoneField;
+//@property (weak, nonatomic) IBOutlet UITextField *codeField;
+//@property (weak, nonatomic) IBOutlet UITextField *passWordField;
+//@property (weak, nonatomic) IBOutlet UITextField *userNameField;
+//@property (weak, nonatomic) IBOutlet UITextField *inviteCodeField;
+
+
+@property (weak, nonatomic) IBOutlet UITextField *userName;
+@property (weak, nonatomic) IBOutlet UITextField *passWord;
+//@property (weak, nonatomic) IBOutlet UITextField *passWordOnce;
+//@property (weak, nonatomic) IBOutlet UITextField *Email;
+
+@property (weak, nonatomic) IBOutlet UIButton *codeBtn;
+@property (weak, nonatomic) IBOutlet UITextField *codeTextField;
+
+@property (weak, nonatomic) IBOutlet UIScrollView *registerScrol;
+@property (weak, nonatomic) IBOutlet UIButton *registerBtn;
+
+@property (strong, nonatomic) UIActivityIndicatorView *indicator;
+@property (strong, nonatomic) UILabel *promptLab;
+
+@property (weak, nonatomic) IBOutlet UITextField *nickNameField;
+
+//@property (strong, nonatomic) IBOutlet UILabel *sexLab;
+@property (strong, nonatomic)NSString *sexStr;
+@property (weak, nonatomic) IBOutlet UIButton *agreeBtn;
+
+
+
+
+
+@end

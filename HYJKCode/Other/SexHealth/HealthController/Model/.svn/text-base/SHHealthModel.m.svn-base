@@ -1,0 +1,228 @@
+//
+//  SHHealthModel.m
+//  SexHealth
+//
+//  Created by ly1992 on 15/6/29.
+//  Copyright (c) 2015年 showm. All rights reserved.
+//
+
+#import "SHHealthModel.h"
+#import "ConstModel.h"
+
+
+@implementation SHHealthAdInfo
+
+@end
+
+@implementation SHHealthAdModel
++ (NSString*)getCachePath
+{
+    return [NSFileManager pathForCacheFile:[NSString stringWithFormat:@"SHHealthAdModel.json"] inDir:@"SHHealthAdModel"];
+}
+
++ (BOOL)setRemoteDataCache:(NSData*)data
+{
+    if (data == nil || data.length <= 0) {
+        return NO;
+    }
+    NSString* cachePath =  [self getCachePath];
+    if ([NSString isBlankString:cachePath]) {
+        return NO;
+    }
+    return [data writeToFile:cachePath atomically:YES];
+}
+
++(SHHealthAdModel*)buildModel
+{
+    SHHealthAdModel *m = [[SHHealthAdModel alloc]init];
+    m.datasource = [[NSMutableArray alloc]init];
+    return m;
+}
+
++(void)loadRemoteDataForAdModel:(SHHealthAdModel*)model flag:(BOOL)flag cb:(void(^)(BOOL isOK, SHHealthAdModel* model))callback
+{
+    
+    [AFHTTPClient postJSONPath:SHINTERFACE_getAdvertising httpHost:sexHealthIP parameters:nil success:^(id responseObject) {
+        
+        NSDictionary *dic=[AFHTTPClient jsonTurnToDictionary:responseObject];
+        NSLog(@"广告----%@----广告",dic);
+        
+        if (dic[@"success"] && [dic[@"success"] intValue]==1) {
+            
+            NSMutableArray *array = [[NSMutableArray alloc] init];
+            for (int i=0; i<[dic[@"datasource"] count]; i++) {
+                SHHealthAdInfo *info=[[SHHealthAdInfo alloc] init];
+                
+                info.iconStr= dic[@"datasource"][i][@"imgUrl"];
+                info.idStr = dic[@"datasource"][i][@"articleId"];
+                [array addObject:info];
+            }
+            
+            model.datasource = [[NSMutableArray alloc] initWithArray:array];
+            
+            callback(YES,model);
+        }
+        
+        
+    } fail:^{
+        
+    }];
+}
+
++(SHHealthAdModel*)loadLocalDataForAdModel
+{
+    SHHealthAdModel* model = [self buildModel];
+    SHHealthAdInfo *info = [[SHHealthAdInfo alloc]init];
+    info.iconStr = @"iconStr";
+    info.idStr = @"1000";
+    [model.datasource addObject:info];
+    return model;
+}
+
+@end
+
+
+
+@implementation SHHealthDoctorModel
++ (NSString*)getCachePath
+{
+    return [NSFileManager pathForCacheFile:[NSString stringWithFormat:@"SHHealthDoctorModel.json"] inDir:@"SHHealthDoctorModel"];
+}
+
++ (BOOL)setRemoteDataCache:(NSData*)data
+{
+    if (data == nil || data.length <= 0) {
+        return NO;
+    }
+    NSString* cachePath =  [self getCachePath];
+    if ([NSString isBlankString:cachePath]) {
+        return NO;
+    }
+    return [data writeToFile:cachePath atomically:YES];
+}
++(SHHealthDoctorModel*)buildModel
+{
+    SHHealthDoctorModel *m = [[SHHealthDoctorModel alloc]init];
+    m.datasource = [[NSMutableArray alloc]init];
+    return m;
+}
+
++(void)loadRemoteDataForDoctorModel:(SHHealthDoctorModel*)model flag:(BOOL)flag cb:(void(^)(BOOL isOK, SHHealthDoctorModel* model))callback
+{
+    [AFHTTPClient getJSONPath:SHINTERFACE_recommendedDoctor httpHost:sexHealthIP params:nil success:^(id json) {
+        
+        NSDictionary *dic=[AFHTTPClient jsonTurnToDictionary:json];
+        if (dic[@"success"] && [dic[@"success"] intValue]==1) {
+            
+            NSMutableArray *array = [[NSMutableArray alloc] init];
+            for (int i=0; i<[dic[@"datasource"] count]; i++) {
+                SHDoctorInfo *info=[[SHDoctorInfo alloc] init];
+                
+                info.iconStr= dic[@"datasource"][i][@"headimgurl"];
+                info.nameStr=dic[@"datasource"][i][@"name"];
+                info.idStr = dic[@"datasource"][i][@"doctorId"];
+                [array addObject:info];
+            }
+            
+            model.datasource = [[NSMutableArray alloc] initWithArray:array];
+            
+            callback(YES,model);
+        }
+        
+        
+    } fail:^{
+        
+    }];
+}
+
++(SHHealthDoctorModel*)loadLocalDataForDoctorModel
+{
+    SHHealthDoctorModel* model = [self buildModel];
+    //    for (int i = 0; i < 10; i++) {
+    //        SHDoctorInfo *info = [[SHDoctorInfo alloc]init];
+    //        info.iconStr = @"doctor";
+    //        info.nameStr = @"林大爷";
+    //        info.idStr = @"1000";
+    //        [model.datasource addObject:info];
+    //    }
+    return model;
+}
+@end
+
+@implementation SHHealthHospitalInfo
+
+@end
+
+@implementation SHHealthHospitalModel
++ (NSString*)getCachePath
+{
+    return [NSFileManager pathForCacheFile:[NSString stringWithFormat:@"SHHealthHospitalModel.json"] inDir:@"SHHealthHospitalModel"];
+}
+
++ (BOOL)setRemoteDataCache:(NSData*)data
+{
+    if (data == nil || data.length <= 0) {
+        return NO;
+    }
+    NSString* cachePath =  [self getCachePath];
+    if ([NSString isBlankString:cachePath]) {
+        return NO;
+    }
+    return [data writeToFile:cachePath atomically:YES];
+}
++(SHHealthHospitalModel*)buildModel
+{
+    SHHealthHospitalModel *m = [[SHHealthHospitalModel alloc]init];
+    m.datasource = [[NSMutableArray alloc]init];
+    return m;
+}
+
++(void)loadRemoteDataForHospitalModel:(SHHealthHospitalModel*)model flag:(BOOL)flag cb:(void(^)(BOOL isOK, SHHealthHospitalModel* model))callback
+{
+    [AFHTTPClient getJSONPath:SHINTERFACE_recommendedHospital httpHost:sexHealthIP params:nil success:^(id json) {
+        
+        NSDictionary *dic=[AFHTTPClient jsonTurnToDictionary:json];
+        
+        if (dic[@"success"] && [dic[@"success"] intValue]==1) {
+            
+            NSMutableArray *array = [[NSMutableArray alloc] init];
+            for (int i=0; i<[dic[@"datasource"] count]; i++) {
+                SHHealthHospitalInfo *info=[[SHHealthHospitalInfo alloc] init];
+                
+                info.iconStr= [NSString stringWithFormat:@"%@", dic[@"datasource"][i][@"pictureUrl"]];
+                info.nameStr= [NSString stringWithFormat:@"%@", dic[@"datasource"][i][@"name"]];
+                info.idStr = [NSString stringWithFormat:@"%@", dic[@"datasource"][i][@"hospitaId"]];
+                info.addressStr = [NSString stringWithFormat:@"%@", dic[@"datasource"][i][@"address"]];
+                info.contentStr = [NSString stringWithFormat:@"%@", dic[@"datasource"][i][@"introduce"]];
+                [array addObject:info];
+            }
+            
+            model.datasource = [[NSMutableArray alloc] initWithArray:array];
+            
+            callback(YES,model);
+        }
+        
+        
+    } fail:^{
+        
+    }];
+    
+}
+
++(SHHealthHospitalModel*)loadLocalDataForHospitalModel
+{
+    SHHealthHospitalModel* model = [self buildModel];
+    //    for (int i = 0; i < 5; i++) {
+    //        SHHealthHospitalInfo *info = [[SHHealthHospitalInfo alloc]init];
+    //        info.iconStr = @"doctor";
+    //        info.nameStr = @"林大爷";
+    //        info.idStr = @"1000";
+    //        [model.datasource addObject:info];
+    //    }
+    return model;
+}
+@end
+
+@implementation SHHealthModel
+
+@end

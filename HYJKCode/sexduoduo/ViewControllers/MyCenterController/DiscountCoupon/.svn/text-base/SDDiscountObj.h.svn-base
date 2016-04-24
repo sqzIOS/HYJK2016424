@@ -1,0 +1,26 @@
+//
+//  SDDiscountObj.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/26.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  购物券model
+
+#import <Foundation/Foundation.h>
+
+@interface SDDiscountObj : NSObject
+
+@property(copy,nonatomic)NSString *amount;//优惠多少
+@property(copy,nonatomic)NSString *conditions;//满多少可以优惠
+@property(assign,nonatomic)long long endDate;
+@property(copy,nonatomic)NSString *isUsed;//0-有效，1-已使用，2-已过期
+@property(copy,nonatomic)NSString *memberCouponsId;
+@property(assign,nonatomic)long long  startDate;
+@property(copy,nonatomic)NSString *type;//0-立减、1-折扣
+
++ (instancetype)consultingWithDict:(NSDictionary *)dict;
+- (instancetype)initWithDict:(NSDictionary *)dict;
+
+-(instancetype)initWithModel:(SDDiscountObj *)model;
+
+@end

@@ -1,0 +1,85 @@
+//
+//  SDGoodRecommendObj.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDGoodRecommendObj.h"
+
+@implementation SDGoodRecommendObj
+
+
+- (instancetype)initWithDict:(NSDictionary  *)dict {
+    
+    if (self = [super init]) {
+        
+        id value = nil;
+        
+        value = dict[@"ThumbnailGoodsImagePath"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.ThumbnailGoodsImagePath = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"marketPrice"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.marketPrice = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"newThumbnailGoodsImagePath"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.nowThumbnailGoodsImagePath = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"salesVolume"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.salesVolume = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"productId"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.productId = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goodtype_id"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodtype_id = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"id"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.idStr = [NSString stringWithFormat:@"%@",value];
+       
+        
+        value = dict[@"goods_price"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goods_price = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goodsCategoryId"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodsCategoryId = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"name"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.name = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goodsSubType"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodsSubType = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"newSmallGoodsImagePath"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.nowSmallGoodsImagePath = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"subTypeId"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.subTypeId = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goodsSn"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodsSn = [NSString stringWithFormat:@"%@",value];
+        
+       
+    }
+    
+    return self;
+}
+
+
+
+@end

@@ -1,0 +1,15 @@
+//
+//  SDGoodsDetailBottomView.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  商品详情的底部按钮
+
+#import <UIKit/UIKit.h>
+#import "GoodsDetailTwoViewController.h"
+@interface SDGoodsDetailBottomView : UIView
+
+@property (nonatomic, weak) GoodsDetailTwoViewController *mainVC;
+
+@end

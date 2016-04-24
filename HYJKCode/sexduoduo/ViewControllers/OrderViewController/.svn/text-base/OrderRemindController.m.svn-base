@@ -1,0 +1,460 @@
+//
+//  OrderRemindController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-9-11.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "OrderRemindController.h"
+
+#import "JiFenShopViewController.h"
+#import <AlipaySDK/AlipaySDK.h>
+
+@interface OrderRemindController ()
+
+@end
+
+@implementation OrderRemindController
+@synthesize result = _result;
+
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        self.orderArray = [NSMutableArray arrayWithCapacity:0];
+    }
+    return self;
+}
+
+-(void)dealloc
+{
+
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    //一共三个与支付相关的类
+    m_orderViewVC=nil;
+    m_orderDetailViewVC=nil;
+    m_orderRemindViewVC=self;
+    
+    
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    [self setViewData];
+    
+    _result = @selector(paymentResult:);
+    
+    NSLog(@"sss-->%@",self.orderArray);
+    
+    if (IOS7_OR_LATER) {
+        self.navigationController.interactivePopGestureRecognizer.enabled = NO;
+    }
+    
+    AppDelegate *delegate1 = (AppDelegate*)[UIApplication sharedApplication].delegate;
+    [delegate1.tabController hidesTabBar:YES animated:YES];
+    
+    
+    
+    //请求订单列表
+    [self requestShopCarList];
+}
+
+-(void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    
+    [oprationShopCarList cancel];
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"订单提醒"];
+    
+    
+}
+
+-(void)setViewData
+{
+    if (self.payWayType == huodaofukuan) {
+        self.toPayOffBtn.hidden = YES;
+        self.payTitleLab.text = @"您的订单已生成，为了能按时收到货，请您保持电话通畅，泡泡客服会和您确认收货信息，我们将在24小时内为您发货。";
+        self.payTitleLab.font = [UIFont systemFontOfSize:14.0];
+    }else
+    {
+        if ([self.isPayOff intValue] == 0) {
+            self.payTitleLab.text = @"您的订单已生成，请及时支付";
+            self.toPayOffBtn.hidden = NO;
+        }else
+        {
+            self.payTitleLab.text = @"您已付款成功，商品整装待发";
+            self.toPayOffBtn.hidden = YES;
+            
+            
+            if (self.payWayType == zhifubao) {
+                //支付宝 ---
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                params = @{@"orderId":self.orderIdStr,@"statusCode":@"9000"};
+                
+                [self requestPaySuccessBackWithDic:params];
+            }else 
+            {
+                //微信支付---
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                params = @{@"orderId":self.orderIdStr};
+                
+                [self requestWeXinPaySuccessBackWithDic:params];
+            }
+            
+            
+        }
+
+    }
+    
+    
+    self.goodsNum.text = [NSString stringWithFormat:@"商品数量:%lu",(unsigned long)[self.orderArray count]];
+    self.payTotalFeeLab.text = [NSString stringWithFormat:@"%@",_totalPriceStr];
+    [self.orderImg sd_setImageWithURL:[PublicMethod imgWithUrl:[[self.orderArray firstObject] objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    
+    
+    
+    // 统计我的订单  -
+    NSString *totalPrice=_totalPriceStr;
+    if (totalPrice && [_totalPriceStr hasPrefix:@"总价:￥"]) {
+        totalPrice=[_totalPriceStr substringFromIndex:4];
+    }
+    NSLog(@" 价格=%@",totalPrice);
+    if (!totalPrice) {
+        totalPrice=@"";
+    }
+    NSDictionary *dict = @{@"pay_way" : [NSString stringWithFormat:@"%d",self.payWayType], @"quantity" :[NSString stringWithFormat:@"%lu",(unsigned long)self.orderArray.count], @"total_price" : totalPrice, @"channel" : [NSString stringWithFormat:@"iOS%@",Flag]};
+    [MobClick event:@"Submit_Order" attributes:dict];
+    NSLog(@"统计我的订单 %@",dict);
+}
+
+//返回
+-(void)toBackView
+{
+    
+    if (IOS7_OR_LATER) {
+        self.navigationController.interactivePopGestureRecognizer.enabled = YES;
+    }
+    
+    
+    [self.navigationController popToRootViewControllerAnimated:YES];
+    return;
+    
+    
+    //我的中心
+    for (MyCenterVC *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[MyCenterVC class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    // 购物车
+    for (ShopCarViewController *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[ShopCarViewController class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    //分类
+    for (ClassifyViewController *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[ClassifyViewController class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    // 首页
+    for (HomeViewThreeVC *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[HomeViewThreeVC class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    
+    for (JiFenShopViewController *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[JiFenShopViewController class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    
+}
+
+#pragma mark - Action
+- (IBAction)toPayOff:(id)sender {
+
+    
+    //判断是支付宝 还是微信支付
+    
+    if(self.payWayType == zhifubao)
+    {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"orderId":self.orderIdStr};
+        
+        [self requestPayOrderWithDic:params];
+    }else if(self.payWayType == weiXin)
+    {
+        if(m_appDelegate)
+        {
+            [m_appDelegate sendPayWithOrderId:self.orderIdStr];
+        }
+    }
+    
+}
+
+
+- (IBAction)toOrderDetail:(id)sender {
+    
+    OrderDetailViewController *controller = [[OrderDetailViewController alloc] initWithNibName:@"OrderDetailViewController" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    controller.orderIdStr = self.orderIdStr;
+    [self.navigationController pushViewController: controller animated:YES];
+    
+    
+}
+
+#pragma mark - 请求网络
+
+//订单支付
+-(void)requestPayOrderWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestPayOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+       
+            NSString *orderString = [responseDic objectForKey:@"datasource"];
+        
+            NSLog(@"orderString-->%@",orderString);
+            appType=ALIXPAY_RET;
+            
+            //新
+            [[AlipaySDK defaultService] payOrder:orderString fromScheme:AlipayAppScheme callback:^(NSDictionary *resultDic) {
+                NSLog(@"支付宝 支付返回参数 =%@",resultDic);
+                
+                //
+                if (resultDic[@"resultStatus"]  && [resultDic[@"resultStatus"] integerValue]==9000) {
+                    OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+                    ctr.hidesBottomBarWhenPushed = YES;
+                    ctr.orderIdStr = self.orderIdStr;
+                    ctr.isPayOff = @"1";
+                    ctr.totalPriceStr = _totalPriceStr;
+                    ctr.orderArray = self.orderArray;
+                    ctr.payWayType = zhifubao;
+                    [self.navigationController pushViewController:ctr animated:YES];
+                    
+                }else {
+                    OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+                    ctr.hidesBottomBarWhenPushed = YES;
+                    ctr.orderIdStr = self.orderIdStr;
+                    ctr.isPayOff = @"0";
+                    ctr.totalPriceStr = _totalPriceStr;
+                    ctr.orderArray = self.orderArray;
+                    ctr.payWayType = zhifubao;
+                    [self.navigationController pushViewController:ctr animated:YES];
+                }
+                
+            }];
+            
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        //        self.promptLab.text = @"请检查网络设置!";
+        //        [self showPromptLab];
+        
+    }];
+}
+
+//支付成功反馈给后台
+-(void)requestPaySuccessBackWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestPaySuccessBackWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+
+            
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        //        self.promptLab.text = @"请检查网络设置!";
+        //        [self showPromptLab];
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"orderId":self.orderIdStr,@"statusCode":@"9000"};
+        
+        [self requestPaySuccessBackWithDic:params];
+        
+        
+    }];
+}
+
+//微信支付成功向后台确认是否后台也是真实成功的
+-(void)requestWeXinPaySuccessBackWithDic:(NSDictionary *)dic
+{
+    [[MKHttpServiceEngine shareMyInstance] requestWeXinPaySuccessBackWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        //        self.promptLab.text = @"请检查网络设置!";
+        //        [self showPromptLab];
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        params = @{@"orderId":self.orderIdStr};
+        [self requestWeXinPaySuccessBackWithDic:params];
+        
+        
+    }];
+}
+
+
+//wap回调函数
+-(void)paymentResult:(NSString *)resultd
+{
+    
+
+}
+
+-(void)paymentResultDelegate:(NSString *)result
+{
+    
+    NSLog(@"--》》%d",[result intValue]);
+    //    NSArray *arrVc=self.navigationController.viewControllers;
+    
+    
+    //    if (![arrVc.lastObject isKindOfClass:[OrderRemindController class]]) {
+    OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+    ctr.hidesBottomBarWhenPushed = YES;
+    ctr.orderIdStr = self.orderIdStr;
+    ctr.isPayOff = result;  //判断支付是否成功
+    ctr.totalPriceStr = _totalPriceStr;
+    ctr.orderArray = self.orderArray;
+    
+    if(appType == ALIXPAY_RET)
+    {
+        ctr.payWayType = zhifubao;
+    }else if(appType == WEXin_AliPay)//微信支付
+    {
+        ctr.payWayType = weiXin;
+    }
+    [self.navigationController pushViewController:ctr animated:YES];
+    
+    //    }
+    
+}
+
+
+#pragma mark -
+#pragma ShopCarRequest  购物车
+
+-(void)requestShopCarList
+{
+    NSDictionary *params = [[NSDictionary alloc]init];
+    if (ISLOGIN) {
+        params = @{@"userId":USERID,@"pageApp":@"1",@"pageSizeApp":@"100"};
+    }else
+        params = @{@"userId":@"",@"pageApp":@"1",@"pageSizeApp":@"100",@"imiestatus":@"0",@"imie":DEVICEUUID};
+    
+    
+    oprationShopCarList=[[MKHttpServiceEngine shareMyInstance] requestShopCarListWithDic:params completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"购物车-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue]) {
+            
+            
+            NSString * messageNum= [NSString stringWithFormat:@"%d",(int)[[responseDic objectForKey:@"datasource"] count]];
+            
+            [[ShopCarObj shareInstance] setShopCarDataArray:[responseDic objectForKey:@"datasource"]];
+            
+            
+            NSDictionary *dic=@{@"messageNum":[NSString stringWithFormat:@"%@",messageNum]};
+            [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_SHOPCARMESSAGE object:nil userInfo:dic];
+        }else
+        {
+            
+            NSMutableArray *arr=[NSMutableArray array];
+            [[ShopCarObj shareInstance] setShopCarDataArray:arr];
+            
+            NSDictionary *dic=@{@"messageNum":[NSString stringWithFormat:@"0"]};
+            [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_SHOPCARMESSAGE object:nil userInfo:dic];
+        }
+        
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        
+        
+    }];
+}
+
+
+
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

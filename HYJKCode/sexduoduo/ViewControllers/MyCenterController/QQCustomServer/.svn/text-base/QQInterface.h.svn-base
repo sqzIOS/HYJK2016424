@@ -1,0 +1,33 @@
+//
+//  QQInterface.h
+//  yueyue
+//  QQ空间及QQSDK接口
+//  Created by chw on 13-7-3.
+//  Copyright (c) 2013年 chw. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import <TencentOpenAPI/TencentOAuth.h>
+#import "TencentOpenAPI/QQApiInterface.h"
+
+@interface QQInterface : NSObject<TencentSessionDelegate, QQApiInterfaceDelegate>
+{
+    NSArray *permissions;
+}
+@property (nonatomic, strong) TencentOAuth* tencentOAuth;
+
++ (id)shareInstance;
+- (BOOL)isQZoneAuthValid;
+- (void)shareToQZoneWithString:(NSString*)string songURL:(NSString*)url imageURL:(NSString*)image;
+- (void)shareToQQWithSongURL:(NSURL*)url songName:(NSString*)name singer:(NSString*)singer image:(NSData*)image;
+-(void)shareToQQwithContentText;
+
+- (void)login;
+
+- (void)onOpenWPA:(NSString *)sender;//发起临时会话
+
+
+//批量监测qq是否在线
+- (void)getQQUinOnlineStatuesWithArray:(NSArray *)senderArr delegate:(id<QQApiInterfaceDelegate>)delegate;
+- (void)getQQUinOnlineStatues:(NSString *)sender;//获得qq的在线状态 cell里面逐个监测 只返回第一个
+@end

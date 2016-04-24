@@ -1,0 +1,27 @@
+//
+//  SDInteractiveRecordModel.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPublicModel.h"
+
+@interface SDInteractiveRecordModel : SDPublicModel
+
+@property (nonatomic, strong) NSString *address;
+
+@property (nonatomic, strong) NSString *age;
+
+@property (nonatomic, strong) NSString *avatar;
+
+@property (nonatomic, strong) NSString *gender;
+
+@property (nonatomic, strong) NSString *grade;
+
+@property (nonatomic, strong) NSString *nickName;
+
+@property (nonatomic, strong) NSString *userId;
+
+@end

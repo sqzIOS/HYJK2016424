@@ -1,0 +1,14 @@
+//
+//  BBSLevelRuleViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-11-20.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  论坛经验值及积分规则
+
+#import <UIKit/UIKit.h>
+
+@interface BBSLevelRuleViewController : UIViewController
+
+
+@end

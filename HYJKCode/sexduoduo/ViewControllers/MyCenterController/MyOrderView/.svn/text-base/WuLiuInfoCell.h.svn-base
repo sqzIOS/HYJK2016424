@@ -1,0 +1,26 @@
+//
+//  WuLiuInfoCell.h
+//  sexduoduo
+//
+//  Created by sqz on 14-12-15.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface WuLiuInfoCell : UITableViewCell
+
+@property (strong, nonatomic) IBOutlet UIImageView *upImage;
+@property (strong, nonatomic) IBOutlet UIImageView *downImage;
+
+
+@property (strong, nonatomic) IBOutlet UILabel *timeLab1;
+@property (strong, nonatomic) IBOutlet UILabel *timeLab2;
+@property (strong, nonatomic) IBOutlet UILabel *detailTextLab;
+
+
+
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row;
+
+@end

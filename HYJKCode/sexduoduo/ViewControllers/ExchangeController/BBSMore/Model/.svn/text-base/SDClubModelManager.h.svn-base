@@ -1,0 +1,26 @@
+//
+//  SDClubModelManager.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/11.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "ClubingModel.h"
+@interface SDClubModelManager : NSObject<NSCoding>
+
+@property (nonatomic, strong) NSMutableArray *dataArray;
+@property (nonatomic, assign) NSInteger countUserForJudgeChange;
+
++ (instancetype)shareInstance;
+
+//缓存下来dataArray
+-(void)cacheDataArray;
+
+-(void)getDataBlock:(void(^)(void))successBlock errorBlock:(void(^)(void)) errorBlock;
+
++(void)addForumWithId:(NSString *)forumId success:(void(^)(void))successBlock errorBlock:(void(^)(void))errorBlock;
++(void)deleteForumWithId:(NSString *)forumId success:(void(^)(void))successBlock errorBlock:(void(^)(void))errorBlock;
+
+@end

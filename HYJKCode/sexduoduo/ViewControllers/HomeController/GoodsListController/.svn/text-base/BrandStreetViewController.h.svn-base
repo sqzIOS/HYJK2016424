@@ -1,0 +1,20 @@
+//
+//  BrandStreetViewController.h
+//  sexduoduo
+//
+//  Created by dsz on 15-1-27.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  品牌街
+
+#import <UIKit/UIKit.h>
+#import "NoNetworkView.h"
+
+@interface BrandStreetViewController : UIViewController<NoNetworkViewProtocol>
+
+@property (strong, nonatomic) IBOutlet UIScrollView *scView;
+
+
+@property (strong, nonatomic) NSMutableArray *dataArray;
+
+@property (strong, nonatomic) NoNetworkView *noNetworkView;
+@end

@@ -1,0 +1,102 @@
+//
+//  SDDiscountCell.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/20.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDDiscountCell.h"
+#import "SDDiscountObj.h"
+@implementation SDDiscountCell
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+-(void)loadWithModel:(id)obj;
+{
+    SDDiscountObj *model = obj;
+    
+    self.priceLab.text=[NSString stringWithFormat:@"%@",model.amount];
+    self.discountContentLab.text = [NSString stringWithFormat:@"满%@元可用",model.conditions];
+    
+    if (model.startDate && model.endDate) {
+        self.discountTimeLab.text = [NSString stringWithFormat:@"%@--%@",[NSDate dateFromLongLong:model.startDate dateFormat:@"yyyy-MM-dd"],[NSDate dateFromLongLong:model.endDate dateFormat:@"yyyy-MM-dd"]];
+    }else self.discountTimeLab.text = @"永久有效";
+    
+    
+    if ([model.isUsed intValue] == 0) {//有效
+        
+        //蓝色
+//        self.customBgView.image = UIImageByName(@"SDCouponsBlue");
+//        self.priceLab.textColor = UICOLOR_RGB(115, 180, 223);
+//        self.priceUnitLab.textColor = UICOLOR_RGB(115, 180, 223);
+        //红色
+        self.customBgView.image = UIImageByName(@"SDCouponsRed");
+        self.priceLab.textColor = UICOLOR_RGB(229, 115, 149);
+        self.priceUnitLab.textColor = UICOLOR_RGB(229, 115, 149);
+        
+    }else if([model.isUsed intValue] == 1)//已使用
+    {        
+        self.customBgView.image = UIImageByName(@"SDCouponsGray");
+        self.priceLab.textColor = UICOLOR_RGB(165, 165, 165);
+        self.priceUnitLab.textColor = UICOLOR_RGB(165, 165, 165);
+        
+        self.discountTimeLab.text =@"已使用";
+        
+    }else if([model.isUsed intValue] == 2)//已过期
+    {
+        self.customBgView.image = UIImageByName(@"SDCouponsGray");
+        self.priceLab.textColor = UICOLOR_RGB(165, 165, 165);
+        self.priceUnitLab.textColor = UICOLOR_RGB(165, 165, 165);
+        
+        self.discountTimeLab.text =@"已过期";
+
+    }
+    
+    
+}
+
+//测试使用
+-(void)loadWithDic:(id)dic;
+{
+    static int index =0;
+    
+    if (index%3==0) {
+        
+        self.customBgView.image = UIImageByName(@"SDCouponsBlue");
+        self.priceLab.textColor = UICOLOR_RGB(115, 180, 223);
+        self.priceUnitLab.textColor = UICOLOR_RGB(115, 180, 223);
+        
+    
+    }else if(index%3 == 1)
+    {
+        self.customBgView.image = UIImageByName(@"SDCouponsRed");
+        self.priceLab.textColor = UICOLOR_RGB(229, 115, 149);
+        self.priceUnitLab.textColor = UICOLOR_RGB(229, 115, 149);
+    }else if(index%3 == 2)
+    {
+        self.customBgView.image = UIImageByName(@"SDCouponsGray");
+        self.priceLab.textColor = UICOLOR_RGB(165, 165, 165);
+        self.priceUnitLab.textColor = UICOLOR_RGB(165, 165, 165);
+    }
+    
+    
+    index++;
+}
+
++(CGFloat)getCellHeight;
+{
+    return QZMake(145);
+}
+
+
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

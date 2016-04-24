@@ -1,0 +1,17 @@
+//
+//  DayRankingController.h
+//  
+//
+//  Created by sqz on 15/12/1.
+//
+//
+
+#import <UIKit/UIKit.h>
+#import "RankingBaseViewController.h"
+
+@interface DayRankingController : RankingBaseViewController
+
+@property (nonatomic,copy) NSString *bgImage;
+@property (nonatomic,copy) NSString *titleImage;
+
+@end

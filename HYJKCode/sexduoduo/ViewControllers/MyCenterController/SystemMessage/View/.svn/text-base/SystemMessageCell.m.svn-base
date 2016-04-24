@@ -1,0 +1,156 @@
+//
+//  SystemMessageCell.m
+//  
+//
+//  Created by apple on 15/12/7.
+//
+//
+
+#import "SystemMessageCell.h"
+#import "ShareFunction.h"
+#import "SystemMessageModel.h"
+#import "DetailButton.h"
+
+#define MainScreenSize [UIScreen mainScreen].bounds.size
+#define Color(r,g,b) [UIColor colorWithRed:r/255.0 green:g/255.0 blue:b /255.0 alpha:1]
+
+
+@interface SystemMessageCell ()
+
+@property (nonatomic,weak) UILabel *timeLabel;
+@property (nonatomic,weak) UILabel *contentLabel;
+@property (nonatomic,weak) UILabel *titleLabel;
+@property (nonatomic,weak) UIImageView *iconView;
+
+
+@end
+
+
+@implementation SystemMessageCell
+
+
+
++ (instancetype)systemMessageCellWithModel:(SystemMessageModel *)model inTableView:(UITableView *)tableView
+{
+    // 创建cell
+    NSString *ID = @"cell";
+    SystemMessageCell *cell = [tableView dequeueReusableCellWithIdentifier:ID];
+    if (cell == nil) {
+        cell = [[SystemMessageCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
+        [cell setContent];
+    }
+    
+    // 设置数据
+    // 时间
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:model.releaseTime / 1000];
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"yyyy-MM-dd HH:mm"];
+    NSString *time = [dateFormatter stringFromDate:date];
+    cell.timeLabel.text = time;
+    
+    
+    // 内容
+    NSMutableAttributedString *contentText = [[NSMutableAttributedString alloc] initWithString:[NSMutableString stringWithString:model.content]];
+    NSMutableParagraphStyle *style = [[NSMutableParagraphStyle alloc] init];
+    [style setLineSpacing:QZMake(8)];
+    [contentText addAttribute:NSParagraphStyleAttributeName value:style range:NSMakeRange(0, model.content.length)];
+    cell.contentLabel.attributedText = contentText;
+
+    
+    // 图标 和 title
+    NSString *titleText;
+    NSString *imageName;
+    if ([model.scene isEqual:@"2"]) {
+        imageName = @"sysmsg_ic_luntan";
+        titleText = [NSString stringWithFormat:@"帖子 %@", model.title];
+    } else {
+        imageName = @"sysmsg_ic_shop";
+        titleText = [NSString stringWithFormat:@"商品 %@", model.title];
+    }
+    cell.iconView.image = [UIImage imageNamed:imageName];
+    cell.titleLabel.text = titleText;
+    
+    return cell;
+}
+
+- (void)setContent
+{
+    self.contentView.backgroundColor = Color(220, 220, 220);
+    
+    // timeLable
+    UILabel *timeLabel = [[UILabel alloc] init];
+    timeLabel.textColor = Color(102, 102, 102);
+    timeLabel.font = [UIFont systemFontOfSize:QZMake(12)];
+    timeLabel.textAlignment = NSTextAlignmentCenter;
+    [self.contentView addSubview:timeLabel];
+    self.timeLabel = timeLabel;
+
+    
+    // whiteView
+    UIView *whiteView = [[UIView alloc] init];
+    whiteView.backgroundColor = [UIColor whiteColor];
+    whiteView.layer.cornerRadius = QZMake(7);
+    whiteView.clipsToBounds = YES;
+    [self.contentView addSubview:whiteView];
+    
+    // iconView
+    UIImageView *iconView = [[UIImageView alloc] init];
+    self.iconView = iconView;
+    iconView.backgroundColor = [UIColor grayColor];
+    iconView.layer.cornerRadius = QZMake(22.25);
+    iconView.clipsToBounds = YES;
+    [whiteView addSubview:iconView];
+
+    // contentLabel
+    UILabel *contentLabel = [[UILabel alloc] init];
+    contentLabel.font = [UIFont systemFontOfSize:QZMake(14)];
+    contentLabel.textAlignment = NSTextAlignmentCenter;
+    contentLabel.numberOfLines = 0;
+    self.contentLabel = contentLabel;
+    [whiteView addSubview:contentLabel];
+
+    // titleLabel
+    UILabel *titleLabel = [[UILabel alloc] init];
+    titleLabel.font = [UIFont systemFontOfSize:QZMake(15)];;
+    [whiteView addSubview:titleLabel];
+    titleLabel.textColor = Color(137, 58, 104);
+    self.titleLabel = titleLabel;
+
+    // showDetailBtn
+    DetailButton *showDetailBtn = [DetailButton button];
+    [whiteView addSubview:showDetailBtn];
+    [showDetailBtn addTarget:self action:@selector(showDetailBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    showDetailBtn = showDetailBtn;
+    
+    // 白色线条
+    UIView *line = [[UIView alloc] init];
+    line.backgroundColor = Color(227, 227, 227);
+    [whiteView addSubview:line];
+    
+    
+    // 设置frame
+    self.timeLabel.frame = CGRectMake(0, 0, MainScreenSize.width, QZMake(34));
+    
+    whiteView.frame = CGRectMake(QZMake(10), CGRectGetMaxY(self.timeLabel.frame), MainScreenSize.width - 2 * QZMake(10), QZMake(119.5));
+    
+    self.iconView.frame = CGRectMake(QZMake(13), QZMake(20), QZMake(44.5), QZMake(44.5));
+    
+    self.contentLabel.frame = CGRectMake(CGRectGetMaxX(self.iconView.frame) + QZMake(9.5), CGRectGetMinY(self.iconView.frame),whiteView.frame.size.width - QZMake(90.5), QZMake(50));
+    
+    self.titleLabel.frame = CGRectMake(CGRectGetMinX(self.iconView.frame), CGRectGetMaxY(self.iconView.frame) + QZMake(21), QZMake(243) , QZMake(34));
+    
+    showDetailBtn.frame = CGRectMake(CGRectGetMaxX(self.titleLabel.frame), CGRectGetMinY(self.titleLabel.frame), whiteView.frame.size.width - self.titleLabel.frame.size.width - QZMake(31), QZMake(34));
+    
+    line.frame = CGRectMake(QZMake(13), CGRectGetMinY(titleLabel.frame) - 1, whiteView.frame.size.width - QZMake(40), 1);
+}
+
+
+- (void)showDetailBtnClick
+{
+    
+    if ([self.delegate respondsToSelector:@selector(systemMessageCellShowDetailBtnClick)]) {
+        [self.delegate systemMessageCellShowDetailBtnClick];
+    }
+}
+
+@end

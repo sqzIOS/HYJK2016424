@@ -1,0 +1,19 @@
+//
+//  HomeThreeView_Top.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/3.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+#import "HomeThreeView.h"
+
+@interface HomeThreeView_Top : HomeThreeView
+
+-(instancetype )init;
+-(void)reset;
+-(void)resetFrame;
+
+@end

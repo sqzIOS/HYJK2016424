@@ -1,0 +1,27 @@
+//
+//  ClubingCell.h
+//  
+//
+//  Created by apple on 15/12/10.
+//
+//
+
+#import <UIKit/UIKit.h>
+
+@class ClubingForumModel,ClubingCell;
+
+@protocol ClubingCellDelegate <NSObject>
+
+- (void)clubingCellAssociatedBtnClickInCell:(ClubingCell *)cell;
+
+@end
+
+@interface ClubingCell : UITableViewCell
+
+@property (nonatomic,strong) ClubingForumModel *model;
+@property (nonatomic,copy) NSString *host;
+@property (nonatomic,weak) id<ClubingCellDelegate> delegate;
+
++ (instancetype)clubingCellWithModel:(ClubingForumModel *)model inTableView:(UITableView *)tableView;
+
+@end

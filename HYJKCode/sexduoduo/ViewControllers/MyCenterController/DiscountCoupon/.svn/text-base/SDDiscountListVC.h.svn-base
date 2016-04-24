@@ -1,0 +1,31 @@
+//
+//  SDDiscountListVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/20.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  优惠券列表
+
+#import <UIKit/UIKit.h>
+#import "SDMainVC.h"
+
+typedef void (^SelectDiscountBlock)(id responseObject);
+
+typedef enum
+{
+    SDDiscountMyList = 0,
+    SDDiscountCanUse,
+    
+} DiscountType;
+
+@interface SDDiscountListVC : SDMainVC
+
+
+@property (strong,nonatomic)NSString *totalPrcie;//当是可用优惠劵时 需要传金额参数
+@property (assign ,nonatomic)DiscountType type;
+
+@property (copy ,nonatomic)SelectDiscountBlock selectDiscountBlock;
+
+-(void)setDiscountSelectReturnBlock:(SelectDiscountBlock)myBlock;
+
+@end

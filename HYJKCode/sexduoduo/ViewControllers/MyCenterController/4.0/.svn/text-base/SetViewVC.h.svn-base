@@ -1,0 +1,29 @@
+//
+//  SetViewVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  4.0之后高级设置
+
+#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
+#import "MobClick.h"
+#import "InstructionViewController.h"
+#import "SDImageCache.h"
+#import "MBProgressHUD.h"
+#import "AppRecommendViewController.h"
+#import "ProtocolViewController.h"
+
+@interface SetViewVC : UIViewController<UITableViewDataSource,UITableViewDelegate>
+{
+    NSString *updatePath;
+}
+
+@property (strong, nonatomic) UITableView *setTableView ;
+@property (strong, nonatomic) NSArray *listAry;
+@property (strong, nonatomic) NSArray *imageArr;//图片数组
+@property(retain, nonatomic) MBProgressHUD *HUD;
+
+
+@end

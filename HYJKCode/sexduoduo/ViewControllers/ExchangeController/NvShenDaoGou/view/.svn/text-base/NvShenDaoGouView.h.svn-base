@@ -1,0 +1,13 @@
+//
+//  NvShenDaoGouView.h
+//  sexduoduo
+//
+//  Created by dsz on 15-1-26.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface NvShenDaoGouView : UIView
+
+@end

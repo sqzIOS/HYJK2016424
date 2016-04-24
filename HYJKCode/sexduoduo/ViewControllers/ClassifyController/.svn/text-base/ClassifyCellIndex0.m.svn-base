@@ -1,0 +1,51 @@
+//
+//  ClassifyCellIndex0.m
+//  sexduoduo
+//
+//  Created by dsz on 15-4-15.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "ClassifyCellIndex0.h"
+
+@implementation ClassifyCellIndex0
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row
+{
+
+    self.goodBtn.tag = row * 2;
+    
+    self.goodBtn.adjustsImageWhenHighlighted = NO;
+    
+    if (judgeUrlIsHave(arry[0],@"newAdlogoPath")) {
+        NSURL * url = [NSURL URLWithString:arry[0][@"newAdlogoPath"]];
+        
+        [self.goodBtn sd_setBackgroundImageWithURL:url forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    }else
+    {
+        NSURL * url = [PublicMethod imgWithUrl:arry[0][@"adlogoPath"]];
+        
+        [self.goodBtn sd_setBackgroundImageWithURL:url forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    }
+    
+    
+    
+        
+
+    
+}
+- (IBAction)btnClick:(id)sender {
+    UIButton *btn = (UIButton *)sender;
+    btn.adjustsImageWhenHighlighted = NO;
+    [self.delegate firstCellGoodsBtnClick:btn.tag];
+}
+@end

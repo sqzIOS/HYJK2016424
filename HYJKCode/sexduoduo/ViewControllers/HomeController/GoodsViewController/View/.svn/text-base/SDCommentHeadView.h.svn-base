@@ -1,0 +1,23 @@
+//
+//  SDCommentHeadView.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/31.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  商品评论的头部
+
+#import <UIKit/UIKit.h>
+
+@interface SDCommentHeadView : UIView
+
+@property (strong, nonatomic)  CRatingView *zlStarView;//质量
+@property (strong, nonatomic)  CRatingView *tdStarView;//态度
+@property (strong, nonatomic)  CRatingView *sdStarView;//速度
+
+@property (strong, nonatomic)  CRatingView *zhStarView;
+@property (strong, nonatomic)  UILabel *zhLab;//综合
+@property (strong, nonatomic)  UILabel *zlLab;//质量
+@property (strong, nonatomic)  UILabel *tdLab;//态度
+@property (strong, nonatomic)  UILabel *sdLab;//速度
+
+@end

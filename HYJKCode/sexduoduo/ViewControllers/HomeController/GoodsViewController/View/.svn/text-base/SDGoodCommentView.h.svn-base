@@ -1,0 +1,29 @@
+//
+//  SDGoodCommentView.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  商品详情中 用户评价View
+
+#import <UIKit/UIKit.h>
+
+@interface SDGoodCommentView : UIView
+
+
+@property (nonatomic, strong)  CRatingView *pfStarView ;
+@property (strong, nonatomic)  UIImageView *imgView;//头像
+@property (strong, nonatomic)  UILabel *nameLab;//名称
+@property (strong, nonatomic)  UILabel *desLab;//描述
+@property (strong, nonatomic)  UILabel *timeLab;//time
+
+@property (nonatomic, assign)  UIViewController *mainVC;
+@property (strong, nonatomic) NSString *goodsId;//商品ID
+
+
+-(instancetype)initWithDic:(NSDictionary *)datasourceDic;
+
+
+
+
+@end

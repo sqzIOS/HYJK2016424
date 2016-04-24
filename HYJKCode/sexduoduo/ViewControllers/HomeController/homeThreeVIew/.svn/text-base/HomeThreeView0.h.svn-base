@@ -1,0 +1,29 @@
+//
+//  HomeThreeView0.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/6.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeThreeView.h"
+
+@interface HomeThreeView0 : HomeThreeView
+
+@property (strong, nonatomic)  UIButton *btn1;
+
+@property (strong, nonatomic)  UIButton *btn2;
+
+@property (strong, nonatomic)  UIButton *btn3;
+
+@property (nonatomic, strong) NSString *countDownStr;//倒计时
+@property (nonatomic, assign) int countDown;
+@property (strong, nonatomic) UILabel *countLabel;
+
+
+
+-(void)reset;
+-(instancetype)init;
+-(CGFloat)getViewHeight;
+
+@end

@@ -1,0 +1,30 @@
+//
+//  SDNearPeoplesVC.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  附近的人, 附近的帖
+
+#import <UIKit/UIKit.h>
+
+typedef enum {
+    PeopleType = 0, //附近的人
+    PostType,      //附近的帖
+}SDNearType;
+
+@interface SDNearPeoplesVC : UIViewController
+
+@property (nonatomic, strong) NSString *gender; //性别
+
+@property (nonatomic, strong) NSString *ahead;  //时间
+
+@property (nonatomic, assign) BOOL isNextPage;                      //是否有下一页
+
+@property (nonatomic) SDNearType type;
+
+@property (strong, nonatomic) IBOutlet UIView *unDataView;  //没有数据时显示
+
+- (instancetype)initWithType:(SDNearType)type;
+
+@end

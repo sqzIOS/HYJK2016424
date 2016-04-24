@@ -1,0 +1,41 @@
+//
+//  BBSDetailNewViewController.h
+//  sexduoduo
+//
+//  Created by dsz on 15-2-10.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  帖子详情
+
+#import <UIKit/UIKit.h>
+#import "UIScrollView+SVInfiniteScrolling.h"
+#import "BBSDetailCell.h"
+#import "NoNetworkView.h"
+
+@interface BBSDetailNewViewController : UIViewController<UITableViewDelegate,UITableViewDataSource,NoNetworkViewProtocol>
+{
+    NSInteger pageIndex;
+    
+    GoTopView *goTopView;
+    
+    MKNetworkOperation *opration;
+}
+
+@property (strong, nonatomic) NoNetworkView *noNetworkView;
+
+@property (strong, nonatomic) UILabel *promptLab;
+@property (strong, nonatomic) UITableView *bbsDetailTableView;
+@property (strong, nonatomic) NSMutableArray *commentArray;
+
+@property (strong, nonatomic) NSDictionary *detailDic;
+@property (strong, nonatomic) NSMutableArray *bbsDataArr;
+@property (nonatomic, strong) NSMutableArray *bbsHotDataArr;
+
+@property (strong, nonatomic) NSString *forumId;//分类id
+@property (strong, nonatomic) NSString *topicId;//帖子id
+
+@property (assign,nonatomic)BOOL isZhiDingTie;// 是否是置顶帖
+@property (strong ,nonatomic) NSMutableArray *contentLabAndImageArr;
+
+@property (assign,nonatomic)BOOL isBackToJumpBBS;//  一般只在首页的帖子使用  该帖子返回时使tabBar切换到BBS板块
+
+@end

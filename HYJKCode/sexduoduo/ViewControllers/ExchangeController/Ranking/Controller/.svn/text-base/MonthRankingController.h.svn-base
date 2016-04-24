@@ -1,0 +1,14 @@
+//
+//  TotalRankingController.h
+//  
+//
+//  Created by sqz on 15/12/1.
+//
+//
+
+#import <UIKit/UIKit.h>
+#import "RankingBaseViewController.h"
+
+@interface MonthRankingController : RankingBaseViewController
+
+@end

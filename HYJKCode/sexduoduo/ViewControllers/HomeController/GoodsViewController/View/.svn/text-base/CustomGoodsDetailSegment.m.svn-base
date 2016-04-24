@@ -1,0 +1,170 @@
+//
+//  CustomGoodsDetailSegment.m
+//  sexduoduo
+//
+//  Created by dsz on 15-5-7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "CustomGoodsDetailSegment.h"
+
+@implementation CustomGoodsDetailSegment
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+-(id)initWithBlock:(CustomGoodsDetailSegmentClickIndex )clickBlock
+{
+    viewHeight=45;
+    
+    self= [self init];
+    
+    self.btnClickBlock = clickBlock;
+    
+    
+    return self;
+}
+
+
+-(id)init
+{
+    if (self=[super init]) {
+        
+        self.backgroundColor=WHITE_COLOR;
+        
+        //各选项按钮
+        detailBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        detailBtn.tag = 1;
+        detailBtn.frame = CGRectMake(0, 0, SCREEN_WIDTH/3., viewHeight);
+        [detailBtn setTitle:@"详情" forState:UIControlStateNormal];
+        [detailBtn.titleLabel setFont:[UIFont fontWithName:k_Font size:14]];
+        [detailBtn setTitleColor:GRAY_COLOR forState:UIControlStateNormal];
+        [detailBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateSelected];
+        detailBtn.selected=YES;
+        [detailBtn addTarget:self action:@selector(buttonClicked:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:detailBtn];
+        
+        
+        UIView *bg1=[[UIView alloc] init];
+        bg1.backgroundColor =  [UIColor colorWithWhite:0.8 alpha:1];
+        bg1.frame = CGRectMake(0, 0, 1, 20);
+        bg1.center = CGPointMake(SCREEN_WIDTH/3.-0.5, viewHeight/2.);
+        [self addSubview:bg1];
+        
+        
+        pingJiaBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        pingJiaBtn.tag = 2;
+        pingJiaBtn.frame = CGRectMake(SCREEN_WIDTH *1/3., 0, SCREEN_WIDTH/3.,viewHeight );
+        [pingJiaBtn setTitle:@"评价" forState:UIControlStateNormal];
+        [pingJiaBtn.titleLabel setFont:[UIFont fontWithName:k_Font size:14]];
+        [pingJiaBtn setTitleColor:GRAY_COLOR forState:UIControlStateNormal];
+        [pingJiaBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateSelected];
+        [pingJiaBtn addTarget:self action:@selector(buttonClicked:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:pingJiaBtn];
+        
+        UIView *bg2=[[UIView alloc] init];
+        bg2.backgroundColor = [UIColor colorWithWhite:0.8 alpha:1];
+        bg2.frame = CGRectMake(0, 0, 1, 20);
+        bg2.center = CGPointMake(SCREEN_WIDTH* 2/3.-0.5, viewHeight/2.);
+        [self addSubview:bg2];
+        
+        tuiJianBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        tuiJianBtn.tag = 3;
+        tuiJianBtn.frame = CGRectMake(SCREEN_WIDTH *2/3., 0,SCREEN_WIDTH/3., viewHeight);
+        [tuiJianBtn setTitle:@"商品推荐" forState:UIControlStateNormal];
+        [tuiJianBtn.titleLabel setFont:[UIFont fontWithName:k_Font size:14]];
+        [tuiJianBtn setTitleColor:GRAY_COLOR forState:UIControlStateNormal];
+        [tuiJianBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateSelected];
+        [tuiJianBtn addTarget:self action:@selector(buttonClicked:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:tuiJianBtn];
+        
+        
+        
+        selectedView = [[UIView alloc] init];
+        selectedView.backgroundColor = NAV_RED_COLOR;
+        selectedView.frame = CGRectMake(0, 32, 34-4, 1);
+        selectedView.center = CGPointMake(SCREEN_WIDTH/3./2., 32.5);
+        [self addSubview:selectedView];
+        
+        
+        _selectedSegmentIndex = 0;
+    }
+    
+    return self;
+}
+
+
+-(void)buttonClicked:(UIButton*)button
+{
+    if (_selectedSegmentIndex+1 == button.tag)
+        return;
+  
+    _selectedSegmentIndex = (int)button.tag-1;
+    
+    switch (_selectedSegmentIndex) {
+        case 0:
+        {
+          
+            selectedView.frame = CGRectMake(0,0, 34-4, 1);
+            selectedView.center = CGPointMake(SCREEN_WIDTH/3./2., 32.5);
+            
+            detailBtn.selected=YES;
+            pingJiaBtn.selected=NO;
+            tuiJianBtn.selected=NO;
+            
+        }
+            break;
+        case 1:
+        {
+        
+            selectedView.frame = CGRectMake(0, 0, 34-4, 1);
+            selectedView.center = CGPointMake(SCREEN_WIDTH/3. +  SCREEN_WIDTH/3./2., 32.5);
+            
+            detailBtn.selected=NO;
+            pingJiaBtn.selected=YES;
+            tuiJianBtn.selected=NO;
+        }
+            break;
+        case 2:
+        {
+          
+            selectedView.frame = CGRectMake(0, 0, 61-4, 1);
+            selectedView.center = CGPointMake(SCREEN_WIDTH*2/3. +  SCREEN_WIDTH/3./2., 32.5);
+            
+            detailBtn.selected=NO;
+            pingJiaBtn.selected=NO;
+            tuiJianBtn.selected=YES;
+        }
+            break;
+        default:
+        {
+            selectedView.frame = CGRectMake(48+2, 32, 34-4, 1);
+        }
+            break;
+    }
+    
+    
+    self.btnClickBlock(_selectedSegmentIndex);
+    
+//    [self setNeedsDisplay];
+}
+
+
+-(void)setSelectedSegmentIndex:(int)selectedSegmentIndex
+{
+    
+    
+    UIButton *btn=[UIButton new];
+    btn.tag=selectedSegmentIndex+1;
+    [self buttonClicked:btn];
+    
+    _selectedSegmentIndex =selectedSegmentIndex;
+}
+
+
+@end

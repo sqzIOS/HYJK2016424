@@ -1,0 +1,19 @@
+//
+//  BBSUserInfo.h
+//  sexduoduo
+//
+//  Created by dsz on 15-3-12.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface BBSUserInfo : NSObject
+
+@property (strong, nonatomic) NSDictionary *userInfo;
+
+
+-(void)requestExchangeUserInfo;
+
+@end
+

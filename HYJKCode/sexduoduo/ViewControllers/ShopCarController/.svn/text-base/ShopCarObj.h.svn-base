@@ -1,0 +1,22 @@
+//
+//  ShopCarObj.h
+//  sexduoduo
+//
+//  Created by dsz on 15-4-10.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+typedef void (^ShopCarObjReponse)(id responseObject);
+
+@interface ShopCarObj : NSObject
+
+@property (strong, nonatomic)NSMutableArray *shopCarDataArray;
+@property (assign, nonatomic)int shopGoodsNum;
+
++(id)shareInstance;
+
+
+
+@end

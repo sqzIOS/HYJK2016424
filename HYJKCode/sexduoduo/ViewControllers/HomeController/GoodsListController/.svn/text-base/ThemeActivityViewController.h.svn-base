@@ -1,0 +1,87 @@
+//
+//  ThemeActivityViewController.h
+//  sexduoduo
+//
+//  Created by dsz on 15-2-2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  年终活动
+
+#import <UIKit/UIKit.h>
+
+@interface ThemeActivityViewController : UIViewController<UIScrollViewDelegate>
+
+
+@property (strong, nonatomic) IBOutlet UIScrollView *scView;
+
+
+@property (strong, nonatomic) IBOutlet UIButton *btn1;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn2;
+@property (strong, nonatomic) IBOutlet UIButton *btn3;
+@property (strong, nonatomic) IBOutlet UIButton *btn4;
+@property (strong, nonatomic) IBOutlet UIButton *btn5;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn6;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn7;
+@property (strong, nonatomic) IBOutlet UIButton *btn8;
+@property (strong, nonatomic) IBOutlet UIButton *btn9;
+@property (strong, nonatomic) IBOutlet UIButton *btn10;
+@property (strong, nonatomic) IBOutlet UIButton *btn11;
+@property (strong, nonatomic) IBOutlet UIButton *btn12;
+
+
+@property (strong, nonatomic) IBOutlet UIButton *btn13;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn14;
+
+
+
+@property (strong, nonatomic) IBOutlet UIButton *btn15;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn16;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn17;
+@property (strong, nonatomic) IBOutlet UIButton *btn18;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn19;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn20;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn21;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn22;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn23;
+
+@property (strong, nonatomic) IBOutlet UIButton *btn24;
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *bgImageView1;
+@property (strong, nonatomic) IBOutlet UIImageView *bgImageView2;
+@property (strong, nonatomic) IBOutlet UIImageView *bgImageView3;
+
+@property (strong, nonatomic) IBOutlet UIButton *bottomBtn1;
+@property (strong, nonatomic) IBOutlet UIButton *bottomBtn2;
+@property (strong, nonatomic) IBOutlet UIButton *bottomBtn3;
+
+@property (weak, nonatomic) IBOutlet UIButton *bottomBtn4;
+
+
+@property (strong, nonatomic) IBOutlet UIView *bottonView;
+
+
+@property (strong, nonatomic)NSMutableArray *homeGoodsArray;
+
+//自己加颜色的三个view
+@property (weak, nonatomic) IBOutlet UIView *bodyColorView1;
+@property (weak, nonatomic) IBOutlet UIView *bodyColorView2;
+@property (weak, nonatomic) IBOutlet UIView *bodyColorView3;
+
+
+
+@property (strong, nonatomic)NSString *nameStr;
+
+
+
+@end

@@ -1,0 +1,36 @@
+//
+//  SDSetTimeModel.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/1.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  抢购时间段
+
+#import "SDSetTimeModel.h"
+
+@implementation SDSetTimeModel
+
+- (instancetype)initWithDict:(NSDictionary  *)dict {
+    
+    if (self = [super init]) {
+        
+        id value = nil;
+        
+        value = dict[@"id"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.timeId = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"label"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.label = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"time"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.time = [NSString stringWithFormat:@"%@",value];
+            
+    }
+    
+    return self;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+}
+
+@end

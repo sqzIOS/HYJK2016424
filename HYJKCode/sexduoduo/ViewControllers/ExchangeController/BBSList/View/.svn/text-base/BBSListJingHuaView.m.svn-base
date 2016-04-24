@@ -1,0 +1,189 @@
+//
+//  BBSListJingHuaView.m
+//  sexduoduo
+//
+//  Created by sqz on 14-9-5.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSListJingHuaView.h"
+#import "BBSDetailNewViewController.h"
+CGFloat distance_y=15;
+@implementation BBSListJingHuaView
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
+-(void)configeView
+{
+    self.backgroundColor=[UIColor whiteColor];
+    self.dataArray=[[NSMutableArray alloc]initWithCapacity:0];
+    
+    
+    tbView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0,self.frame.size.width, self.frame.size.height-distance_y)];
+    tbView.dataSource = self;
+    tbView.delegate = self;
+    if (IOS7_OR_LATER) {
+        [tbView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    tbView.backgroundColor = [UIColor clearColor];
+    [self addSubview:tbView];
+
+    //
+    bottomView=[[UIImageView alloc]initWithFrame:CGRectMake(0, self.frame.size.height-distance_y, self.frame.size.width, distance_y)];
+    bottomView.backgroundColor=[UIColor colorWithRed:236/255. green:236/255. blue:236/255. alpha:1.0];
+    [self addSubview:bottomView];
+    
+
+    [self reloadView];
+    
+    
+    
+}
+
+-(void)setDataArray:(NSMutableArray *)dataArray
+{
+    _dataArray=dataArray;
+    [self reloadView];
+}
+
+-(void)reloadView
+{
+    
+    CGRect tbViewFrame=tbView.frame;
+    tbViewFrame.size.height=82+_dataArray.count*40;
+    tbView.frame=tbViewFrame;
+    
+    CGRect frame= self.frame;
+    frame.size.height=82+_dataArray.count*40+distance_y;
+    self.frame=frame;
+    bottomView.frame=CGRectMake(0, frame.size.height-distance_y, frame.size.width, bottomView.frame.size.height);
+    
+    //刷新
+    [tbView reloadData];
+}
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return 1+_dataArray.count;
+}
+
+//- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+//{
+//    return 200.0;
+//}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.row==0) {
+        return 82;
+    }else return 40;
+    
+}
+
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"Cell";
+    UITableViewCell *cell=nil;
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+    }
+    
+    cell.backgroundColor = [UIColor clearColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    if (indexPath.row==0) {
+        if (self.forumImage) {
+            [cell.imageView setImage:UIImageByName(@"plate_0")];
+            cell.imageView.hidden=YES;
+            
+            UIImageView *img =[[UIImageView alloc]initWithFrame:CGRectMake(10, 10, 60, 60)];
+            [img setImage:self.forumImage];
+            img.tag=1000;
+            [cell addSubview:img];
+        }else{
+            if ([self.forumId intValue]<=8) {
+                [cell.imageView setImage:[UIImage imageNamed:[NSString stringWithFormat:@"plate_%d",[self.forumId intValue]-1]]];
+            }else [cell.imageView setImage:[UIImage imageNamed:[NSString stringWithFormat:@"plate_%d",[self.forumId intValue] ]]];
+        }
+        
+        
+        cell.textLabel.text = self.nameString;
+        cell.textLabel.textColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.9];
+        cell.textLabel.font =[UIFont systemFontOfSize:15.0];
+        cell.detailTextLabel.text = self.detailString;
+        cell.detailTextLabel.font = [UIFont systemFontOfSize:12.0];
+        cell.detailTextLabel.textColor = [UIColor lightGrayColor];
+        cell.detailTextLabel.numberOfLines = 3;
+        
+    }else
+    {
+        UILabel *zhiDingLab=[[UILabel alloc]initWithFrame:CGRectMake(20, 13, 34, 16)];
+        zhiDingLab.backgroundColor=[UIColor redColor];
+        zhiDingLab.textColor=[UIColor whiteColor];
+        zhiDingLab.font=[UIFont systemFontOfSize:12];
+        zhiDingLab.textAlignment=NSTextAlignmentCenter;
+        zhiDingLab.text=@"置顶";
+        [cell addSubview:zhiDingLab];
+        
+        
+        UILabel *titleLab=[[UILabel alloc]initWithFrame:CGRectMake(74, 10, SCREEN_WIDTH-74-10, 20)];
+        titleLab.font=[UIFont systemFontOfSize:14];
+        titleLab.textColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.6];
+        titleLab.text=_dataArray[indexPath.row-1][@"title"];
+        [cell addSubview:titleLab];
+        
+    }
+
+    return cell;
+
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (indexPath.row==0) {
+        return;
+    }
+    
+    
+    NSString *topicId=@"0";
+    if (_dataArray.count>=indexPath.row) {
+        topicId=_dataArray[indexPath.row-1][@"id"];
+    }
+    
+    
+    BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+    controller.forumId=self.forumId;
+    controller.topicId=topicId;
+    controller.isZhiDingTie=YES;
+    controller.hidesBottomBarWhenPushed = YES;
+    
+    [self.delegate.navigationController pushViewController:controller animated:YES];
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

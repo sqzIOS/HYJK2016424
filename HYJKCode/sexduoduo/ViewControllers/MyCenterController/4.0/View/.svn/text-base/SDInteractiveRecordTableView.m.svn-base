@@ -1,0 +1,66 @@
+//
+//  SDInteractiveRecordTableView.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  打赏 喜欢 tableview
+
+#import "SDInteractiveRecordTableView.h"
+#import "SDInteractiveRecordTableViewCell.h"
+#import "SDUserCenterVC.h"
+#import "SDMessageVC.h"
+
+@implementation SDInteractiveRecordTableView
+
+- (instancetype)initWithFrame:(CGRect)frame style:(UITableViewStyle)style Array:(NSArray *)array Controller:(UIViewController *)vc Type:(int)type{
+    if (self = [super initWithFrame:frame style:style]) {
+        self.backgroundColor = colorWith05;
+        self.type = type;
+        self.mainVC = vc;
+        self.dataArr = array;
+        self.dataSource = self;
+        self.delegate = self;
+//        self.separatorStyle = 
+    }
+    return self;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    return _dataArr.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    static NSString *identity = @"SDInteractiveRecordTableViewCell";
+    SDInteractiveRecordTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identity];
+    if (cell == nil) {
+        cell = [[SDInteractiveRecordTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identity Type:self.type];
+    }
+    if (self.type == 3) {
+        SDMessageToMeModel *model = _dataArr[indexPath.row];
+        [cell addTheDtaWithType:model];
+    } else {
+        SDInteractiveRecordModel *model = _dataArr[indexPath.row];
+        [cell addTheDtaWith:model];
+    }
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    return QZMake(100);
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (self.type == 3) {
+        SDMessageVC *vc = [[SDMessageVC alloc] initWithType:PersonalMessageType];
+        vc.personalMessageModel = _dataArr[indexPath.row];
+        [self.mainVC.navigationController pushViewController:vc animated:YES];
+        return;
+    }
+    SDInteractiveRecordModel *model = _dataArr[indexPath.row];
+    SDUserCenterVC *vc = [[SDUserCenterVC alloc] initWithType:FromOther UserId:model.userId];
+    [self.mainVC.navigationController pushViewController:vc animated:YES];
+}
+
+@end

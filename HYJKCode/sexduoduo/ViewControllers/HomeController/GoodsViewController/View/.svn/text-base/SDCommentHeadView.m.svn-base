@@ -1,0 +1,133 @@
+//
+//  SDCommentHeadView.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/31.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDCommentHeadView.h"
+#import "CRatingView.h"
+
+@implementation SDCommentHeadView
+
+
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.backgroundColor = WHITE_COLOR;
+        
+        UIView *line= [[UIView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH/2.-0.5, QZMake(5), 1, self.height-QZMake(10))];
+        line.backgroundColor = NAV_RED_COLOR;
+        [self addSubview:line];
+        
+        
+        UILabel *lab =[[UILabel alloc] initWithFrame:CGRectMake(0, QZMake(5), SCREEN_WIDTH/2., QZMake(30))];
+        lab.textAlignment = NSTextAlignmentCenter;
+        [self addSubview:lab];
+        lab.text = @"综合评分";
+        lab.textColor = UIColorFromRGB(0x616161);
+        lab.font = fontWithSize(15);
+        
+        self.zhLab =[[UILabel alloc] initWithFrame:CGRectMake(0, lab.bottom, SCREEN_WIDTH/2., QZMake(30))];
+        self.zhLab.textAlignment = NSTextAlignmentCenter;
+        self.zhLab.centerY=self.height/2.+QZMake(5);
+        [self addSubview:self.zhLab];
+        self.zhLab.text = @"5.0";
+        self.zhLab.textColor = NAV_RED_COLOR;
+        self.zhLab.font = fontWithSize(25);
+        
+        self.zhStarView =[[CRatingView alloc] initWithFrame:CGRectMake(0, self.zhLab.bottom, QZMake(58), QZMake(27))];
+        self.zhStarView.centerX = SCREEN_WIDTH/4.;
+        [self addSubview:self.zhStarView];
+        
+        
+        lab =[[UILabel alloc] initWithFrame:CGRectMake(SCREEN_WIDTH/2. +QZMake(10), QZMake(5), SCREEN_WIDTH/2., QZMake(20))];
+        lab.centerY=self.height/2.-QZMake(30);
+
+        [self addSubview:lab];
+        lab.text = @"商品质量:";
+        lab.textColor = UIColorFromRGB(0x616161);
+        lab.font = fontWithSize(13);
+        
+        CGSize size=[NSString getTextContent:lab.text withFont:lab.font];
+        self.zlStarView =[[CRatingView alloc] initWithFrame:CGRectMake(0, lab.top +QZMake(2), QZMake(82), QZMake(20))];
+//        self.zlStarView.width = self.zhStarView.imageWidth *5;
+        self.zlStarView.left = lab.left + size.width;
+        [self addSubview:self.zlStarView];
+        
+        self.zlLab =[[UILabel alloc] initWithFrame:CGRectMake(self.zlStarView.right,lab.top, SCREEN_WIDTH/2., QZMake(20))];
+        [self addSubview:self.zlLab];
+        self.zlLab.text = @"5.0";
+        self.zlLab.textColor = NAV_RED_COLOR;
+        self.zlLab.font = fontWithSize(13);
+        
+        lab =[[UILabel alloc] initWithFrame:CGRectMake(SCREEN_WIDTH/2. +QZMake(10), QZMake(5), SCREEN_WIDTH/2., QZMake(20))];
+        lab.centerY=self.height/2.;
+        [self addSubview:lab];
+        lab.text = @"服务态度:";
+        lab.textColor = UIColorFromRGB(0x616161);
+        lab.font = fontWithSize(13);
+        
+        size=[NSString getTextContent:lab.text withFont:lab.font];
+        self.tdStarView =[[CRatingView alloc] initWithFrame:CGRectMake(0, lab.top+QZMake(2), QZMake(82), QZMake(20))];
+        self.tdStarView.left = lab.left + size.width;
+        [self addSubview:self.tdStarView];
+        
+        self.tdLab =[[UILabel alloc] initWithFrame:CGRectMake(self.tdStarView.right, lab.top, SCREEN_WIDTH/2., QZMake(20))];
+        [self addSubview:self.tdLab];
+        self.tdLab.text = @"5.0";
+        self.tdLab.textColor = NAV_RED_COLOR;
+        self.tdLab.font = fontWithSize(13);
+        
+        
+        lab =[[UILabel alloc] initWithFrame:CGRectMake(SCREEN_WIDTH/2. +QZMake(10), QZMake(5), SCREEN_WIDTH/2., QZMake(20))];
+        lab.centerY=self.height/2.+ QZMake(30);
+        [self addSubview:lab];
+        lab.text = @"发货速度:";
+        lab.textColor = UIColorFromRGB(0x616161);
+        lab.font = fontWithSize(13);
+        
+        size=[NSString getTextContent:lab.text withFont:lab.font];
+        self.sdStarView =[[CRatingView alloc] initWithFrame:CGRectMake(0, lab.top+QZMake(2), QZMake(82), QZMake(20))];
+        self.sdStarView.left = lab.left + size.width;
+        [self addSubview:self.sdStarView];
+        
+        self.sdLab =[[UILabel alloc] initWithFrame:CGRectMake(self.sdStarView.right, lab.top, SCREEN_WIDTH/2., QZMake(20))];
+        [self addSubview:self.sdLab];
+        self.sdLab.text = @"5.0";
+        self.sdLab.textColor = NAV_RED_COLOR;
+        self.sdLab.font = fontWithSize(13);
+        
+        
+        [self.zhStarView setImagesDeselected:@"star0.png" partlySelected:@"star1.png" fullSelected:@"star2.png"];
+        [self.zlStarView setImagesDeselected:@"star0.png" partlySelected:@"star1.png" fullSelected:@"star2.png"];
+        [self.tdStarView setImagesDeselected:@"star0.png" partlySelected:@"star1.png" fullSelected:@"star2.png"];
+        [self.sdStarView setImagesDeselected:@"star0.png" partlySelected:@"star1.png" fullSelected:@"star2.png"];
+        
+        
+        [self.zhStarView displayRating:5.0];
+        [self.zlStarView displayRating:5.0];
+        [self.tdStarView displayRating:5.0];
+        [self.sdStarView displayRating:5.0];
+        
+        
+        
+        line= [[UIView alloc] initWithFrame:CGRectMake(0, self.height -1, SCREEN_WIDTH, 1)];
+        line.backgroundColor = GRAY_COLOR_TABLEVIEWLINE;
+        [self addSubview:line];
+    }
+    return self;
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

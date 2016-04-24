@@ -1,0 +1,51 @@
+//
+//  BBSListViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-7-30.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  帖子列表 
+
+#import <UIKit/UIKit.h>
+#import "BBSCell.h"
+#import "UIScrollView+SVInfiniteScrolling.h"
+#import "BBSDetailNewViewController.h"
+#import "PostMsgViewController.h"
+
+#import "NoNetworkView.h"
+
+typedef enum : NSUInteger {
+   BBSListTypeNone = 0,
+   BBSListTypeSRecord,
+} BBSListType;
+
+@interface BBSListViewController : UIViewController<UITableViewDelegate,UITableViewDataSource,BBSCellProtocol,NoNetworkViewProtocol>
+{
+
+    
+    NSInteger pageIndex;
+    
+    GoTopView *goTopView;
+    
+    MKNetworkOperation *opration;
+    MKNetworkOperation *oprationTop;//
+}
+@property (strong, nonatomic) UITableView *bbsTableView;
+@property (strong, nonatomic) IBOutlet UIView *headerView;
+@property (strong, nonatomic) NSString *titleStr;
+@property (strong, nonatomic) NSMutableArray *bbsArray;
+
+
+//head的简介
+
+@property (strong, nonatomic) NSString *forumId;
+@property (strong, nonatomic) UIImage *forumImage;
+@property (strong, nonatomic) NSString *nameString;
+@property (strong, nonatomic) NSString *detailString;
+
+@property (strong, nonatomic) NoNetworkView *noNetworkView;
+
+//
+@property (nonatomic) BBSListType type;
++(void)gotoMyself:(id)pvc withType:(BBSListType)type;
+@end

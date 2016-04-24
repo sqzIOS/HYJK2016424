@@ -1,0 +1,53 @@
+//
+//  SDNearPostModel.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPublicModel.h"
+
+@interface SDNearPostModel : SDPublicModel
+
+@property (nonatomic, copy) NSString *age;          //年龄
+
+@property (nonatomic, copy) NSString *comefrom;     //地址
+
+@property (nonatomic, copy) NSString *content;      //内容
+
+@property (nonatomic, copy) NSString *createTime;   //创建时间
+
+@property (nonatomic, copy) NSString *firstPostId;  //帖子id
+
+@property (nonatomic, copy) NSString *forumId;
+
+@property (nonatomic, copy) NSArray *imgList;       //图片数组
+
+@property (nonatomic, copy) NSString *isShowName;
+
+@property (nonatomic, copy) NSString *lastTime;
+
+@property (nonatomic, copy) NSString *nickname;     //昵称
+
+@property (nonatomic, copy) NSString *praiseCount;
+
+@property (nonatomic, copy) NSString *replyCount;   //回复数
+
+@property (nonatomic, copy) NSArray *replyUserInfo; //回复用户信息数组
+
+@property (nonatomic, copy) NSString *sex;
+
+@property (nonatomic, copy) NSString *sortTime;
+
+@property (nonatomic, copy) NSString *status;       //状态
+
+@property (nonatomic, copy) NSString *title;        //标题
+
+@property (nonatomic, copy) NSString *topicId;      //
+
+@property (nonatomic, copy) NSString *username;     //用户名
+
+@property (nonatomic, copy) NSString *topicCreaterAvatar;
+
+@end

@@ -1,0 +1,1179 @@
+//
+//  OrderViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-7-10.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "OrderViewController.h"
+#import <AlipaySDK/AlipaySDK.h>
+@interface OrderViewController ()
+{
+    NSString *alipayMinPriceStr;//支付宝最低包邮价格
+    NSString *huoDaoMinPriceStr;//货到付款 最低包邮价格
+    
+    NSString *alipayPostPri;//支付宝邮费
+    NSString *huoDaoPostPri;//货到付款邮费
+    NSString *activityPostPri;// 活动商品每个的邮费
+}
+@end
+
+@implementation OrderViewController
+@synthesize result = _result;
+@synthesize orderScrollView;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        self.orderArray = [NSMutableArray arrayWithCapacity:0];
+        self.orderDetailArray = [NSMutableArray arrayWithCapacity:0];
+        
+        alipayMinPriceStr=@"88";//支付宝包邮价格
+        huoDaoMinPriceStr = @"188";//货到付款包邮价格
+        
+        alipayPostPri=@"10";//支付宝邮费
+        huoDaoPostPri=@"12";// 货到付款邮费
+        activityPostPri=@"22";// 活动商品每个的邮费
+        
+        [self judgeUmengOnline];
+    }
+    return self;
+}
+-(void)judgeUmengOnline
+{
+    //支付宝包邮价格
+    alipayMinPriceStr = @"88";
+    NSString* isAlipayMinPriceStr = [MobClick getConfigParams:@"alipayMinPriceStr"];
+    if (isAlipayMinPriceStr) {
+        alipayMinPriceStr=isAlipayMinPriceStr;
+    }
+    //货到付款包邮价格
+    huoDaoMinPriceStr = @"188";
+    NSString* isHuoDaoMinPriceStr = [MobClick getConfigParams:@"huoDaoMinPriceStr"];
+    if (isHuoDaoMinPriceStr) {
+        huoDaoMinPriceStr=isHuoDaoMinPriceStr;
+    }
+    //支付宝邮费
+    alipayPostPri = @"10";
+    NSString* isalipayPostPri = [MobClick getConfigParams:@"alipayPostPri"];
+    if (isHuoDaoMinPriceStr) {
+        alipayPostPri=isalipayPostPri;
+    }
+    
+    // 货到付款邮费 只是客户端计算和显示给用户看的 不发给后台  若改变后台也有份需要该百年
+    huoDaoPostPri = @"12";
+    NSString* ishuoDaoPostPri = [MobClick getConfigParams:@"huoDaoPostPri"];
+    if (isHuoDaoMinPriceStr) {
+        huoDaoPostPri=ishuoDaoPostPri;
+    }
+    
+    // 活动商品每个的邮费
+    activityPostPri = @"22";
+    NSString* isactivityPostPri = [MobClick getConfigParams:@"activityPostPri"];
+    if (isHuoDaoMinPriceStr) {
+        activityPostPri=isactivityPostPri;
+    }
+    
+    
+}
+-(void)dealloc
+{
+    
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    _result = @selector(paymentResult:);
+    
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshAddrAction) name:@"refreshAddr" object:nil];
+
+    activityNum = 0;
+
+    
+    //两种支付方式的id 支付宝- 微信支付-货到付款
+    self.payArray = [NSMutableArray arrayWithObjects:@"8a04bc8b47d8fb940147de2226d40021",@"8a04bc8b4ed33cfd014ef65d2ab52e14",@"40288183305534f00130554ff4fe0003", nil];
+    
+    //四种物流信息的id 支付宝0-10  微信包邮，不包邮  货到付款0-12
+    self.sendArray = [NSMutableArray arrayWithObjects:@"40288186306e677a01306e68d4920000",@"8a04bc8b480d74e301481022dee20009",
+                      @"8a04bc8b4ed33cfd014ef6598c222df6",@"8a04bc8b4ed33cfd014ef65918e62df3",
+                      @"8a04bc8b480d74e30148102439c0000a",@"8a04bc8b480d74e30148102482f3000b", nil];
+    
+    
+    [self setTopNavView];
+    [self initOrderScrollView];
+    
+    _selectNum = 0;  //支付宝
+    self.payStrId = [self.payArray objectAtIndex:_selectNum];
+    
+//    NSLog(@"--<>>%@",self.orderDetailArray);
+    
+    
+    
+    for (NSDictionary *dic in self.orderDetailArray) {
+        if ([[dic objectForKey:@"isActivities"] boolValue] == 1) {
+            activityNum = activityNum + [[dic objectForKey:@"quanity"] intValue];
+        }
+    }
+    
+    
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    //一共三个与支付相关的类
+    m_orderViewVC=self;
+    
+    m_orderDetailViewVC=nil;
+    m_orderRemindViewVC=nil;
+    
+
+}
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"订单确认"];
+    
+}
+
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+
+
+//刷新收货地址
+
+-(void)refreshAddrAction
+{
+    [self.orderScrollView removeFromSuperview];
+    [self initOrderScrollView];
+}
+
+-(void)initOrderScrollView
+{
+    self.orderScrollView = [[UIScrollView alloc] init];
+    self.orderScrollView.frame = CGRectMake( 0, STAR_Y, SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y - OFFSET_Y);
+    self.orderScrollView.delegate = self;
+    [self.view addSubview:self.orderScrollView];
+    
+    [self.orderScrollView setContentSize:CGSizeMake(SCREEN_WIDTH, 600)];
+    
+    // 底部的 总价和提价订单
+    UIImageView *bottomImg = [[UIImageView alloc] initWithFrame:CGRectMake(0, [UIScreen mainScreen].bounds.size.height - 50 - OFFSET_Y, SCREEN_WIDTH, 50)];
+    [bottomImg setImage:[UIImage imageNamed:@"toPayBg.png"]];
+    [self.view addSubview:bottomImg];
+    
+    UIButton *submitBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    submitBtn.frame = CGRectMake(SCREEN_WIDTH - 85, [UIScreen mainScreen].bounds.size.height - 50 - OFFSET_Y, 85, 50);
+    [submitBtn addTarget:self action:@selector(submitOrderAction:) forControlEvents:UIControlEventTouchUpInside];
+    [submitBtn setTitle:@"提交订单" forState:UIControlStateNormal];
+    submitBtn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+    submitBtn.backgroundColor = NAV_RED_COLOR;
+    [self.view addSubview:submitBtn];
+    
+    totalPriceLab = [[UILabel alloc] initWithFrame:CGRectMake(10, 15, 180, 20)];
+    totalPriceLab.backgroundColor = [UIColor clearColor];
+    totalPriceLab.font = [UIFont systemFontOfSize:16.0];
+    totalPriceLab.textColor = [UIColor orangeColor];
+    [bottomImg addSubview:totalPriceLab];
+    
+    float price = 0;
+    for (NSDictionary *dic in self.orderDetailArray) {
+        price = [[dic objectForKey:@"totalPrice"] floatValue] + price;
+    }
+    if (_selectNum == 0) {
+        if (price < [alipayMinPriceStr floatValue]) {
+            totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + [alipayPostPri floatValue]];
+        }else
+            totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price];
+    }else
+    {
+        if (price < [huoDaoMinPriceStr floatValue]) {
+            totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + [huoDaoPostPri floatValue]];
+        }else
+        {
+            totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price];
+        }
+        
+    }
+
+    
+    
+    // 是否有保存的地址
+    layOutH = 0;
+    
+    if ([[[AppSet shareInstance] userAddrArry] count] < 1) {
+        self.noAddrView.frame = CGRectMake(0, layOutH, SCREEN_WIDTH, 40);
+        [self.orderScrollView addSubview:self.noAddrView];
+        
+        layOutH += 40;
+    }else
+    {
+        self.userNameLab.text = [NSString stringWithFormat:@"收货人:%@",[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"receiveName"]];
+        self.userPhoneLab.text = [NSString stringWithFormat:@"%@",[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"telephone"]];
+        self.userAddrLab.text = [NSString stringWithFormat:@"收货地址:%@%@",[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"areaId"],[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"address"]];
+        self.userAddrLab.numberOfLines = 0;
+        
+        CGSize detailSize = [[NSString stringWithFormat:@"收货地址:%@%@",[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"areaId"],[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"address"]] sizeWithFont:[UIFont systemFontOfSize:12.0]
+                                                                    constrainedToSize:CGSizeMake(245, 60)
+                                                                        lineBreakMode:NSLineBreakByWordWrapping];
+        
+        self.userAddrLab.frame = CGRectMake(self.userAddrLab.frame.origin.x, self.userAddrLab.frame.origin.y, 245, detailSize.height);
+        
+        
+        self.addrView.frame = CGRectMake(0, layOutH, SCREEN_WIDTH, detailSize.height + 50);
+        
+        self.addrBgImgView.frame = CGRectMake(0, 0, self.addrView.frame.size.width, self.addrView.frame.size.height);
+        
+        self.locationImg.frame = CGRectMake(10, self.addrView.frame.size.height/2 - 11, 20, 22);
+        self.toEditAddrImg.frame = CGRectMake(285, self.addrView.frame.size.height/2 - 8, 15, 15);
+        
+        [self.orderScrollView addSubview:self.addrView];
+
+        
+        layOutH += self.addrView.frame.size.height;
+    }
+    
+    
+    //包邮提示
+    UIImageView *recommendV = [[UIImageView alloc] initWithFrame:CGRectMake(0, layOutH, SCREEN_WIDTH, 50)];
+    [recommendV setImage:[UIImage imageNamed:@"toPayBg.png"]];
+    [self.orderScrollView addSubview:recommendV];
+    
+    UIImageView *baoyouImg = [[UIImageView alloc] initWithFrame:CGRectMake(20, 15, 40, 20)];
+    [baoyouImg setImage:[UIImage imageNamed:@"zhekouBg.png"]];
+    [recommendV addSubview:baoyouImg];
+    
+    UILabel *baoyouLab = [[UILabel alloc] initWithFrame:baoyouImg.frame];
+    baoyouLab.text = @"包邮";
+    baoyouLab.font = [UIFont systemFontOfSize:12.0];
+    baoyouLab.textColor = [UIColor whiteColor];
+    baoyouLab.textAlignment = NSTextAlignmentCenter;
+    baoyouLab.backgroundColor = [UIColor clearColor];
+    [recommendV addSubview:baoyouLab];
+    
+    UILabel *desLab = [[UILabel alloc] initWithFrame:CGRectMake(70, 15, 240, 20)];
+    desLab.text = [NSString stringWithFormat:@"支付宝满%@包邮，货到付款满%@包邮",alipayMinPriceStr,huoDaoMinPriceStr];
+    desLab.font = [UIFont systemFontOfSize:12.0];
+    desLab.textColor = [UIColor darkGrayColor];
+    desLab.backgroundColor = [UIColor clearColor];
+    [recommendV addSubview:desLab];
+    
+    layOutH += 50;
+    
+    
+    // 支付方式
+    UIView *imgLineFir = [[UIView alloc] initWithFrame:CGRectMake(0, layOutH, SCREEN_WIDTH, 35)];
+//    [imgLineFir setImage:[UIImage imageNamed:@"toPayBg.png"]];
+    imgLineFir.backgroundColor = [UIColor whiteColor];
+    [self.orderScrollView addSubview:imgLineFir];
+    
+    UIImageView *payWayImg = [[UIImageView alloc] initWithFrame:CGRectMake(20, 12, 15, 15)];
+    [payWayImg setImage:[UIImage imageNamed:@"payWay.png"]];
+    [imgLineFir addSubview:payWayImg];
+    
+    UILabel *payLab = [[UILabel alloc] initWithFrame:CGRectMake(45, 10, 100, 20)];
+    payLab.text = @"支付方式";
+    payLab.backgroundColor = [UIColor clearColor];
+    payLab.font = [UIFont systemFontOfSize:14.0];
+    payLab.textColor = NAV_RED_COLOR;
+    [imgLineFir addSubview:payLab];
+    
+    
+    UIView *imgLine = [[UIView alloc] initWithFrame:CGRectMake(15, 34, SCREEN_WIDTH, 0.5)];
+    imgLine.backgroundColor = [UIColor lightGrayColor];
+    [imgLineFir addSubview:imgLine];
+    
+    layOutH += 35;
+    
+    self.payTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, layOutH, SCREEN_WIDTH, 60*3)];
+    self.payTableView.dataSource = self;
+    self.payTableView.scrollEnabled = NO;//不能滑动
+    self.payTableView.delegate = self;
+    [self.orderScrollView addSubview:self.payTableView];
+    
+    
+    layOutH += self.payTableView.frame.size.height;
+    
+    
+    // 结算详情
+    UIImageView *imgLineSec = [[UIImageView alloc] initWithFrame:CGRectMake(0, layOutH, SCREEN_WIDTH, 35)];
+    [imgLineSec setImage:[UIImage imageNamed:@"toPayBg.png"]];
+    [self.orderScrollView addSubview:imgLineSec];
+    
+    UILabel *orderLab = [[UILabel alloc] initWithFrame:CGRectMake(15, 10, 100, 20)];
+    orderLab.text = @"结算详情";
+    orderLab.backgroundColor = [UIColor clearColor];
+    orderLab.font = [UIFont systemFontOfSize:14.0];
+    orderLab.textColor = [UIColor grayColor];
+    [imgLineSec addSubview:orderLab];
+    
+    layOutH += 35;
+    
+    self.orderTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, layOutH, SCREEN_WIDTH, 180)];
+    self.orderTableView.dataSource = self;
+    self.orderTableView.delegate = self;
+    self.orderTableView.scrollEnabled = NO; //不能滑动
+    [self.orderScrollView addSubview:self.orderTableView];
+    
+    UIView *footerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 60)];
+    footerView.backgroundColor = [UIColor whiteColor];
+    self.orderTableView.tableFooterView = footerView;
+    
+    UIView *lineView = [[UIView alloc] initWithFrame:CGRectMake(20, 20, SCREEN_WIDTH - 40, 35)];
+    lineView.backgroundColor = [UIColor colorWithRed:240/255.f green:240/255.f blue:240/255.f alpha:1.0];
+    lineView.layer.cornerRadius = 3.5;
+    [footerView addSubview:lineView];
+    
+    self.remarkField = [[UITextField alloc] initWithFrame:CGRectMake(25, 20, SCREEN_WIDTH - 45, 35)];
+    self.remarkField.delegate = self;
+    self.remarkField.font = [UIFont systemFontOfSize:14.0];
+    self.remarkField.textColor = [UIColor lightGrayColor];
+    self.remarkField.placeholder = @"备注信息";
+    self.remarkField.returnKeyType = UIReturnKeyDone;
+    self.remarkField.clearButtonMode = UITextFieldViewModeAlways;
+    [footerView addSubview:self.remarkField];
+    
+    
+    
+    layOutH += 180;
+    
+    [self.orderScrollView setContentSize:CGSizeMake(SCREEN_WIDTH, layOutH + 50)];
+    
+    
+}
+
+
+//提交订单
+- (void)submitOrderAction:(id)sender {
+    NSLog(@"地址数组%@",[[[AppSet shareInstance] userAddrArry] lastObject]);
+    
+    // 没有地址的话 请填写地址
+    if (![[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"receiveId"]) {
+
+        
+        [ShareFunction showToast:@"请填写收货地址!"];
+        
+        
+        return;
+    }
+
+    if (self.isJiFenShop) {//积分商城 用的是相同的支付
+        
+        
+        NSString *shopIdStr = @"";
+        for (NSDictionary *dic in self.orderDetailArray) {
+            NSString *str = [NSString stringWithFormat:@"%@",[dic objectForKey:@"productId"]];//积分用商品id
+            if ([shopIdStr isEqual:@""]) {
+                shopIdStr = str;
+            }else
+            {
+                shopIdStr = [NSString stringWithFormat:@"%@,%@",shopIdStr,str];
+            }
+            
+        }
+        NSLog(@"shopIdStr-->%@",shopIdStr);
+        
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        NSLog(@"-->>%@",[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"receiveId"]);
+        if (ISLOGIN) {
+            params = @{@"deliveryID":self.sendStrId,   //(物流信息的id)
+                       @"paymentConfigID":self.payStrId, //付款方式
+                       @"receiverAppID":[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"receiveId"],  //（用户收货地址id）
+                       @"OrderusernameId":[defaults objectForKey:@"userId"],//（用户id）
+                       @"memo":[NSString stringWithFormat:@"备注:%@",self.remarkField.text],           //（备注
+                       @"productId":shopIdStr,
+                       @"prestige":self.orderDetailArray[0][@"prestige"],};
+        }
+        
+        
+        [self requestJiFenShopSubmitOrderWithDic:params];
+
+        return;
+    }
+    
+    
+    NSString *shopIdStr = @"";
+    for (NSDictionary *dic in self.orderDetailArray) {
+        NSString *str = [NSString stringWithFormat:@"%@",[dic objectForKey:@"cartItemId"]];
+        if ([shopIdStr isEqual:@""]) {
+            shopIdStr = str;
+        }else
+        {
+            shopIdStr = [NSString stringWithFormat:@"%@,%@",shopIdStr,str];
+        }
+        
+    }
+    NSLog(@"shopIdStr-->%@",shopIdStr);
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    NSLog(@"-->>%@",[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"receiveId"]);
+    if (ISLOGIN) {
+        params = @{@"deliveryID":self.sendStrId,   //(物流信息的id)
+                   @"paymentConfigID":self.payStrId, //付款方式
+                   @"receiverAppID":[[[[AppSet shareInstance] userAddrArry] lastObject] objectForKey:@"receiveId"],  //（用户收货地址id）
+                   @"OrderusernameId":[defaults objectForKey:@"userId"],//（用户id）
+                   @"memo":[NSString stringWithFormat:@"备注:%@",self.remarkField.text],           //（备注
+                   @"shopId":shopIdStr,};       //cartemId
+    }else
+    {
+        NSDictionary *dic=[[[AppSet shareInstance] userAddrArry] lastObject];
+        
+        params = @{
+                   @"deliveryID":self.sendStrId,   //(物流信息的id)
+                   @"paymentConfigID":self.payStrId, //付款方式
+                   
+                   @"receiveApprName":dic[@"receiveName"],     //收货人名字
+                   @"receiverAderss":dic[@"address"],      //收货人地址
+                   @"receiverZipCode":dic[@"zipCode"],     //收货人邮编
+                   @"receiverMobile":dic[@"telephone"],      //收货人移动电话
+                   @"receiverPhone":@"",       //收货人电话(俩电话必有一个)
+                   @"areaId":dic[@"areaId"],              //省份id
+                   
+                   @"OrderusernameId":@"",     //（用户id）
+                   @"memo":[NSString stringWithFormat:@"备注:%@",self.remarkField.text],           //（备注
+                   @"shopId":shopIdStr,     //cartemId
+                   @"imiestatus":@"0",
+                   @"imie":DEVICEUUID};
+    }
+    
+    
+    
+//    NSLog(@">>>>%@",params);
+    
+    
+    [self requestSubmitOrderWithDic:params];
+    
+}
+
+//跳转更改地址
+- (IBAction)changeUserAddressView:(id)sender {
+    if (ISLOGIN) {
+        AddrListViewController *controller = [[AddrListViewController alloc] initWithNibName:@"AddrListViewController" bundle:nil];
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:controller animated:YES];
+    }else
+    {
+        AddrViewController *controller = [[AddrViewController alloc] initWithNibName:@"AddrViewController" bundle:[NSBundle mainBundle]];
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:controller animated:YES];
+    }
+    
+}
+
+
+//展开商品列表
+-(void)showOrderDetaiList:(id)sender
+{
+    
+    if (self.orderArray.count < 1) {
+        [self.orderArray addObjectsFromArray:self.orderDetailArray];
+        
+        self.orderTableView.frame = CGRectMake(self.orderTableView.frame.origin.x, self.orderTableView.frame.origin.y, self.orderTableView.frame.size.width, 90.0 * self.orderArray.count + 180.0);
+        [self.orderScrollView setContentSize:CGSizeMake(SCREEN_WIDTH, layOutH + 50 + 90 * self.orderArray.count)];
+        
+        
+        [self.orderTableView reloadData];
+        
+        
+    }else
+    {
+        [self.orderArray removeAllObjects];
+        
+        self.orderTableView.frame = CGRectMake(self.orderTableView.frame.origin.x, self.orderTableView.frame.origin.y, self.orderTableView.frame.size.width, 90.0 * self.orderArray.count + 180.0);
+        [self.orderScrollView setContentSize:CGSizeMake(SCREEN_WIDTH, layOutH + 50 + 90 * self.orderArray.count)];
+        
+        
+        [self.orderTableView reloadData];
+
+       
+        
+    }
+    
+
+    
+}
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    if (tableView == self.orderTableView) {
+        return 3;
+    }else
+        return 1;
+    
+    //    return 5;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (tableView == self.payTableView) {
+        return 3;
+    }else
+    {
+        if (section == 0) {
+            return self.orderArray.count;
+        }
+    }
+        return 0;
+    
+    
+    //    return 5;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (tableView == self.orderTableView) {
+        return 40.0;
+    }
+    return 0.0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    
+    if (tableView == self.orderTableView) {
+        UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 40)];
+        headerView.backgroundColor = [UIColor whiteColor];
+        
+        // 左边名称：如商品清单 运费 优惠
+        UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(15, 10, 100, 20)];
+        lab.backgroundColor = [UIColor clearColor];
+        lab.textColor = [UIColor colorWithRed:122/255.f green:122/255.f blue:122/255.f alpha:1.0];
+        lab.font = [UIFont systemFontOfSize:15.0];
+        [headerView addSubview:lab];
+        
+        // 右边内容
+        UILabel *lastLab = [[UILabel alloc] initWithFrame:CGRectMake(110, 10, SCREEN_WIDTH - 120, 20)];
+        lastLab.backgroundColor = [UIColor clearColor];
+        lastLab.textColor = [UIColor lightGrayColor];
+        lastLab.textAlignment = NSTextAlignmentRight;
+        lastLab.font = [UIFont systemFontOfSize:12.0];
+        [headerView addSubview:lastLab];
+        
+        UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, headerView.frame.size.height - 0.5, headerView.frame.size.width, 0.5)];
+        line.backgroundColor = [UIColor lightGrayColor];
+        [headerView addSubview:line];
+        
+        if (section == 0) {
+            UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+            btn.tag = section;
+            [btn addTarget:self action:@selector(showOrderDetaiList:) forControlEvents:UIControlEventTouchUpInside];
+            btn.frame = headerView.frame;
+            [headerView addSubview:btn];
+            
+            self.detailIconImg = [[UIImageView alloc ] initWithFrame:CGRectMake(SCREEN_WIDTH - 25, 13, 14, 14)];
+            if (self.orderArray.count > 0) {
+                [self.detailIconImg setImage:[UIImage imageNamed:@"icon_arrows_pre.png"]];
+            }else
+                [self.detailIconImg setImage:[UIImage imageNamed:@"icon_arrows_nor.png"]];
+            [headerView addSubview:self.detailIconImg];
+            
+            lastLab.frame = CGRectMake(110, 10, SCREEN_WIDTH - 140, 20);
+            
+        }
+        
+        //商品总价
+        float price = 0;
+        for (NSDictionary *dic in self.orderDetailArray) {
+            price = [[dic objectForKey:@"totalPrice"] floatValue] + price;
+        }
+        
+        if (section == 0) {
+            
+            lab.text = @"商品清单";
+            lastLab.text = [NSString stringWithFormat:@"共%lu件商品，总计￥%.2f",(unsigned long)self.orderDetailArray.count,price];
+            
+        }else if (section == 1) {
+            lab.text = @"运费:";
+            
+            if (activityNum > 0) {
+                UILabel *warnLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 10, 180, 20)];
+                warnLabel.text =[NSString stringWithFormat:@"活动商品需另付邮费%.2f/件",[activityPostPri floatValue]];
+                warnLabel.textAlignment = NSTextAlignmentRight;
+                warnLabel.textColor = [UIColor lightGrayColor];
+                warnLabel.font = [UIFont systemFontOfSize:13.0];
+                [headerView addSubview:warnLabel];
+            }
+            
+            
+            lab.frame = CGRectMake(15, 10, 40, 20);
+            lastLab.frame = CGRectMake(60, 10, 100, 20);
+            lastLab.textAlignment = NSTextAlignmentLeft;
+            
+            if (_selectNum == 0 || _selectNum == 1) {//支付宝和微信支付时的运费
+                if (price > 0 && price < [alipayMinPriceStr floatValue]) {
+//                    lastLab.text = @"￥10.00";
+                    float money = activityNum * [activityPostPri floatValue] + [alipayPostPri floatValue];
+                    lastLab.text = [NSString stringWithFormat:@"%.2f",money];
+                }else
+                {
+                    float money = activityNum * [activityPostPri floatValue];
+                    lastLab.text = [NSString stringWithFormat:@"%.2f",money];
+                    
+                    if (price==0 && activityNum==0) {
+                        lastLab.text=[NSString stringWithFormat:@"%.2f",[alipayPostPri floatValue]];
+                    }
+                }
+                
+            }
+            
+            else// 货到付款 时的运费
+            {
+                if (price > 0 && price < [huoDaoMinPriceStr floatValue]) {
+//                    lastLab.text = [NSString stringWithFormat:@"%.2f",[huoDaoPostPri floatValue]];
+                    float money = activityNum * [activityPostPri floatValue] + [huoDaoPostPri floatValue];
+                    lastLab.text = [NSString stringWithFormat:@"%.2f",money];
+                }else
+                {
+//                    lastLab.text = @"￥0.00";
+                    float money = activityNum * [activityPostPri floatValue];
+                    lastLab.text = [NSString stringWithFormat:@"%.2f",money];
+                    
+                    if (price==0 && activityNum==0) {
+                        lastLab.text=[NSString stringWithFormat:@"%.2f",[huoDaoPostPri floatValue]] ;
+                    }
+                }
+                
+            }
+            
+        }else if (section == 2) {
+            lab.text = @"优惠:";
+            
+            
+            
+            UIImageView *img = [[UIImageView alloc] initWithFrame:CGRectMake(15, 10, 20, 20)];
+            [img setImage:[UIImage imageNamed:@"youhuiImg.png"]];
+            [headerView addSubview:img];
+            
+            lab.frame = CGRectMake(40, 10, 50, 20);
+            lastLab.frame = CGRectMake(90, 10, 100, 20);
+            lastLab.textAlignment = NSTextAlignmentLeft;
+            
+            if (_selectNum == 0) {
+                if (price > 0.0 && price < [alipayMinPriceStr floatValue]) {
+                    lastLab.text = @"无优惠";
+                    totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price +[alipayPostPri floatValue] + activityNum * [activityPostPri floatValue]];
+                    self.sendStrId = [self.sendArray objectAtIndex:0];
+                }else
+                {
+                    lastLab.text = [NSString stringWithFormat:@"满%@包邮",alipayMinPriceStr];
+                    totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + activityNum * [activityPostPri floatValue]];
+                    self.sendStrId = [self.sendArray objectAtIndex:1];
+                    
+                    // 总价为0 且无活动商品
+                    if (price==0 && activityNum==0) {
+                        totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + [alipayPostPri floatValue] +activityNum * [activityPostPri floatValue]];
+                        self.sendStrId = [self.sendArray objectAtIndex:0];
+                    }
+                }
+                
+            }else if(_selectNum == 1)
+            {
+                if (price > 0.0 && price < [alipayMinPriceStr floatValue]) {
+                    lastLab.text = @"无优惠";
+                    totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price +[alipayPostPri floatValue] + activityNum * [activityPostPri floatValue]];
+                    self.sendStrId = [self.sendArray objectAtIndex:2];
+                }else
+                {
+                    lastLab.text = [NSString stringWithFormat:@"满%@包邮",alipayMinPriceStr];
+                    totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + activityNum * [activityPostPri floatValue]];
+                    self.sendStrId = [self.sendArray objectAtIndex:3];
+                    
+                    // 总价为0 且无活动商品
+                    if (price==0 && activityNum==0) {
+                        totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + [alipayPostPri floatValue] +activityNum * [activityPostPri floatValue]];
+                        self.sendStrId = [self.sendArray objectAtIndex:2];
+                    }
+                }
+            }else
+            {
+                if (price > 0.0 && price < [huoDaoMinPriceStr floatValue]) {
+                    lastLab.text = @"无优惠";
+                    totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + [huoDaoPostPri floatValue] + activityNum * [activityPostPri floatValue]];
+                    self.sendStrId = [self.sendArray objectAtIndex:2];
+                }else
+                {
+                    lastLab.text = [NSString stringWithFormat:@"满%@包邮",huoDaoMinPriceStr];
+                    totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + activityNum * [activityPostPri floatValue]];
+                    self.sendStrId = [self.sendArray objectAtIndex:3];
+                    
+                    // 总价为0 且无活动商品
+                    if (price==0 && activityNum==0) {
+                        totalPriceLab.text = [NSString stringWithFormat:@"总价:￥%.2f",price + [huoDaoPostPri floatValue] +activityNum *[activityPostPri floatValue]];
+                        self.sendStrId = [self.sendArray objectAtIndex:2];
+                    }
+                }
+                
+            }
+
+            
+        }
+        
+        return headerView;
+
+    }
+    return nil;
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (tableView == self.payTableView) {
+        return 60;
+    }else
+        return 90;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (tableView == self.payTableView) {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+            
+//            UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(100, 10, 100, 20)];
+//            lab.text = @"满168包邮";
+//            lab.backgroundColor = [UIColor clearColor];
+//            lab.textColor = [UIColor lightGrayColor];
+//            lab.font = [UIFont systemFontOfSize:14.0];
+//            lab.tag = 1000;
+//            [cell addSubview:lab];
+            
+            UIImageView *selectImg = [[UIImageView alloc] initWithFrame:CGRectMake(280, 16, 30, 28)];
+            selectImg.backgroundColor = [UIColor clearColor];
+            selectImg.tag = 1001;
+            [cell addSubview:selectImg];
+        }
+        
+        cell.backgroundColor = [UIColor whiteColor];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        cell.textLabel.font = [UIFont systemFontOfSize:15.0];
+        cell.textLabel.textColor = [UIColor colorWithRed:122/255.f green:122/255.f blue:122/255.f alpha:1.0];
+        
+        cell.detailTextLabel.textColor = [UIColor lightGrayColor];
+        
+//        UILabel *label = (UILabel *)[cell viewWithTag:1000];
+        UIImageView *imgView = (UIImageView *)[cell viewWithTag:1001];
+        if (IOS7_OR_LATER) {
+            
+            [cell setSeparatorInset:UIEdgeInsetsMake(0, 15, 0, 0)];
+        }
+        
+        if (indexPath.row == 0) {
+            [cell.imageView setImage:[UIImage imageNamed:@"zhifubao.png"]];
+            cell.textLabel.text = @"支付宝";
+            cell.detailTextLabel.text = [NSString stringWithFormat:@"满%@包邮",alipayMinPriceStr];
+        }else if (indexPath.row == 1)
+        {
+            [cell.imageView setImage:[UIImage imageNamed:@"weixinzhifu.png"]];
+            cell.textLabel.text = @"微信支付";
+            cell.detailTextLabel.text = [NSString stringWithFormat:@"满%@包邮",alipayMinPriceStr];
+        }else if (indexPath.row == 2)
+        {
+            [cell.imageView setImage:[UIImage imageNamed:@"daofu.png"]];
+            cell.textLabel.text = @"货到付款";
+            cell.detailTextLabel.text = [NSString stringWithFormat:@"满%@包邮",huoDaoMinPriceStr];
+        }
+        
+        if (indexPath.row == _selectNum) {
+            imgView.image = [UIImage imageNamed:@"goods_pre.png"];
+        }else
+        {
+            imgView.image = [UIImage imageNamed:@"goods_nor.png"];
+        }
+
+        return cell;
+    }
+    
+    
+    static NSString *CellIdentifier = @"OrderCell";
+    OrderCell *cell = (OrderCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"OrderCell" owner:self options:nil] lastObject];
+    }
+    
+    cell.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    [cell initCellWithDic:[self.orderArray objectAtIndex:indexPath.row]];
+    
+    
+    
+    return cell;
+
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    if (tableView == self.payTableView) {
+        _selectNum = (int)indexPath.row;
+        [self.payTableView reloadData];
+        [self.orderTableView reloadData];
+        self.payStrId = [self.payArray objectAtIndex:_selectNum];
+        
+    }else if (tableView == self.orderTableView)
+    {
+        // 不要点击 不然会有bug 编辑商品后 回来 没有刷新订单 邮费会计算错误
+
+    }
+    
+}
+
+
+#pragma mark- UITextField detegate
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    [self.orderScrollView setContentOffset:CGPointMake(0, self.orderTableView.frame.origin.y + self.orderTableView.frame.size.height - 100) animated:YES];
+}
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [self.orderScrollView setContentOffset:CGPointMake(0, 0) animated:YES];
+    [self.remarkField resignFirstResponder];
+    return YES;
+}
+
+
+#pragma mark -
+#pragma mark 订单提交
+//订单提交  获得订单id
+-(void)requestSubmitOrderWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestSubmitOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        NSString *showText = [responseDic objectForKey:MESSAGE];
+        [ShareFunction showToast:showText];
+
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+
+            orderIdStr = [[[responseDic objectForKey:@"datasource"] lastObject] objectForKey:@"orderId"];
+            
+            if (_selectNum == 0) {//支付宝 跳支付页面
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                params = @{@"orderId":[[[responseDic objectForKey:@"datasource"] lastObject] objectForKey:@"orderId"]};
+                [self requestPayOrderWithDic:params];
+                
+                
+                
+            }else if(_selectNum == 1)//微信支付
+            {
+                
+                if(m_appDelegate)
+                {
+                    [m_appDelegate sendPayWithOrderId:orderIdStr];
+                }
+                
+            }
+            else // 货到付款
+            {
+                [self performSelector:@selector(submitSuccess) withObject:self afterDelay:2.0];
+            }
+            
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+     
+        
+    }];
+}
+//积分商城订单提交
+-(void)requestJiFenShopSubmitOrderWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestJiFenShopSubmitOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"积分商城的responseArray-->%@",responseDic);
+        
+
+        NSString *showText = [responseDic objectForKey:MESSAGE];
+        [ShareFunction showToast:showText];
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            orderIdStr = [[[responseDic objectForKey:@"datasource"] lastObject] objectForKey:@"orderId"];
+            
+            if (_selectNum == 0) {//支付宝 跳支付页面
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                params = @{@"orderId":[[[responseDic objectForKey:@"datasource"] lastObject] objectForKey:@"orderId"]};
+                
+                [self requestPayOrderWithDic:params];
+                
+            }else if(_selectNum == 1)//微信支付
+            {
+                if(m_appDelegate)
+                {
+//                    [m_appDelegate sendPay];
+                    [m_appDelegate sendPayWithOrderId:orderIdStr];
+                }
+            }
+            else // 货到付款
+            {
+                
+                [self performSelector:@selector(submitSuccess) withObject:self afterDelay:2.0];
+            }
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        
+        
+    }];
+}
+
+
+
+#pragma mark 支付宝支付
+//订单支付
+-(void)requestPayOrderWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestPayOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+
+            
+            NSString *orderString = [responseDic objectForKey:@"datasource"];
+            
+            NSLog(@"orderString-->%@",orderString);
+            
+            appType=ALIXPAY_RET;
+            
+            //新
+            [[AlipaySDK defaultService] payOrder:orderString fromScheme:AlipayAppScheme callback:^(NSDictionary *resultDic) {
+                
+                NSLog(@"支付宝 支付返回参数 =%@",resultDic);
+                
+                
+                //
+                if (resultDic[@"resultStatus"]  && [resultDic[@"resultStatus"] integerValue]==9000) {
+                    OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+                    ctr.hidesBottomBarWhenPushed = YES;
+                    ctr.orderIdStr = orderIdStr;
+                    ctr.isPayOff = @"1";
+                    ctr.totalPriceStr = totalPriceLab.text;
+                    ctr.orderArray = self.orderDetailArray;
+                    ctr.payWayType = zhifubao;
+                    [self.navigationController pushViewController:ctr animated:YES];
+                    
+                }else{
+                    OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+                    ctr.hidesBottomBarWhenPushed = YES;
+                    ctr.orderIdStr = orderIdStr;
+                    ctr.isPayOff = @"0";
+                    ctr.totalPriceStr = totalPriceLab.text;
+                    ctr.orderArray = self.orderDetailArray;
+                    ctr.payWayType = zhifubao;
+                    [self.navigationController pushViewController:ctr animated:YES];
+                }
+                
+            }];
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+     
+        
+    }];
+}
+
+#pragma mark 提交成功 跳订单提醒
+
+
+//货到付款 成功
+-(void)submitSuccess
+{
+    
+//    NSArray *arrVc=self.navigationController.viewControllers;
+    
+//    if (![arrVc.lastObject isKindOfClass:[OrderRemindController class]]) {
+        OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+        ctr.hidesBottomBarWhenPushed = YES;
+        ctr.orderIdStr = orderIdStr;
+        ctr.isPayOff = 0;
+        ctr.totalPriceStr = totalPriceLab.text;
+        ctr.payWayType = huodaofukuan;
+        ctr.orderArray = self.orderDetailArray;
+        [self.navigationController pushViewController:ctr animated:YES];
+//    }
+
+}
+
+
+
+//wap回调函数
+-(void)paymentResult:(NSString *)resultd
+{
+    
+//    //结果处理
+//#if ! __has_feature(objc_arc)
+//    AlixPayResult* result = [[[AlixPayResult alloc] initWithString:resultd] autorelease];
+//#else
+//    AlixPayResult* result = [[AlixPayResult alloc] initWithString:resultd];
+//#endif
+//	if (result)
+//    {
+//		NSLog(@"%@",result);
+//		if (result.statusCode == 9000)
+//        {
+//			/*
+//			 *用公钥验证签名 严格验证请使用result.resultString与result.signString验签
+//			 */
+//            
+//            //交易成功
+//            NSString* key = AlipayPubKey;//签约帐户后获取到的支付宝公钥
+//			id<DataVerifier> verifier;
+//            verifier = CreateRSADataVerifier(key);
+//            
+//			if ([verifier verifyString:result.resultString withSign:result.signString])
+//            {
+//                //验证签名成功，交易结果无篡改
+//                
+//                OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+//                ctr.hidesBottomBarWhenPushed = YES;
+//                ctr.orderIdStr = orderIdStr;
+//                ctr.isPayOff = @"1";
+//                ctr.totalPriceStr = totalPriceLab.text;
+//                ctr.orderArray = self.orderDetailArray;
+//                ctr.payWayType = zhifubao;
+//                [self.navigationController pushViewController:ctr animated:YES];
+//			}
+//        }else
+//        {
+//            //交易失败
+//            NSLog(@"reslfjk");
+//            OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+//            ctr.hidesBottomBarWhenPushed = YES;
+//            ctr.orderIdStr = orderIdStr;
+//            ctr.isPayOff = @"0";
+//            ctr.totalPriceStr = totalPriceLab.text;
+//            ctr.orderArray = self.orderDetailArray;
+//            ctr.payWayType = zhifubao;
+//            [self.navigationController pushViewController:ctr animated:YES];
+//        }
+//    }
+//    else
+//    {
+//        //失败
+//    }
+    
+}
+
+
+-(void)paymentResultDelegate:(NSString *)result
+{
+    
+    NSLog(@"--》》%d",[result intValue]);
+//    NSArray *arrVc=self.navigationController.viewControllers;
+    
+    
+
+    
+    
+    if ([result isEqualToString:@"1"]) {//支付成功  有需要再调用接口
+        
+        
+        OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+        ctr.hidesBottomBarWhenPushed = YES;
+        ctr.orderIdStr = orderIdStr;
+        ctr.isPayOff = result;
+        ctr.totalPriceStr = totalPriceLab.text;
+        ctr.orderArray = self.orderDetailArray;
+        
+        if(appType == ALIXPAY_RET)
+        {
+            ctr.payWayType = zhifubao;
+        }else if(appType == WEXin_AliPay)//微信支付
+        {
+            ctr.payWayType = weiXin;
+        }
+        
+       
+        [self.navigationController pushViewController:ctr animated:YES];
+        
+        
+    }else
+    {
+        OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+        ctr.hidesBottomBarWhenPushed = YES;
+        ctr.orderIdStr = orderIdStr;
+        ctr.isPayOff = result;
+        ctr.totalPriceStr = totalPriceLab.text;
+        ctr.orderArray = self.orderDetailArray;
+        if(appType == ALIXPAY_RET)
+        {
+            ctr.payWayType = zhifubao;
+        }else if(appType == WEXin_AliPay)//微信支付
+        {
+            ctr.payWayType = weiXin;
+        }
+        [self.navigationController pushViewController:ctr animated:YES];
+    }
+    
+    
+    
+
+
+
+    
+}
+
+
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

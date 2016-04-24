@@ -1,0 +1,38 @@
+//
+//  SDNearPostModel.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDNearPostModel.h"
+
+@implementation SDNearPostModel
+
+- (NSDictionary *)propertyMapDic {
+    return @{
+            @"age":@"age",
+            @"comefrom":@"comefrom",
+            @"content":@"content",
+            @"createTime":@"createTime",
+            @"firstPostId":@"firstPostId",
+            @"forumId":@"forumId",
+            @"imgList":@"imgList",
+            @"isShowName":@"isShowName",
+            @"lastTime":@"lastTime",
+            @"nickname":@"nickname",
+            @"praiseCount":@"praiseCount",
+            @"replyCount":@"replyCount",
+            @"replyUserInfo":@"replyUserInfo",
+            @"sex":@"sex",
+            @"sortTime":@"sortTime",
+            @"status":@"status",
+            @"title":@"title",
+            @"topicId":@"topicId",
+            @"username":@"username",
+            @"topicCreaterAvatar":@"topicCreaterAvatar"
+            };
+}
+
+@end

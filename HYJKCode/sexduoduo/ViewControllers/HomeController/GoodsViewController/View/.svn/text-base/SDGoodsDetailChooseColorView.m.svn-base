@@ -1,0 +1,251 @@
+//
+//  SDGoodsDetailChooseColorView.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDGoodsDetailChooseColorView.h"
+
+#import "GoodsDetailTwoViewController.h"
+
+@implementation SDGoodsDetailChooseColorView
+
+-(instancetype)initWithFrame:(CGRect)frame
+{
+    if (self= [super initWithFrame:frame]) {
+        
+        
+        self.backgroundColor = WHITE_COLOR;
+        
+        //商品的基本描述
+        UIView *goodDecView=[[UIView alloc] initWithFrame:CGRectMake(0, MAKEOF5(5), SCREEN_WIDTH, MAKEOF5(60))];
+        [self addSubview:goodDecView];
+        
+        self.productImg = [[UIImageView alloc] initWithFrame:CGRectMake(MAKEOF5(10), MAKEOF5(5), MAKEOF5(50), MAKEOF5(50))];
+        self.productImg.image = [UIImage imageNamed:@"bg"];
+        [goodDecView addSubview:self.productImg];
+        
+        
+        self.productPrice = [[UILabel alloc] initWithFrame:CGRectMake(MAKEOF5(68), MAKEOF5(8),MAKEOF5(149), MAKEOF5(21))];
+        self.productPrice.font = fontWithSize(14);
+        self.productPrice.textColor = LIGHT_GRAY_COLOR;
+        [goodDecView addSubview:self.productPrice];
+        
+        
+        self.productColor = [[UILabel alloc] initWithFrame:CGRectMake(MAKEOF5(68), MAKEOF5(30), MAKEOF5(195), MAKEOF5(21))];
+        self.productColor.font = fontWithSize(13);
+        self.productColor.textColor = LIGHT_GRAY_COLOR;
+        [goodDecView addSubview:self.productColor];
+        
+        UIImageView *line =[UIImageView qzImageViewLineWithX:0 withY:MAKEOF5(59) withWidth:SCREEN_WIDTH withHeight:1];
+        [goodDecView addSubview:line];
+        
+        self.cancelBtn  =[UIButton buttonWithType:0];
+        [self.cancelBtn setFrame:CGRectMake(MAKEOF5(271), MAKEOF5(15), MAKEOF5(40), MAKEOF5(30))];
+        [self.cancelBtn addTarget:self action:@selector(cancelBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self.cancelBtn setImage:UIImageByName(@"chooseView_down.png") forState:UIControlStateNormal];
+        [goodDecView addSubview:self.cancelBtn];
+        
+        //商品的规格选择
+        self.numChooseScrol =[[UIScrollView alloc] initWithFrame:CGRectMake(0, MAKEOF5(65), SCREEN_WIDTH, MAKEOF5(274))];
+//        self.numChooseScrol .backgroundColor = RED_COLOR;
+        [self addSubview:self.numChooseScrol];
+        
+        UILabel *choseTitle = [[UILabel alloc] initWithFrame:CGRectMake(MAKEOF5(20), MAKEOF5(10),MAKEOF5(184), MAKEOF5(21))];
+        choseTitle.text = @"规格选择";
+        choseTitle.textColor=DARK_GRAY_COLOR;
+        [choseTitle setFont:fontWithSize(15)];
+        [self.numChooseScrol addSubview:choseTitle];
+        
+        UIImageView *line1 =[UIImageView qzImageViewLineWithX:MAKEOF5(20) withY:MAKEOF5(38) withWidth:SCREEN_WIDTH -MAKEOF5(40) withHeight:1];
+        line1.backgroundColor = UICOLOR_RGB(215, 215, 215);
+        [self.numChooseScrol addSubview:line1];
+        
+        
+        //商品的数量选择
+        self.goodsNumView = [[UIView alloc] initWithFrame:CGRectMake(0, MAKEOF5(184),SCREEN_WIDTH, MAKEOF5(90))];
+        [self.numChooseScrol addSubview:self.goodsNumView];
+        
+        
+        UILabel *numTitle = [[UILabel alloc] initWithFrame:CGRectMake(MAKEOF5(20), MAKEOF5(9),MAKEOF5(78), MAKEOF5(21))];
+        numTitle.text = @"数量";
+        numTitle.textColor=DARK_GRAY_COLOR;
+        [numTitle setFont:fontWithSize(15)];
+        [self.goodsNumView addSubview:numTitle];
+        
+        line1 =[UIImageView qzImageViewLineWithX:MAKEOF5(20) withY:MAKEOF5(38) withWidth:SCREEN_WIDTH - MAKEOF5(40) withHeight:1];
+        line1.backgroundColor = UICOLOR_RGB(215, 215, 215);
+        [self.goodsNumView addSubview:line1];
+        
+        // -
+        UIButton *minBtn  =[UIButton buttonWithType:0];
+        [minBtn setFrame:CGRectMake(MAKEOF5(22), MAKEOF5(50), MAKEOF5(35), MAKEOF5(30))];
+        [minBtn addTarget:self action:@selector(minBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [minBtn setImage:UIImageByName(@"minus.png") forState:UIControlStateNormal];
+        [self.goodsNumView addSubview:minBtn];
+
+        
+        self.goodsNumField = [[UITextField alloc] initWithFrame:CGRectMake(MAKEOF5(56), MAKEOF5(50), MAKEOF5(42), MAKEOF5(30))];
+        self.goodsNumField.textAlignment = NSTextAlignmentCenter;
+        self.goodsNumField.borderStyle=UITextBorderStyleNone;
+        self.goodsNumField.background =UIImageByName(@"goodsNum");
+        self.goodsNumField.text = @"1";
+        self.goodsNumField.font = fontWithSize(14);
+        [self.goodsNumView addSubview:self.goodsNumField];
+        
+        // +
+        UIButton *addBtn  =[UIButton buttonWithType:0];
+        [addBtn setFrame:CGRectMake(MAKEOF5(97), MAKEOF5(50), MAKEOF5(35), MAKEOF5(30))];
+        [addBtn addTarget:self action:@selector(addBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [addBtn setImage:UIImageByName(@"plus.png") forState:UIControlStateNormal];
+        [self.goodsNumView addSubview:addBtn];
+        
+        self.numChooseScrol.contentSize = CGSizeMake(SCREEN_WIDTH, self.goodsNumView.top + addBtn.bottom +QZMake(5));
+        
+        self.numChooseScrol.height = self.height - self.numChooseScrol.top -MAKEOF5(48);
+        
+        UIImageView *bottomView = [[UIImageView alloc] initWithFrame:CGRectMake(MAKEOF5(0), self.height - MAKEOF5(48), SCREEN_WIDTH, MAKEOF5(48))];
+        bottomView.image = [UIImage imageNamed:@"toPayBg.png"];
+        [self addSubview:bottomView];
+        
+        
+        UIButton *sureBtn  =[UIButton buttonWithType:0];
+        [sureBtn setFrame:CGRectMake(MAKEOF5(113), MAKEOF5(340), MAKEOF5(95), MAKEOF5(35))];
+        sureBtn.centerY = self.height - QZMake(48)/2.;
+        [sureBtn addTarget:self action:@selector(sureBuyAction:) forControlEvents:UIControlEventTouchUpInside];
+        sureBtn.backgroundColor = NAV_MoreBg_COLOR;
+        [sureBtn setTitle:@"确定" forState:UIControlStateNormal];
+        [sureBtn.titleLabel setFont:fontWithSize(14)];
+        [sureBtn.titleLabel setTextColor:WHITE_COLOR];
+        [self addSubview:sureBtn];
+        
+        
+    }
+    
+    return self;
+}
+
+#pragma mark  - action
+-(void)cancelBtnClick:(id)sender
+{
+    
+    if ([self.mainVC respondsToSelector:@selector(cancelBuyAction:)]) {
+        [self.mainVC cancelBuyAction:nil];
+    }
+}
+
+-(void)addBtnClick:(id)sender
+{
+    if ([self.mainVC respondsToSelector:@selector(plusGoodsNumAction:)]) {
+        [self.mainVC plusGoodsNumAction:nil];
+    }
+}
+-(void)minBtnClick:(id)sender
+{
+    if ([self.mainVC respondsToSelector:@selector(minusGoodsNumAction:)]) {
+        [self.mainVC minusGoodsNumAction:nil];
+    }
+}
+
+-(void)sureBuyAction:(id)sender
+{
+    if ([self.mainVC respondsToSelector:@selector(sureBuyAction:)]) {
+        [self.mainVC sureBuyAction:self.numIndexColor];
+    }
+}
+
+
+
+#pragma mark  商品规格选择 效果设计
+#pragma mark- MMGridView detegate
+- (void)setupGridView{
+    
+    self.gridView = [[MMGridView alloc] initWithFrame:CGRectMake(20, 50, SCREEN_WIDTH-40, 40)];
+    self.gridView.backgroundColor = [UIColor whiteColor];
+    //    self.gridView.numberOfColumns = 1;
+    //    self.gridView.numberOfRows = 5;
+    self.gridView.dataSource = self;
+    self.gridView.delegate = self;
+    [self.numChooseScrol addSubview:self.gridView];
+    
+    CGSize detailSize = [[[_colorArray firstObject] objectForKey:@"Specifications"] sizeWithFont:[UIFont systemFontOfSize:14.0]
+                                                                               constrainedToSize:CGSizeMake( SCREEN_WIDTH-40, 21)
+                                                                                   lineBreakMode:NSLineBreakByWordWrapping];
+    NSLog(@"detailSize=%f ,%@",detailSize.width,[_colorArray firstObject]);
+    
+    if (detailSize.width >= 140) {
+        self.gridView.numberOfColumns = 1;
+        self.gridView.numberOfRows = self.colorArray.count;
+        self.gridView.frame = CGRectMake(20, 50,  SCREEN_WIDTH-40, self.colorArray.count * 40);
+        self.goodsNumView.frame = CGRectMake(0, 50 + self.gridView.frame.size.height,SCREEN_WIDTH, 90);
+        [self.numChooseScrol setContentSize:CGSizeMake(SCREEN_WIDTH, 140 + self.gridView.frame.size.height)];
+    }else if (70 <= detailSize.width && detailSize.width < 140) {
+        self.gridView.numberOfColumns = 2;
+        self.gridView.numberOfRows = self.colorArray.count / 2 + 1;
+        self.gridView.frame = CGRectMake(20, 50,  SCREEN_WIDTH-40, (self.colorArray.count / 2 + 1) * 40);
+        self.goodsNumView.frame = CGRectMake(0, 50 + self.gridView.frame.size.height,SCREEN_WIDTH, 90);
+        [self.numChooseScrol setContentSize:CGSizeMake(SCREEN_WIDTH, 140 + self.gridView.frame.size.height)];
+    }else if (0 < detailSize.width && detailSize.width < 70)
+    {
+        self.gridView.numberOfColumns = 4;
+        self.gridView.numberOfRows = self.colorArray.count / 4 + 1;
+        self.gridView.frame = CGRectMake(20, 50,  SCREEN_WIDTH-40, (self.colorArray.count / 4 + 1) * 40);
+        self.goodsNumView.frame = CGRectMake(0, 50 + self.gridView.frame.size.height,SCREEN_WIDTH, 90);
+        [self.numChooseScrol setContentSize:CGSizeMake(SCREEN_WIDTH, 140 + self.gridView.frame.size.height)];
+    }
+    
+}
+
+
+- (NSInteger)numberOfCellsInGridView:(MMGridView *)gridView
+{
+    return self.colorArray.count;
+}
+
+
+- (MMGridViewCell *)gridView:(MMGridView *)gridView cellAtIndex:(NSUInteger)index
+{
+    
+    MMGridViewDefaultCell *cell = [[MMGridViewDefaultCell alloc] initWithFrame:CGRectNull];
+    cell.textLabel.text =  [[self.colorArray objectAtIndex:index] objectForKey:@"Specifications"];
+    if (index == _numIndexColor) {
+        cell.textLabel.textColor = [UIColor colorWithRed:244/255.f green:45/255.f blue:100/255.f alpha:1.0];
+        cell.iconImageVIew.layer.borderColor = [UIColor colorWithRed:244/255.f green:45/255.f blue:100/255.f alpha:1.0].CGColor;
+    }
+    return cell;
+}
+
+
+#pragma mark - GridView Delegate
+
+- (void)gridView:(MMGridView *)gridView didSelectCell:(MMGridViewCell *)cell atIndex:(NSUInteger)index
+{
+    NSLog(@"%d",(int)index);
+    //    self.searchTextField.text = [_colorArray objectAtIndex:index];
+    //    [self cancelSearch];
+    _numIndexColor = (int)index;
+    [self.gridView reloadData];
+    
+    NSDictionary *dic = [_colorArray objectAtIndex:index];
+    
+    self.productPrice.text = [NSString stringWithFormat:@"￥%@",[dic objectForKey:@"price"]];
+    self.productColor.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"Specifications"]];
+    
+}
+
+- (void)gridView:(MMGridView *)theGridView changedPageToIndex:(NSUInteger)index
+{
+    
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

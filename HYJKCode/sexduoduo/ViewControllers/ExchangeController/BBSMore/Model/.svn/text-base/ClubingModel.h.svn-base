@@ -1,0 +1,21 @@
+//
+//  ClubingModel.h
+//  
+//
+//  Created by apple on 15/12/10.
+//
+//
+
+#import <Foundation/Foundation.h>
+#import "ClubingForumModel.h"
+
+@interface ClubingModel : NSObject<NSCoding>
+
+@property (nonatomic) int ID;
+@property (nonatomic,strong) NSMutableArray *forumArry;
+@property (nonatomic,copy) NSString *name;
+
+
++ (instancetype)clubingModelWith:(NSDictionary *)dict;
+
+@end

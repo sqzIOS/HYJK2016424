@@ -1,0 +1,60 @@
+//
+//  ShopCarViewController.h
+//  sexduoduo
+//
+//  Created by showm on 14-5-20.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+//#import "ZBarSDK.h"
+#import <AVFoundation/AVFoundation.h>
+#import "AppDelegate.h"
+#import "ShopCarCell.h"
+#import "GoodsDetailTwoViewController.h"
+#import "SDOrderVC.h"
+
+@interface ShopCarViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,UIAlertViewDelegate>
+{
+    UIButton *rightBtn;
+    UIView *bottomImgView;
+    UILabel *totalPrice;
+    UIButton *buyBtn;
+    UIButton *totalBtn;
+    UIButton *delAllBtn;
+    
+    int currentPage;
+    
+    MKNetworkOperation *opration;
+
+    
+}
+@property (weak, nonatomic) IBOutlet UIView *noGoodsView;
+@property (strong, nonatomic) IBOutlet UIView *goodsView;
+
+@property (strong, nonatomic)  UITableView *goodsTableView;
+
+@property (strong, nonatomic) NSMutableArray *goodsDataArray;
+@property (strong, nonatomic) NSMutableArray *orderDataArray;
+@property (strong, nonatomic) NSMutableDictionary *goodsDic;
+
+@property (strong, nonatomic) NSMutableArray *shopCarDataArray;
+
+@property (assign, nonatomic) BOOL isShowEdit;
+
+@property (assign, nonatomic) int selectRow;
+
+@property (assign, nonatomic) int removeRow;
+
+@property (strong, nonatomic) UIActivityIndicatorView *indicator;
+@property (strong, nonatomic) UILabel *promptLab;
+
+@property (strong, nonatomic) NSString *quantityStr;
+
+
+@property (weak, nonatomic) IBOutlet UIButton *goToShopBtn;
+
+
+
+
+@end

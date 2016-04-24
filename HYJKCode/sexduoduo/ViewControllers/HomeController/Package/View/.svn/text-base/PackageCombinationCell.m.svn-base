@@ -1,0 +1,131 @@
+//
+//  PackageCombinationCell.m
+//  
+//
+//  Created by apple on 15/12/14.
+//
+//
+
+#import "PackageCombinationCell.h"
+#import "ShareFunction.h"
+#import "SDGoodRecommendObj.h"
+#import "SDGoodDetailRecommend.h"
+#import "UIImageView+WebCache.h"
+#import "NSString+Category.h"
+
+
+@interface PackageCombinationCell()
+
+@property (nonatomic,weak) UIButton *chooseBtn;
+@property (nonatomic,weak) UIImageView *iconView;
+@property (nonatomic,weak) UILabel *detailLabel;
+@property (nonatomic,weak) UILabel *marketPrice;
+@property (nonatomic,weak) UILabel *goodsPrice;
+@end
+
+@implementation PackageCombinationCell
+
++ (instancetype)packageCombinationCellInTableView:(UITableView *)tableView;
+{
+    NSString *ID = @"cell";
+    PackageCombinationCell *cell = [tableView dequeueReusableCellWithIdentifier:ID];
+    if (cell == nil) {
+        cell = [[PackageCombinationCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    }
+    return cell;
+}
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+        [self setContent];
+    }
+    return  self;
+}
+
+- (void)setContent
+{
+    // 按钮
+    UIButton *chooseBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    [chooseBtn setImage:[UIImage imageNamed:@"package_goods_nor"] forState:UIControlStateNormal];
+    [chooseBtn setImage:[UIImage imageNamed:@"package_goods_pre"] forState:UIControlStateSelected];
+    chooseBtn.frame = CGRectMake(0, QZMake(25.5), QZMake(45), QZMake(45));
+    [self.contentView addSubview:chooseBtn];
+    self.chooseBtn = chooseBtn;
+    [chooseBtn addTarget:self action:@selector(chooseBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    
+    // 图片
+    UIImageView *iconView = [[UIImageView alloc] init];
+    iconView.frame = CGRectMake(CGRectGetMaxX(self.chooseBtn.frame), QZMake(15), QZMake(70), QZMake(70));
+    [self.contentView addSubview:iconView];
+    self.iconView = iconView;
+    
+    // 描述
+    UILabel *detailLabel = [[UILabel alloc] init];
+    detailLabel.frame = CGRectMake(CGRectGetMaxX(self.iconView.frame) + QZMake(5), CGRectGetMinY(self.iconView.frame), SCREEN_WIDTH - CGRectGetMaxX(self.iconView.frame) - QZMake(10), QZMake(45));
+    [self.contentView addSubview:detailLabel];
+    detailLabel.font = [UIFont systemFontOfSize:QZMake(14)];
+    detailLabel.textColor = RGBCOLOR(97, 97, 97);
+    detailLabel.numberOfLines = 0;
+    self.detailLabel = detailLabel;
+    
+    // goodsPrice
+    UILabel *goodsPrice = [[UILabel alloc] init];
+    goodsPrice.textColor = RGBCOLOR(252, 122, 36);
+    goodsPrice.font = [UIFont systemFontOfSize:QZMake(16)];
+    goodsPrice.frame = CGRectMake(CGRectGetMaxX(self.iconView.frame) + QZMake(5), CGRectGetMaxY(self.detailLabel.frame),QZMake(80) , QZMake(30));
+    [self.contentView addSubview:goodsPrice];
+    self.goodsPrice = goodsPrice;
+    
+    // marketPrice
+    UILabel *marketPrice = [[UILabel alloc] init];
+    marketPrice.textColor = RGBCOLOR(165, 165, 165);
+    marketPrice.font = [UIFont systemFontOfSize:QZMake(12)];
+    marketPrice.frame = CGRectMake(CGRectGetMaxX(self.goodsPrice.frame) + QZMake(5), CGRectGetMaxY(self.detailLabel.frame), QZMake(70), QZMake(30));
+//    marketPrice.textAlignment = NSTextAlignmentRight;
+    [self.contentView addSubview:marketPrice];
+    self.marketPrice = marketPrice;
+    
+}
+
+- (void)setModel:(SDGoodRecommendObj *)model
+{
+    _model = model;
+    
+    // 图片
+    NSURL *url = [NSURL URLWithString:model.nowThumbnailGoodsImagePath];
+    [self.iconView sd_setImageWithURL:url];
+    
+    // 内容
+    self.detailLabel.text = model.name;
+
+    // 市场价
+    self.marketPrice.text = [NSString stringWithFormat:@"¥%.2f",[model.marketPrice floatValue]];
+    
+    UIView *line = [[UIView alloc] init];
+    line.backgroundColor = self.marketPrice.textColor;
+    line.frame = CGRectMake(0, 0, [self.marketPrice.text sizeWithAttributes:nil].width, 1);
+    line.centerY = self.marketPrice.height/2.;
+    [self.marketPrice addSubview:line];
+    
+    // 价格
+    self.goodsPrice.text = [NSString stringWithFormat:@"¥%.2f",[model.goods_price floatValue]];
+    CGSize size = [NSString getTextContent:self.goodsPrice.text withFont:self.goodsPrice.font];
+    self.goodsPrice.width = size.width +QZMake(5);
+    
+    self.marketPrice.left = self.goodsPrice.right;
+    
+}
+
+- (void)chooseBtnClick:(UIButton *)chooseBtn
+{
+    chooseBtn.selected = !chooseBtn.selected;
+    
+    if ([self.delegate respondsToSelector:@selector(PackageCombinationCellChooseBtnClick:)]) {
+        [self.delegate PackageCombinationCellChooseBtnClick:self];
+    }
+}
+
+
+@end

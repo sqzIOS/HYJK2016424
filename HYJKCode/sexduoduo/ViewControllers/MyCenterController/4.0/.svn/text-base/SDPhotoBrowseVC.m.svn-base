@@ -1,0 +1,138 @@
+
+//
+//  SDPhotoBrowseVC.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/11.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  图片浏览
+
+#import "SDPhotoBrowseVC.h"
+
+@interface SDPhotoBrowseVC ()<UIScrollViewDelegate>
+
+@property (nonatomic, strong) UIScrollView *mainScrollView;
+
+@property (nonatomic, strong) TopNavView *navView;
+
+@property (nonatomic, strong) UILabel *pageLab;
+//@property (nonatomic, strong) UIImageView *imageView;
+
+@end
+
+@implementation SDPhotoBrowseVC
+
+- (instancetype)initWithArr:(NSArray *)dataArr Num:(int)num{
+    if (self = [super init]) {
+        self.dataArr = dataArr;
+        self.num = num;
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    self.view.backgroundColor = BLACK_COLOR;
+    
+//    [self setTopNavView];
+    
+    [self initView];
+}
+
+
+////顶部NavView
+//-(void)setTopNavView
+//{
+//    int layOutH = -20;
+//    if (IOS7_OR_LATER) {
+//        layOutH = 0;
+//    }
+//    
+//    _navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, layOutH,SCREEN_WIDTH, 64)];
+//    [self.view addSubview:_navView];
+//    
+//    [_navView setTitleStr:[NSString stringWithFormat:@"%zi/%zi",_num + 1,_dataArr.count]];
+//    
+//    [_navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+//    
+//}
+
+- (void) initView {
+    
+    [self.view addSubview:self.mainScrollView];
+    
+    self.mainScrollView.contentSize = CGSizeMake(SCREEN_WIDTH * _dataArr.count, _mainScrollView.height);
+    
+    for (int i = 0; i < _dataArr.count; i++) {
+        
+        UIImageView *imgV = [[UIImageView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH * i, 0, SCREEN_WIDTH, _mainScrollView.height)];
+        [_mainScrollView addSubview:imgV];
+        imgV.userInteractionEnabled = YES;
+        imgV.contentMode = UIViewContentModeScaleAspectFit;
+        NSString *pathStr = [NSString stringWithFormat:@"%@",_dataArr[i][@"image_url"]];
+        [imgV sd_setImageWithURL:[NSURL URLWithString:pathStr] placeholderImage:[UIImage imageNamed:@"myCenter_userImg2"]];
+        
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)];
+        [imgV addGestureRecognizer:tap];
+    }
+    
+    self.mainScrollView.contentOffset = CGPointMake(SCREEN_WIDTH * _num, _mainScrollView.contentOffset.y);
+    
+    [self.view addSubview:self.pageLab];
+    self.pageLab.text = [NSString stringWithFormat:@"%zi / %zi",_num + 1,_dataArr.count];
+}
+
+#pragma mark - btn action
+////返回
+//-(void)toBackView
+//{
+//    [self.navigationController popViewControllerAnimated:YES];
+//}
+
+/**
+ *  停止滚动
+ *
+ *  @param scrollView
+ *  @param decelerate
+ */
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    
+    int page = scrollView.contentOffset.x / SCREEN_WIDTH + 1;
+    self.pageLab.text = [NSString stringWithFormat:@"%zi / %zi",page,_dataArr.count];
+}
+
+
+- (void)tapAction:(UITapGestureRecognizer *)tap {
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+#pragma mark --- get
+
+- (UIScrollView *)mainScrollView {
+    if (_mainScrollView == nil) {
+        _mainScrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+        _mainScrollView.pagingEnabled = YES;
+        _mainScrollView.bounces = NO;
+        _mainScrollView.delegate = self;
+    }
+    return _mainScrollView;
+}
+
+-(UILabel *)pageLab {
+    if (_pageLab == nil) {
+        _pageLab = [[UILabel alloc] initWithFrame:CGRectMake(0, SCREEN_HEIGHT - 40, SCREEN_WIDTH, 20)];
+        _pageLab.font = FONT_WITH_SIZE(20);
+        _pageLab.textColor = WHITE_COLOR;
+        _pageLab.textAlignment = NSTextAlignmentCenter;
+    }
+    return _pageLab;
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

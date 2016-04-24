@@ -1,0 +1,27 @@
+//
+//  SRResultVC.h
+//  sexduoduo
+//
+//  Created by ly1992 on 15/6/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "SRecordModel.h"
+
+@interface SRResultVC : UIViewController
+{
+    
+}
+typedef enum{
+    ResultTypeSexMan  = 0,  //男
+    ResultTypeSexWomen     //女
+}ResultTypeSex;
+
+@property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
+
+@property (strong,nonatomic) SRecordModel *model;
+
+@property (nonatomic,assign) ResultTypeSex type;
++(void)gotoMySelf:(id)pvc withModel:(SRecordModel*)model withType:(ResultTypeSex)type;
+@end

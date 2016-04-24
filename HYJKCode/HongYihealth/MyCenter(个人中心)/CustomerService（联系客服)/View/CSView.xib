@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="7706" systemVersion="15B42" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="CustomerServiceView">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0C5-2c-R7Y">
+                    <rect key="frame" x="101" y="15" width="199" height="21"/>
+                    <animations/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="21" id="lgb-cN-Y78"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4cL-pH-39l">
+                    <rect key="frame" x="20" y="47" width="280" height="30"/>
+                    <animations/>
+                    <color key="backgroundColor" red="0.3294117647" green="0.77647058820000003" blue="0.45882352939999999" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="30" id="wSj-kI-qMd"/>
+                    </constraints>
+                    <state key="normal" title="联系客服">
+                        <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                    </state>
+                    <connections>
+                        <action selector="connectServiceBtnClick:" destination="iN0-l3-epB" eventType="touchUpInside" id="k8Q-09-Hf6"/>
+                    </connections>
+                </button>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="客服热线:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="YIy-eV-Ixy">
+                    <rect key="frame" x="20" y="15" width="73" height="21"/>
+                    <animations/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="73" id="E4K-Xk-ueg"/>
+                        <constraint firstAttribute="height" constant="21" id="d2j-gR-CVw"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+            </subviews>
+            <animations/>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="4cL-pH-39l" secondAttribute="trailing" constant="20" id="43c-fe-t5a"/>
+                <constraint firstAttribute="trailing" secondItem="0C5-2c-R7Y" secondAttribute="trailing" constant="20" id="9Pk-R3-6Ln"/>
+                <constraint firstItem="YIy-eV-Ixy" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="20" id="Aoh-SH-TyX"/>
+                <constraint firstItem="0C5-2c-R7Y" firstAttribute="leading" secondItem="YIy-eV-Ixy" secondAttribute="trailing" constant="8" id="DTp-es-Oqa"/>
+                <constraint firstItem="4cL-pH-39l" firstAttribute="top" secondItem="YIy-eV-Ixy" secondAttribute="bottom" constant="11" id="NuG-6E-Hjo"/>
+                <constraint firstItem="YIy-eV-Ixy" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="15" id="Ug0-5d-ock"/>
+                <constraint firstItem="0C5-2c-R7Y" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="15" id="etZ-Al-w8S"/>
+                <constraint firstItem="4cL-pH-39l" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" constant="20" id="zvv-a3-RAP"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+            <connections>
+                <outlet property="connectService" destination="4cL-pH-39l" id="vaa-Ga-xDH"/>
+                <outlet property="servicePhoneNum" destination="0C5-2c-R7Y" id="qY3-0T-kMY"/>
+            </connections>
+            <point key="canvasLocation" x="102" y="247"/>
+        </view>
+    </objects>
+</document>

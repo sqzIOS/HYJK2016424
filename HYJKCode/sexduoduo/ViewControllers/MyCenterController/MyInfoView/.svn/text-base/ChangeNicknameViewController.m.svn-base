@@ -1,0 +1,188 @@
+//
+//  ChangeNicknameViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-9-18.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "ChangeNicknameViewController.h"
+
+@interface ChangeNicknameViewController ()
+
+@end
+
+@implementation ChangeNicknameViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    [self initChangeNicknameView];
+}
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"修改昵称"];
+    
+
+    
+
+    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    _indicator.frame = CGRectMake(SCREEN_WIDTH - 42, 25 , 32, 32);
+    [navView addSubview:_indicator];
+    _indicator.hidden = YES;
+    
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+-(void)initChangeNicknameView
+{
+    
+    
+    UIView *lineSec = [[UIView alloc] initWithFrame:CGRectMake(20, 67, SCREEN_WIDTH, 0.5)];
+    lineSec.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [self.changeNicknameView addSubview:lineSec];
+    
+
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    [self.changeNicknameView addSubview:self.promptLab];
+    
+    self.changeNicknameBtn.layer.cornerRadius = 3.5;
+    self.changeNicknameBtn.backgroundColor = NAV_MoreBg_COLOR;
+    
+    
+}
+
+- (IBAction)changeBtnClick:(id)sender {
+    
+    NSLog(@"昵称长度：%d",self.nicknameTextField.text.length);
+    if (self.nicknameTextField.text.length>0) {
+        
+       
+        int len = [ShareFunction sinaCountWord:self.nicknameTextField.text];
+        
+        NSLog(@"昵称长度2：%d",len);
+        if (len>12) {
+            self.promptLab.text = @"请输入小于12个字符";
+            [self showPromptLab];
+            return;
+        }
+    }
+    
+    if (self.nicknameTextField.text.length < 1) {
+        self.promptLab.text = @"请输入新昵称！";
+        [self showPromptLab];
+        
+    }else
+    {
+       
+        NSMutableDictionary *dic=[[NSMutableDictionary alloc]initWithCapacity:0];
+        [dic setObject:USERID forKey:@"usernameId"];
+        [dic setObject:self.nicknameTextField.text forKey:@"nickname"];
+        
+        [dic setObject:@"" forKey:@"gender"];
+        [dic setObject:@"" forKey:@"email"];
+        [dic setObject:@"" forKey:@"name"];
+        [dic setObject:@"" forKey:@"birth"];
+        [dic setObject:@"" forKey:@"areaStore"];
+        [dic setObject:@"" forKey:@"address"];
+        [dic setObject:@"" forKey:@"zipCode"];
+        [dic setObject:@"" forKey:@"phone"];
+        
+        
+        [self requestWithUserLoginWithDic:dic];
+    }
+    
+}
+
+
+-(void)requestWithUserLoginWithDic:(NSDictionary *)dic
+{
+    self.indicator.hidden = NO;
+    [self.indicator startAnimating];
+    
+    [[MKHttpServiceEngine shareMyInstance] changeUserInfo:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        self.indicator.hidden = YES;
+        [self.indicator stopAnimating];
+        
+        self.promptLab.text = [responseDic objectForKey:@"message"];
+        [self showPromptLab];
+        
+        if ([[responseDic objectForKey:@"success"] boolValue]) {
+            
+            [self performSelector:@selector(toBackView) withObject:self afterDelay:0.5];
+            
+        }
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        self.indicator.hidden = YES;
+        [self.indicator stopAnimating];
+        
+        self.promptLab.text = @"修改失败!";
+        [self showPromptLab];
+    }];
+    
+}
+
+
+//显示提示
+-(void)showPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:0.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:nil];
+}
+
+
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

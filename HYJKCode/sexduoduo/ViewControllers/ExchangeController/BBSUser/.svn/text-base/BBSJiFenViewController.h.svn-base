@@ -1,0 +1,25 @@
+//
+//  BBSJiFenViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-11-12.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  我的积分
+
+#import <UIKit/UIKit.h>
+#import "UIScrollView+SVInfiniteScrolling.h"
+#import "EGORefreshTableHeaderView.h"
+@interface BBSJiFenViewController : UIViewController
+{
+    MKNetworkOperation *opration;
+    MKNetworkOperation *oprationMore;
+}
+@property (strong, nonatomic) UITableView *setTableView0 ;
+@property (strong, nonatomic) UITableView *setTableView1 ;
+@property (strong, nonatomic) UITableView *setTableView2 ;
+@property (strong, nonatomic) NSArray *listAry;
+@property (strong, nonatomic) NSMutableArray *detailArray;// 多币明细array
+@property (strong, nonatomic) NSMutableArray *recordArray;// 购买记录array
+
+@property (strong, nonatomic) NSDictionary *userInfo;
+@end

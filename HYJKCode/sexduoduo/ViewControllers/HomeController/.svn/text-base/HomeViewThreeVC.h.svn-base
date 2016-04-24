@@ -1,0 +1,40 @@
+//
+//  HomeViewThreeVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "TaoBaoWebViewController.h"
+#import "DaogouView.h"
+#import "SDHomeHeaderView.h"
+@interface HomeViewThreeVC : UIViewController<UIScrollViewDelegate>
+
+{
+ 
+}
+
+
+@property (strong, nonatomic) IBOutlet UIScrollView *mainScrollView;
+
+// 广告图
+@property (strong, nonatomic)SDHomeHeaderView *adScrollView;
+
+//首页商品
+@property (strong, nonatomic) NSMutableArray *homeNewDataArray;
+
+//广告下的 论坛 包邮 top热卖 多币商城
+@property (strong, nonatomic) UIView *homeViewTop;
+
+
+
+//女神导购
+@property (strong, nonatomic) NSMutableArray *nvShenDaoGouListArr; //女神导购array
+@property (strong, nonatomic) UITableView *daoGouTableView ;//导购的tabView
+
+@property (strong, nonatomic) DaogouView *daoGouView;
+
+
+@end

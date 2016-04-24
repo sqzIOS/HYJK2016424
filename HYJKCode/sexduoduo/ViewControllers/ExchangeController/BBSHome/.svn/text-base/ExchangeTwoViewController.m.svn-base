@@ -1,0 +1,1400 @@
+//
+//  ExchangeTwoViewController.m
+//  sexduoduo
+//
+//  Created by dsz on 15-1-21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "ExchangeTwoViewController.h"
+#import "KWPopoverView.h"
+#import "TopRightAlertView.h"
+
+#import "MyInfoViewController.h"
+#import "LoginViewController.h"
+#import "MyBBSListViewController.h"
+#import "BBSUserViewController.h"
+#import "BBSHomeCell.h"
+#import "MoreBanKuaiViewController.h"
+#import "NvShenDaoGouListCell.h"
+
+#import "NvShenDetailViewController.h"
+#import "BBSDetailNewViewController.h"
+
+#import "MJRefresh.h"
+#import "JiFenShopViewController.h"
+
+#import "SDExchangeHeadView.h"
+#import "SDNvShenListVC.h"
+#import "ClassifyFileObj.h"
+
+#import "SDNearPeoplesVC.h"
+
+#import "RankingListController.h"
+#import "ClubingViewController.h"
+#import "SDClubModelManager.h"
+
+#import "SystemMessageController.h"
+
+#import "TopLeftAlertView.h"
+#import "MyCLController.h"
+
+//#define BBSADScrollViewHeight 160
+#define BBSADScrollViewHeight  QZMake(160)
+
+
+@interface ExchangeTwoViewController ()<TopRightAlertViewDelegate,BBSHomeCellDelegate,NvShenDaoGouListCellProtocol>
+{
+    
+    
+    NSInteger buttonClicked;//判断选中
+    UIButton *dayBtn,*weekBtn;
+    UIImageView  *selectedView;//下划线
+    float Begin_width_x,Begin_width_y,btnWidth;//按钮位置需要
+    CGRect selectedViewFrame1,selectedViewFrame2;
+    
+    
+    //我的版块
+    NSMutableArray *myBBSListArr;
+    
+    
+    NSInteger tuiJianNum;//推荐版块数目
+    int hotBBSMixNum;// 热门话题数目
+    int nvShenDaoGouPageSize;//女神导购一页几个数据
+    
+    BOOL isHaveNextPage;//女神导购是否有另外一页
+    int nvShenDaoGouPageIndex;//女神导购当前页码
+    
+    UIView *nearBtnView;//附近的人和附近的贴
+    BOOL isOpenNear;//打开或关闭附近的人或帖子
+    
+}
+@property (nonatomic, strong) SDClubModelManager *clubManager;//版块组
+
+@end
+
+@implementation ExchangeTwoViewController
+@synthesize myBBSListArr;
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    //下载广告和板块数据
+    [self requestExchangeData];
+
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    nearBtnView.hidden = YES;
+    isOpenNear = NO;
+}
+
+-(void)viewToFront
+{
+    if (ISLOGIN) {
+        // 判断是否是第一次登陆
+        [self checkBBSEveryDayEvent];
+    }
+    
+    [UIApplication sharedApplication].networkActivityIndicatorVisible = NO ;
+    
+    //下载广告和板块数据
+    [self requestExchangeData];
+    
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    self.extendDataArray = [[NSMutableArray alloc] init];
+    self.bbsDataArray = [[NSMutableArray alloc] init];
+    
+    //定位
+    [[MyCLController sharedInstance] startUpdateLocation];
+    
+    self.clubManager=[SDClubModelManager shareInstance];
+    
+    [self.clubManager qzAddObserverBlockForKeyPath:@"self.countUserForJudgeChange" block:^(__weak id obj, id oldVal, id newVal) {
+        NSLog(@"数据有变化 ");
+    }];
+    
+    
+    if (ISLOGIN) {
+        // 判断是否是第一次登陆
+        [self checkBBSEveryDayEvent];
+    }
+    
+    if (isPassStoreCheck) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(viewToFront) name:@"displayView2" object:nil];
+    }
+    
+    
+    buttonClicked=1;//初始化选中第一个按钮
+    tuiJianNum=4;//推荐四个版块
+    hotBBSMixNum=4;//热门话题
+    nvShenDaoGouPageSize=10;//女神导购显示 页数
+    
+    
+    
+    
+    // 数据
+    [self fomartBBSHomeData];
+    
+    //女神导购
+    self.nvShenDaoGouListArr =[[NSMutableArray alloc] init];
+    if ([[AppSet shareInstance] nvShenDaoGouListArr].count>0) {
+        self.nvShenDaoGouListArr=[[AppSet shareInstance] nvShenDaoGouListArr];
+    }
+    
+    [self setTopNavView];
+    [self initexchangeTableV];
+    
+    //广告页
+    [self setHeaderView];
+    
+    self.exchangeTableV.scrollsToTop=NO;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeToNvShenDaoGou:) name:@"showNvShenDaoGou" object:nil];
+    
+}
+// 首页点击女神导购的更多跳转过来
+-(void)changeToNvShenDaoGou:(id)sender
+{
+    
+    UIButton *btn=[UIButton buttonWithType:0];
+    btn.tag=2;
+    [self threeBtnClick:btn];
+    
+}
+
+
+#pragma mark 设置 我的版块 泡吧推荐 数据
+-(void)fomartBBSHomeData
+{
+    
+    //推广活动数据
+    NSArray *bbsExtendArray=[ClassifyFileObj readArrayWithPath:FILE_BBSExtendArray_path];
+    if (bbsExtendArray) {
+        self.extendDataArray = [NSMutableArray arrayWithArray:bbsExtendArray];
+    }else
+    {
+        self.extendDataArray = [[NSMutableArray alloc] init];
+    }
+    
+    
+    
+    //全部版块
+//    NSArray *allBBSData =[ClassifyFileObj readArrayWithPath:FILE_ALLBBSDataArray_path];
+//    if(allBBSData)
+//    {
+//        self.bbsDataArray =[NSMutableArray arrayWithArray:allBBSData];
+//    }else self.bbsDataArray = [[NSMutableArray alloc] init];
+    
+    
+    self.bbsDataArray = [NSMutableArray array];
+    NSMutableArray *array = [[SDClubModelManager shareInstance] dataArray];
+    
+    for (ClubingModel* clubModel in array) {
+        if (clubModel) {
+            [self.bbsDataArray addObjectsFromArray:clubModel.forumArry];
+        }
+    }
+    
+    self.myBBSListArr=[[NSMutableArray alloc] init];
+
+    for (ClubingForumModel *model in self.bbsDataArray) {
+        if (model.associated ) {
+            
+            [self.myBBSListArr addObject:model];
+        }
+    }
+    
+    
+    //可以用来推荐的版块
+    self.canTuiJianListArr = [[NSMutableArray alloc] initWithArray:self.bbsDataArray];
+    
+    for (int i=0; i<self.canTuiJianListArr.count; i++) {
+        ClubingForumModel *model=self.canTuiJianListArr[i];
+        for (ClubingForumModel *myModel in self.myBBSListArr) {
+            if ([model.ID intValue]== [myModel.ID intValue]) {
+                [self.canTuiJianListArr removeObject:model];
+                i--;
+            }
+        }
+    }
+    
+    
+    //推荐版块
+    self.tuiJianBBSListArr =[[NSMutableArray alloc] init];
+    
+    if (self.canTuiJianListArr.count>tuiJianNum) {
+        //随机几个不同的板块
+        for (int i=0; i<tuiJianNum; i++) {
+            
+            NSInteger x =arc4random()%self.canTuiJianListArr.count;
+            [self.tuiJianBBSListArr addObject:self.canTuiJianListArr[x]];
+            [self.canTuiJianListArr removeObjectAtIndex:x];
+            
+        }
+    }else self.tuiJianBBSListArr =[[NSMutableArray alloc] initWithArray:self.canTuiJianListArr];
+    
+   
+   
+}
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    
+    [self createThreeBtnWith:navView withHeight_y:20];
+    
+    
+    UIButton *rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightBtn.frame = CGRectMake(SCREEN_WIDTH-44, 20 , 44, 44);
+    [rightBtn setImage:[UIImage imageNamed:@"exchangeRightBtn"] forState:UIControlStateNormal];
+    [rightBtn addTarget:self action:@selector(showTopAlertView:) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:rightBtn];
+    
+    UIButton *leftBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    leftBtn.frame = CGRectMake(0, 20, 44, 44);
+    [leftBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateNormal];
+    [leftBtn setImage:[UIImage imageNamed:@"btn-radar"] forState:UIControlStateNormal];
+    [leftBtn addTarget:self action:@selector(leftBtnAction:) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:leftBtn];
+    
+    // 我的消息
+    if (IS_ShowMessageIcon) {
+        self.numImg = [[UIImageView alloc] initWithFrame:CGRectMake(rightBtn.width - 20, 5 , 17, 17)];
+        [self.numImg setImage:[UIImage imageNamed:@"numBg.png"]];
+        [rightBtn addSubview:self.numImg];
+        
+        self.numLabel = [[UILabel alloc] initWithFrame:self.numImg.frame];
+        self.numLabel.font = [UIFont systemFontOfSize:8.0];
+        self.numLabel.textColor = WHITE_COLOR;
+        self.numLabel.textAlignment = NSTextAlignmentCenter;
+        self.numLabel.text = @"0";
+        self.numLabel.backgroundColor = [UIColor clearColor];
+        [rightBtn addSubview:self.numLabel];
+        
+        
+        NSString *bbsMessageNumStr=[UserDefaults objectForKey:@"BBSMessageNum"];
+        if (bbsMessageNumStr && [bbsMessageNumStr intValue]>0) {
+            self.numLabel.text=bbsMessageNumStr;
+            
+            self.numImg.hidden=NO;
+            self.numLabel.hidden=NO;
+            
+        }else
+        {
+            self.numImg.hidden=YES;
+            self.numLabel.hidden=YES;
+        }
+        
+        
+         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeInfoNum:) name:NOTIFICATION_BBSMESSAGE object:nil];
+        
+    }
+    
+}
+
+-(void)changeInfoNum:(NSNotification *)sender
+{
+    
+    NSLog(@"论坛首页通知内容 =%@", sender.userInfo);
+    NSDictionary *dic=sender.userInfo;
+    if(dic[@"messageNum"])
+    {
+        NSInteger num=[dic[@"messageNum"] integerValue];
+        if (num >0) {
+            self.numLabel.text=[NSString stringWithFormat:@"%ld",(long)num];
+            
+            if (num>999) {
+                self.numLabel.text=@"999";
+            }
+            
+            self.numLabel.hidden=NO;
+            self.numImg.hidden=NO;
+            
+        }else
+        {
+            self.numLabel.text=@"0";
+            
+            self.numImg.hidden=YES;
+            self.numImg.hidden=YES;
+        }
+    }
+}
+
+/**
+ *  附近的贴
+ */
+- (void)leftBtnAction:(UIButton *)sender {
+    
+    // 灰色背景
+    self.blackView=[[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+    self.blackView.backgroundColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.2];
+    [self.view addSubview:self.blackView];
+    //注册通知 用于关闭alertView 此为类方法 Observer要使用对象popView
+    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(dismissAlertView) name:NOTIFICATION_AlertBGCanCanCel object:nil];
+    //
+    TopLeftAlertView *leftView = [[TopLeftAlertView alloc] initWithFrame:CGRectMake(5, STAR_Y, QZMake(150),QZMake(93)) Controller:self];
+    
+    [KWPopoverView showPopoverAtPoint:sender.center inView:self.view withContentView:leftView andRejectTouchBackOrNO:NO];
+}
+
+-(void)showTopAlertView:(UIButton *)sender
+{
+    
+    
+    if (ISLOGIN) {
+       
+        if(BBSUSERLEVEL)//已登陆的旧用户更新包 不会有该字段 
+        {
+            // 灰色背景
+            self.blackView=[[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+            self.blackView.backgroundColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.2];
+            [self.view addSubview:self.blackView];
+            //注册通知 用于关闭alertView 此为类方法 Observer要使用对象popView
+            [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(dismissAlertView) name:NOTIFICATION_AlertBGCanCanCel object:nil];
+            
+            
+            //
+            TopRightAlertView *topAlert=[[[NSBundle mainBundle] loadNibNamed:@"TopRightAlertView" owner:self options:nil] lastObject];
+            topAlert.levelStr=BBSUSERLEVEL;
+            topAlert.topAlertViewDelegate=self;
+            topAlert.frame=CGRectMake(SCREEN_WIDTH-180 -5, STAR_Y, 180,217);
+            [topAlert configView];
+            
+            [KWPopoverView showPopoverAtPoint:sender.center inView:self.view withContentView:topAlert andRejectTouchBackOrNO:NO];
+        }else{
+            
+            
+            [[MKHttpExchangeDemo shareMyInstance] requestExchangeUserInfoCompletionHandler:^(id responseObject) {
+                
+                NSDictionary *dic=(NSDictionary *)responseObject;
+                NSLog(@"请求论坛用户中心=%@",dic);
+                if ([dic[@"success"] intValue]==1) {
+                    
+                    NSDictionary *userInfo=[dic[@"datasource"] objectAtIndex:0];
+                    
+                    NSString *userLevel = @"LV* ***";
+                    
+                    if (userInfo) {
+                        NSString *str=[NSString stringWithFormat:@"LV%@ %@",userInfo[@"groupId"],userInfo[@"groupName"]];
+                        userLevel = str;
+                    }
+                    
+                    
+                    // 用户等级信息
+                    [UserDefaults setValue:userLevel forKey:@"BBSUserLevel"];
+                    [UserDefaults synchronize];
+                    
+                    // 灰色背景
+                    self.blackView=[[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+                    self.blackView.backgroundColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.2];
+                    [self.view addSubview:self.blackView];
+                    //注册通知 用于关闭alertView 此为类方法 Observer要使用对象popView
+                    [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(dismissAlertView) name:NOTIFICATION_AlertBGCanCanCel object:nil];
+                    
+                    
+                    //
+                    TopRightAlertView *topAlert=[[[NSBundle mainBundle] loadNibNamed:@"TopRightAlertView" owner:self options:nil] lastObject];
+                    topAlert.levelStr=userLevel;
+                    topAlert.topAlertViewDelegate=self;
+                    topAlert.frame=CGRectMake(SCREEN_WIDTH-180 -5, STAR_Y, 180,217);
+                    [topAlert configView];
+                    
+                    [KWPopoverView showPopoverAtPoint:sender.center inView:self.view withContentView:topAlert andRejectTouchBackOrNO:NO];
+                    
+                    
+                }
+            } errorHandler:^(NSError *error) {
+                
+            }];
+        }
+        
+    }else
+    {
+        [PublicMethod gotoLoginWithVC:self];
+    }
+    
+}
+
+-(void)dismissAlertView
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NOTIFICATION_AlertBGCanCanCel object:nil];
+    
+    [self.blackView removeFromSuperview];
+    self.blackView=nil;
+}
+
+
+
+-(void)initexchangeTableV
+{
+    self.exchangeTableV = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - 64 - 50) style:1];
+    self.exchangeTableV.dataSource = self;
+    self.exchangeTableV.delegate = self;
+    
+    
+    if (IOS7_OR_LATER) {
+        [self.exchangeTableV setSeparatorInset:UIEdgeInsetsZero];
+        
+    }
+    self.exchangeTableV.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.exchangeTableV];
+    
+    [self.exchangeTableV clearDefaultLineByAddFootLineWithLineColor:CLEAR_COLOR];
+    
+    
+    // 1.下拉刷新
+    
+    [self.exchangeTableV addHeaderWithTarget:self action:@selector(headerRereshing)];
+}
+
+
+-(void)headerRereshing
+{
+    
+    //提示请求
+    [ShareFunction showHUDWithText:@"正在加载"];
+    
+    //下载广告和板块数据
+    [self requestExchangeData];
+}
+-(void)hearderRereshingEnd
+{
+    
+    // 停止提示加载
+    [ShareFunction hiddenHUD];
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.exchangeTableV headerEndRefreshing];
+}
+
+#pragma mark - 上拉刷新
+-(void)footerRereshing
+{
+//    if (isHaveNextPage) {
+//        [self requestNvShenDaoGouListMore ];
+//    }else{
+        // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+        [self.exchangeTableV footerEndRefreshing];
+        [ShareFunction showToast:@"已加载到最后"];
+//    }
+    
+    NSLog(@"上拉刷新 ");
+}
+
+
+
+#pragma mark 顶部弹出框的代理 TopAlertViewDelegate
+-(void)topAlertViewButtonClick:(id)sender{
+    switch ([(UIButton*)sender tag]) {
+        case 1000://登陆
+        {
+            if (ISLOGIN) {
+                
+                // 新 用户中心
+                BBSUserViewController *controller=[[BBSUserViewController alloc] initWithNibName:@"BBSUserViewController" bundle:[NSBundle mainBundle]];
+                controller.hidesBottomBarWhenPushed = YES;
+                [self.navigationController pushViewController:controller animated:YES];
+                
+            }else
+            {
+                [PublicMethod gotoLoginWithVC:self];
+            }
+            
+        }
+            break;
+        case 1001:
+        {
+            NSLog(@"我的帖子 click");
+            if (ISLOGIN) {
+                
+                MyBBSListViewController *controller=[[MyBBSListViewController alloc]init];
+                controller.hidesBottomBarWhenPushed=YES;
+                controller.titleStr=@"我的帖子";
+                controller.mylistType=myListMyTopic;
+                [self.navigationController pushViewController:controller animated:YES];
+                
+            }else
+            {
+                [PublicMethod gotoLoginWithVC:self];
+
+            }
+            
+            
+        }
+            break;
+        case 1002:
+        {
+            NSLog(@"回复 click");
+            if (ISLOGIN) {
+                MyBBSListViewController *controller=[[MyBBSListViewController alloc]init];
+                controller.hidesBottomBarWhenPushed=YES;
+                controller.titleStr=@"我的回复";
+                controller.mylistType =myListPostReply;
+                [self.navigationController pushViewController:controller animated:YES];
+                
+            }else
+            {
+                [PublicMethod gotoLoginWithVC:self];
+
+            }
+            
+            
+            
+        }
+            break;
+        case 1003:
+        {
+            NSLog(@"积分 click");
+        }
+            break;
+        default:
+            break;
+    }
+    
+}
+
+-(void)topRightAlertViewButtonClick:(id)sender{
+    switch ([(UIButton*)sender tag]) {
+        case 1000://登陆
+        {
+            
+            if (ISLOGIN) {
+                // 新 用户中心
+                BBSUserViewController *controller=[[BBSUserViewController alloc] initWithNibName:@"BBSUserViewController" bundle:[NSBundle mainBundle]];
+                
+                controller.hidesBottomBarWhenPushed = YES;
+                [self.navigationController pushViewController:controller animated:YES];
+            }else
+            {
+                [PublicMethod gotoLoginWithVC:self];
+
+            }
+        }
+            break;
+        case 1001:
+        {
+            NSLog(@"回复 click");
+            if (ISLOGIN) {
+                MyBBSListViewController *controller=[[MyBBSListViewController alloc]init];
+                controller.hidesBottomBarWhenPushed=YES;
+                controller.titleStr=@"我的回复";
+                controller.mylistType =myListPostReply;
+                
+                NSString *bbsMessageNumStr=[UserDefaults objectForKey:@"BBSMessageNum"];
+                if (bbsMessageNumStr && [bbsMessageNumStr intValue]>0) {
+                    controller.isReplyME=YES;
+                }
+                
+                [self.navigationController pushViewController:controller animated:YES];
+            }else
+            {
+                [PublicMethod gotoLoginWithVC:self];
+
+            }
+            
+        }
+            break;
+        case 1002:
+        {
+            NSLog(@"我的帖子 click");
+            if (ISLOGIN) {
+                MyBBSListViewController *controller=[[MyBBSListViewController alloc]init];
+                controller.hidesBottomBarWhenPushed=YES;
+                controller.titleStr=@"我的帖子";
+                controller.mylistType=myListMyTopic;
+                [self.navigationController pushViewController:controller animated:YES];
+            }else
+            {
+                [PublicMethod gotoLoginWithVC:self];
+
+            }
+            
+            
+        }
+            break;
+        
+        case 1003:
+        {
+            NSLog(@"积分 click");
+            JiFenShopViewController *ctrVc = [[JiFenShopViewController alloc] initWithNibName:@"JiFenShopViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.titleStr = @"积分商城";
+            ctrVc.isHiddenSort=YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.requestType = classifyType;
+            ctrVc.classifyId =@"8a04bc8b4a050d2c014a05252972004a";
+            [self.navigationController pushViewController:ctrVc animated:YES];
+        }
+            break;
+        default:
+            break;
+    }
+    
+}
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    if (buttonClicked==2) {
+         return 1;
+    }else
+    {
+        return 3;
+    }
+    
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (buttonClicked==2) {
+        return 5;
+    
+    }else{
+        
+        if (section==0) {
+            
+            return self.extendDataArray.count< 3 ? self.extendDataArray.count : 3 ;
+            
+        }
+        else if (section ==1){
+
+            return self.myBBSListArr.count;
+        }
+        
+        
+        return self.tuiJianBBSListArr.count;
+    }
+  
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (buttonClicked==2) {
+        return 82;
+    }else{
+        if (indexPath.section==0) {
+            if (indexPath.row<self.myBBSListArr.count) {
+                return 82;
+            }else return 45;
+        }
+
+        else if(indexPath.section==1){
+
+            if (indexPath.row<self.myBBSListArr.count) {
+                return 82;
+            }else return 45;
+        }
+        return 82;
+    }
+    
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (buttonClicked==2) {
+        return 0;
+    }else
+    {
+        if (section==0) {
+            return 0;
+        }
+        if (section == 1) {
+            if(section==1 && self.myBBSListArr.count ==0)
+            {
+                return 75;
+            }else return 35;
+        }
+        
+        return 35;
+    }
+    
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 35)];
+    view.userInteractionEnabled=YES;
+    view.backgroundColor=WHITE_COLOR;
+    
+    if(buttonClicked==1){
+        
+        UIImageView *leftImg = [[UIImageView alloc] initWithFrame:CGRectMake(3, (view.frame.size.height-13)/2. ,4, 13)];
+        [leftImg setImage:[UIImage imageNamed:@"BBSHomeLeftImage"]];
+        leftImg.backgroundColor=WHITE_COLOR;
+        [view addSubview:leftImg];
+        
+        
+        UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(10, (view.frame.size.height-25)/2., 100, 25)];
+        lab.backgroundColor=WHITE_COLOR;
+        lab.font = [UIFont systemFontOfSize:14.0];
+        if (section==1) {
+            
+            UIButton *btn =FastCreatButton(CGRectMake(SCREEN_WIDTH-80, 0, 80, view.frame.size.height), @"查看更多", CLEAR_COLOR, NAV_RED_COLOR, nil, nil);
+            btn.tag=10001;
+            btn.titleLabel.font = [UIFont systemFontOfSize:12.0];
+            [btn addTarget:self action:@selector(moreBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+            [view addSubview:btn];
+            
+        }
+        switch (section) {
+            case 0:
+            {
+                
+            }
+                break;
+            case 1:
+            {
+                lab.text = @"我的泡吧";
+                
+            }
+                break;
+            case 2:
+            {
+                lab.text = @"泡吧版块";
+                
+            }
+                break;
+            default:
+                break;
+        }
+        [view addSubview:lab];
+        
+        if (section==1 && self.myBBSListArr.count==0) {
+            UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(0, 30, SCREEN_WIDTH, 45)];
+            lab.backgroundColor=WHITE_COLOR;
+            lab.textAlignment=NSTextAlignmentCenter;
+            lab.text=@"您尚未添加版块";
+            lab.textColor = [UIColor lightGrayColor];
+            lab.font = [UIFont systemFontOfSize:13.0];
+            [view addSubview:lab];
+        }
+    }
+    
+    return view;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+    if (section ==2) {
+        return  40;
+    }
+    return 0;
+}
+-(UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
+{
+    UIView *view=[[UIView alloc] init];
+    
+    if (section==2) {
+        
+        UIButton *btn = FastCreatButton(CGRectMake((SCREEN_WIDTH-253)/2., 7, 253, 29), @"更多版块",NAV_RED_COLOR,WHITE_COLOR, nil, nil);
+        btn.titleLabel.font=[UIFont systemFontOfSize:14];
+        btn.tag=10001;
+        btn.backgroundColor=[UIColor colorWithPatternImage:UIImageByName(@"homeBBSMoreBanKuai")];
+        [btn addTarget:self action:@selector(moreBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [view addSubview:btn];
+        
+    }
+    return view;
+}
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (buttonClicked==2) {
+        return NO;
+    }else{
+        if (indexPath.section==1) {
+            return TRUE;
+        }
+        else
+            return NO;
+    }
+    
+}
+- (NSString*)tableView:(UITableView*)tableView
+titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath*)indexpath {
+    return @"退出";
+}
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return UITableViewCellEditingStyleDelete;
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+    ClubingForumModel *model = self.myBBSListArr[indexPath.row];
+
+    // 从我的板块删除
+    if(!ISLOGIN)
+    {
+        [PublicMethod gotoLoginWithVC:self];
+    }else
+    {
+        [SDClubModelManager deleteForumWithId:model.ID success:^{
+        } errorBlock:^{
+        }];
+    }
+    
+    [self.myBBSListArr removeObjectAtIndex:indexPath.row];
+    [self.exchangeTableV reloadData];
+    [ShareFunction showToast:@"删除成功"];
+    
+    
+    
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (buttonClicked==2) {
+        
+        NSArray *imageNameArr=@[@"bbs_ic_rich",@"bbs_ic_community",@"bbs_ic_reward",@"bbs_ic_hot",@"bbs_ic_trendsetter"];
+        NSArray *titleArr = @[@"土豪财富榜",@"社区名人堂",@"剁手至尊榜",@"今日最热门",@"达人爱导购"];
+        NSArray *subTitleArr = @[@"土豪集体出现，屌丝敬请围观",@"嘴遁王者排行榜，张口自带5毛钱特效",@"谁是今日剁手至尊？良辰要他好看！",@"你的槽点够深刻，我的膝盖中箭了",@"好不好，看人家搞一下不就晓得了？"];
+        
+        self.exchangeTableV.separatorStyle=UITableViewCellSeparatorStyleNone;
+        
+        self.exchangeTableV.separatorStyle=UITableViewCellSeparatorStyleSingleLine;
+        
+        BBSHomeCell *cell = nil;
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"BBSHomeCell" owner:self options:nil] lastObject];
+            
+        }
+        
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        cell.contentView.backgroundColor=[UIColor whiteColor];
+        
+        NSMutableArray *array=nil;
+        array=self.myBBSListArr;
+        
+        cell.imageView.image = [UIImage imageNamed:imageNameArr[indexPath.row]];
+        cell.textLabel.text = titleArr[indexPath.row];
+        cell.detailTextLabel.text = subTitleArr[indexPath.row];
+    
+        cell.textLabel.textColor = [UIColor colorWithRed:0 green:0 blue:0 alpha:0.9];
+        cell.detailTextLabel.textColor = LIGHT_GRAY_COLOR;
+             
+        UIImageView *accesoryView=[[UIImageView alloc] initWithImage:UIImageByName(@"bbs_btn_jump")];
+        cell.addBtn.hidden=YES;
+        cell.accessoryView=nil;
+        cell.accessoryView=accesoryView;
+
+        
+        return cell;
+    
+    }else{
+        self.exchangeTableV.separatorStyle=UITableViewCellSeparatorStyleSingleLine;
+        
+        BBSHomeCell *cell = nil;
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"BBSHomeCell" owner:self options:nil] lastObject];
+        }
+        
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        cell.contentView.backgroundColor=[UIColor whiteColor];
+        
+        
+        NSMutableArray *array=nil;
+        //我的板块
+        if (indexPath.section==0) {
+            array=self.extendDataArray;
+            
+            
+            if(indexPath.row<array.count){
+                [cell configCellWithArray:array indexRow:(int)indexPath.row];
+                cell.delegate=self;
+                cell.addBtn.hidden=YES;
+                cell.accessoryView=nil;
+                
+                // 是否最热
+                UIImageView *imgHot=(UIImageView *)[cell viewWithTag:1001];
+                if (array[indexPath.row][@"isHot"]) {
+                    if ([array[indexPath.row][@"isHot"] intValue]==1) {
+                        imgHot.hidden=NO;
+                    }
+                }
+                
+                // 点击关注更多版块
+            }else{
+                
+                cell.textLabel.text=@"";
+                cell.detailTextLabel.text=@"";
+                cell.addBtn.hidden=YES;
+                
+                UIButton *btn = FastCreatButton(CGRectMake((SCREEN_WIDTH-253)/2., 7, 253, 29), @"更多版块",NAV_RED_COLOR,WHITE_COLOR, nil, nil);
+                btn.titleLabel.font=[UIFont systemFontOfSize:14];
+                btn.tag=10001;
+                btn.backgroundColor=[UIColor colorWithPatternImage:UIImageByName(@"homeBBSMoreBanKuai")];
+                [btn addTarget:self action:@selector(moreBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+                [cell addSubview:btn];
+                
+            }
+        }
+        
+        else if(indexPath.section==1)
+        {
+            array=self.myBBSListArr;
+            
+            if(indexPath.row<array.count){
+                [cell configCellWithArray:array indexRow:(int)indexPath.row];
+                cell.delegate=self;
+                cell.addBtn.hidden=YES;
+                cell.accessoryView=nil;
+                
+                ClubingForumModel *model = array[indexPath.row];
+                // 是否最热
+                UIImageView *imgHot=(UIImageView *)[cell viewWithTag:1001];
+                if (model.isHot) {
+                    imgHot.hidden=NO;
+                    
+                }
+            }
+        }else
+        {
+            array=self.tuiJianBBSListArr;
+            
+            
+            [cell configCellWithArray:array indexRow:(int)indexPath.row];
+            cell.delegate=self;
+            
+            
+            ClubingForumModel *model = array[indexPath.row];
+            // 是否最热
+            UIImageView *imgHot=(UIImageView *)[cell viewWithTag:1001];
+            if (model.isHot) {
+                imgHot.hidden=NO;
+                
+            }
+        }
+        return cell;
+
+    }
+    
+}
+
+#pragma mark 女神导购点赞登陆
+-(void)didNotLogin
+{
+    UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"提示" message:@"您尚未登录,是否去登录" delegate:self cancelButtonTitle:@"否" otherButtonTitles:@"是", nil];
+    alert.tag=111;
+    [alert show];
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag==111) {
+        if (buttonIndex==1) {
+            [PublicMethod gotoLoginWithVC:self];
+
+        }
+    }
+}
+-(void)moreBtnClick:(UIButton *)sender
+{
+    if (sender.tag==10001) {
+//        MoreBanKuaiViewController *controller = [[MoreBanKuaiViewController alloc] initWithNibName:@"MoreBanKuaiViewController" bundle:[NSBundle mainBundle]];
+//        
+//        controller.hidesBottomBarWhenPushed = YES;
+//        controller.bbsDataArray=self.bbsDataArray;
+//        [self.navigationController pushViewController: controller animated:YES];
+        
+        ClubingViewController *vc=[[ClubingViewController alloc] init];
+        
+        [self.navigationController pushViewController:vc animated:YES];
+        
+        
+    }else if (sender.tag==10002)
+    {
+        //热门话题
+        MyBBSListViewController *controller=[[MyBBSListViewController alloc]init];
+        controller.hidesBottomBarWhenPushed=YES;
+       
+        controller.mylistType=mylistHotBBS;
+        [self.navigationController pushViewController:controller animated:YES];
+    }
+   
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+//    SystemMessageController *vc =[[SystemMessageController alloc] init];
+//    [self.navigationController pushViewController:vc animated:YES];
+//    
+//    return;
+    
+    
+  
+    
+    if (buttonClicked==2) {
+        
+        
+        if (indexPath.row == 0) {
+            // 打赏榜
+            RankingListController *rankingListController = [RankingListController RankingListControllerInitWithStyle:RankingListControllerStyleReward];
+            [self.navigationController pushViewController:rankingListController animated:YES];
+        }
+        if (indexPath.row == 1) {
+            // 泡吧榜
+            RankingListController *rankingListController = [RankingListController RankingListControllerInitWithStyle:RankingListControllerStyleClubbing];
+            [self.navigationController pushViewController:rankingListController animated:YES];
+        }
+        if (indexPath.row == 2) {
+            // 金币榜
+            RankingListController *rankingListController = [RankingListController RankingListControllerInitWithStyle:RankingListControllerStyleGold];
+            [self.navigationController pushViewController:rankingListController animated:YES];
+        }
+        
+        if (indexPath.row == 3) {
+            //热门话题
+            MyBBSListViewController *controller=[[MyBBSListViewController alloc]init];
+            controller.mylistType=mylistHotBBS;
+            [self.navigationController pushViewController:controller animated:YES];
+        }
+        
+        if (indexPath.row == 4) {
+            SDNvShenListVC *vc=[[SDNvShenListVC alloc] init];
+            [self.navigationController pushViewController:vc animated:YES];
+        }
+        
+    }else
+    {
+        
+        BBSHomeCell *cell=(BBSHomeCell *)[tableView cellForRowAtIndexPath:indexPath];
+        
+        NSMutableArray *array=nil;
+        if (indexPath.section==0) {
+            array=self.extendDataArray;
+        }else if(indexPath.section==1){
+            array = self.myBBSListArr;//我的板块
+        }else if(indexPath.section == 2)
+        {
+            array = self.tuiJianBBSListArr;
+        }
+        
+        if (indexPath.row<array.count) {
+            
+            BBSListViewController *controller = [[BBSListViewController alloc] initWithNibName:@"BBSListViewController" bundle:[NSBundle mainBundle]];
+            
+            
+            if ([array[indexPath.row] isKindOfClass:[ClubingForumModel class]])
+            {
+                ClubingForumModel *model = array[indexPath.row];
+                controller.forumId=model.ID;
+                controller.forumImage=[cell.headImageView image];
+                controller.nameString=model.title;
+                controller.detailString=model.des;
+                controller.titleStr = model.title;
+            }else
+            {
+                controller.forumId=array[indexPath.row][@"id"];
+                controller.forumImage=[cell.headImageView image];
+                controller.nameString=[array objectAtIndex:indexPath.row][@"title"];
+                controller.detailString=[array objectAtIndex:indexPath.row][@"description"];
+                controller.titleStr = [array objectAtIndex:indexPath.row][@"title"];
+            }
+        
+            [self.navigationController pushViewController: controller animated:YES];
+            
+            
+        }else
+        {
+            
+        }
+
+    }
+ 
+}
+#pragma mark - 添加我的版块
+-(void)addBtnClickWithIndexRow:(NSInteger )indexRow
+{
+    NSLog(@"点击addbtn %d",(int)indexRow);
+    
+    if(!ISLOGIN)
+    {
+        [PublicMethod gotoLoginWithVC:self];
+        return;
+    }else
+    {
+        ClubingForumModel *model = self.tuiJianBBSListArr[indexRow];
+        [SDClubModelManager addForumWithId:model.ID success:^{
+        } errorBlock:^{
+        }];
+    }
+    
+    
+    // 添加到我的版块
+    [self.myBBSListArr addObject:self.tuiJianBBSListArr[indexRow]];
+    
+    // 删除泡吧推荐的该条数据
+    [self.tuiJianBBSListArr removeObjectAtIndex:indexRow];
+    
+    //如果推荐数据变为0了 则新增几条数据
+    if (self.tuiJianBBSListArr.count==0) {
+        [self requestExchangeData];
+    }
+    [self.exchangeTableV reloadData];
+    [ShareFunction showToast:@"添加成功"];
+
+}
+
+#pragma mark -
+
+-(void)setHeaderView
+{
+    
+    SDExchangeHeadView *headView=[[SDExchangeHeadView alloc] initWithFrameAndType:CGRectMake(0, STAR_Y, SCREEN_WIDTH, AdScrollViewHeight) pvc:self];
+    
+    self.exchangeTableV.tableHeaderView = headView;
+    return;
+}
+
+
+#pragma mark 两个按钮初始化
+-(void)createThreeBtnWith:(UIView *)topBarView withHeight_y:(CGFloat)height_y{
+    btnWidth=60 ;
+    Begin_width_x=SCREEN_WIDTH/2.-QZMake(15) - QZMake(btnWidth) ;
+
+    Begin_width_y=40 ;
+    
+    //日按钮
+    dayBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    dayBtn.tag = 1;
+    dayBtn.frame = CGRectMake(Begin_width_x, height_y, QZMake(btnWidth), Begin_width_y);
+    [dayBtn setTitle:NSLocalizedString(@"社区",nil) forState:UIControlStateNormal];
+    dayBtn.titleLabel.font=[UIFont fontWithName:k_Font size:16];
+    [dayBtn setTitleColor: DARK_GRAY_COLOR  forState:UIControlStateNormal];
+    [dayBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateSelected];
+    
+    [dayBtn addTarget:self action:@selector(threeBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [topBarView addSubview:dayBtn];
+    
+    //周按钮
+    weekBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    weekBtn.tag = 2;
+    weekBtn.frame = CGRectMake(SCREEN_WIDTH/2. + QZMake(15), height_y, btnWidth, Begin_width_y);
+    [weekBtn setTitle:NSLocalizedString(@"发现",nil) forState:UIControlStateNormal];
+    weekBtn.titleLabel.font=[UIFont fontWithName:k_Font size:16];
+    [weekBtn setTitleColor:DARK_GRAY_COLOR forState:UIControlStateNormal];
+    [weekBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateSelected];
+
+    [weekBtn addTarget:self action:@selector(threeBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [topBarView addSubview:weekBtn];
+   
+    
+    //下划线
+    selectedView = [[UIImageView alloc] init];
+    selectedView.backgroundColor=NAV_RED_COLOR;
+    selectedView.frame = CGRectMake(0, height_y+Begin_width_y -1, btnWidth, 1);
+    selectedView.left = dayBtn.left;
+    [topBarView addSubview:selectedView];
+    
+    
+    selectedViewFrame1 = CGRectMake(dayBtn.left, height_y+Begin_width_y-1, btnWidth, 1);
+    selectedViewFrame2 = CGRectMake(weekBtn.left, height_y+Begin_width_y-1, btnWidth, 1);
+    if (buttonClicked==1) {
+        dayBtn.selected=YES;
+        weekBtn.selected=NO;
+        selectedView.frame = selectedViewFrame1;
+    }else {
+        dayBtn.selected=NO;
+        weekBtn.selected=YES;
+        selectedView.frame = selectedViewFrame2;
+    }
+    
+    
+   
+}
+#pragma mark  按钮点击事件
+-(void)threeBtnClick:(UIButton*)button{
+    if (buttonClicked == button.tag){
+        
+        return;
+    }
+    buttonClicked = button.tag;
+    switch (buttonClicked) {
+        case 1:
+        {
+
+            selectedView.frame = selectedViewFrame1;
+            dayBtn.selected=YES;
+            weekBtn.selected=NO;
+            
+            
+            //去掉刷新
+            [self.exchangeTableV removeFooter];
+        }
+            break;
+        case 2:
+        {
+            selectedView.frame = selectedViewFrame2;
+            dayBtn.selected=NO;
+            weekBtn.selected=YES;
+        }
+            break;
+        default:
+        {
+            
+            selectedView.frame = selectedViewFrame1;
+        }
+            break;
+    }
+    
+    [self.exchangeTableV reloadData];
+}
+
+#pragma mark - 数据请求
+-(void)requestExchangeData
+{
+
+    [[SDClubModelManager shareInstance] getDataBlock:^{
+        
+        [self fomartBBSHomeData];
+        
+        [self.exchangeTableV reloadData];
+        
+        [self hearderRereshingEnd];
+    } errorBlock:^{
+        
+        [self hearderRereshingEnd];
+    }];
+    
+    [self requestExtendExchangeData ];
+}
+
+-(void)requestExtendExchangeData
+{
+    NSDictionary *dic=nil;
+    
+    dic=@{@"category":@"10"};
+    
+    // 加载论坛版块信息
+    [[MKHttpExchangeDemo shareMyInstance] requestPostWithURL:MKPath_appForumList andParamDic:dic completionHandler:^(id responseObject) {
+        
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"--<>>%@-论坛推广版块-%@",responseDic,[responseDic objectForKey:@"message"]);
+        
+        if (responseDic[@"success"] && responseDic[@"datasource"])
+        {
+            //保存本地
+            NSMutableArray *bbsArr=[[NSMutableArray alloc]initWithArray:responseDic[@"datasource"]];
+            self.extendDataArray = bbsArr;
+            
+            [self.exchangeTableV reloadData];
+            
+            [ClassifyFileObj writeToFileWithArray:bbsArr andFilePath:FILE_BBSExtendArray_path];
+            
+            
+        }
+        
+    } errorHandler:^(NSError *error) {
+        
+        
+    }];
+    
+}
+//添加触底刷新
+-(void)JudgePageNumAndToalPage:(NSArray *)dataSource
+{
+    
+    if ([dataSource count] > nvShenDaoGouPageSize-1) {
+        
+        isHaveNextPage=YES;
+        
+    }else
+    {
+        isHaveNextPage=NO;
+    }
+}
+
+#pragma mark 每日第一次登陆BBS
+-(void)checkBBSEveryDayEvent
+{
+    NSDate* date = [NSDate date];
+    NSTimeZone* zone = [NSTimeZone systemTimeZone];
+    NSInteger interval = [zone secondsFromGMTForDate:date];
+    NSDate* localDate = [date dateByAddingTimeInterval:interval];
+    
+    NSString* curTime = [NSString stringWithFormat:@"%@",localDate];
+    NSLog(@"currentTime=%@",curTime);
+    if (curTime.length > 10) {
+        curTime = [curTime substringToIndex:10];
+    }
+    
+    NSString* lastTime = [[NSUserDefaults standardUserDefaults] objectForKey:@"BBS_LAST_TIME"];
+    if (lastTime == nil || ![curTime isEqualToString:lastTime])
+    {
+        
+        [[MKHttpExchangeDemo shareMyInstance] requestExchangeEveryLoginGetPointexpCompletionHandler:^(id responseObject) {
+            NSDictionary *dic=(NSDictionary *)responseObject;
+            NSLog(@"每日登录论坛 dic=%@",dic);
+            if (dic[@"success"]) {
+                if ([dic[@"success"] intValue] ==1) {
+                    
+                    /*
+                     userPoint 用户经验
+                     userPrestige 用户积分
+                     pointLogin 首次登录加多少经验
+                     prestigeLogin 首次登录加多少积分
+                     */
+                    NSString *jingYan = [NSString stringWithFormat:@"经验 +%@",[dic[@"datasource"] lastObject][@"pointLogin"]];
+                    NSString *jiFen = [NSString stringWithFormat:@"积分 +%@",[dic[@"datasource"] lastObject][@"prestigeLogin"]];
+                    
+                    
+                    [ShareFunction showToastWithText1:@"首次登陆论坛" andText2:jingYan andText3:jiFen inSuperview:self.view.window];
+                    
+                    //保存时间
+                    [[NSUserDefaults standardUserDefaults] setObject:curTime forKey:@"BBS_LAST_TIME"];
+                }
+                NSLog(@"firstLogin=%@  --%@",dic,dic[@"message"]);
+            }
+        } errorHandler:^(NSError *error) {
+            NSLog(@"每日登录论坛 失败");
+        }];
+    }
+}
+
+
+
+
+
+
+#pragma mark -
+
+
+-(void)dealloc
+{
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+@end

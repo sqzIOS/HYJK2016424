@@ -1,0 +1,88 @@
+//
+//  SDPersonalPhotoWall.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/10.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPersonalPhotoWall.h"
+#import "SDPersonalCollectionViewCell.h"
+#import "SDPhotoBrowseVC.h"
+#import "MJPhotoBrowser.h"
+#import "MJPhoto.h"
+
+@interface SDPersonalPhotoWall ()
+
+@property (nonatomic, strong) NSMutableArray *imgViewArr;
+
+@end
+
+@implementation SDPersonalPhotoWall
+
+- (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout Array:(NSArray *)dataArr Controller:(UIViewController *)vc {
+    if (self = [super initWithFrame:frame collectionViewLayout:layout]) {
+        
+        self.mainVC = vc;
+        self.dataArr = dataArr;
+        self.backgroundColor = WHITE_COLOR;
+        self.delegate = self;
+        self.dataSource = self;
+        
+        if (_dataArr.count > 5) {
+            self.contentSize = CGSizeMake(QZMake(75.12) * _dataArr.count, self.height);
+        }
+        
+        [self registerClass:[SDPersonalCollectionViewCell class] forCellWithReuseIdentifier:@"SDPersonalCollectionViewCell"];
+        [self registerNib:[UINib nibWithNibName:@"SDPersonalCollectionViewCell" bundle:nil] forCellWithReuseIdentifier:@"SDPersonalCollectionViewCell"];
+        
+    }
+    return self;
+}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    return _dataArr.count;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    
+    SDPersonalCollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"SDPersonalCollectionViewCell" forIndexPath:indexPath];
+    if (_dataArr.count == 0) {
+        cell.photoImageView.image = [UIImage imageNamed:@"myCenter_userImg2"];
+    } else {
+        [cell.photoImageView sd_setImageWithURL:_dataArr[indexPath.row][@"image_url"]];
+    }
+    
+    
+    //    [cell.photoImageView sd_setImageWithURL:[NSURL URLWithString:pathStr] placeholderImage:[UIImage imageNamed:@"myCenter_userImg2"] completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+    //        if (_imgViewArr == nil) {
+    //            _imgViewArr = [[NSMutableArray alloc] initWithCapacity:_dataArr.count];
+    //        }
+    //        [_imgViewArr addObject:image];
+    //    }];
+    
+    return cell;
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    
+    //    int count = (int)_imgViewArr.count;
+    //    NSMutableArray *photos = [NSMutableArray arrayWithCapacity:count];
+    //    for (int i = 0; i<count; i++) {
+    //        MJPhoto *photo = [[MJPhoto alloc] init];
+    ////        photo.srcImageView = (UIImageView *)[headView viewWithTag:100+i]; // 来源于哪个UIImageView
+    //        [photo setUpSrcImage:_imgViewArr[i]];
+    //        [photos addObject:photo];
+    //    }
+    //
+    // 2.显示相册
+    //    MJPhotoBrowser *browser = [[MJPhotoBrowser alloc] init];
+    //    browser.currentPhotoIndex = indexPath.row; // 弹出相册时显示的第一张图片是？
+    //    browser.photos = photos; // 设置所有的图片
+    //    [browser show];
+    
+    SDPhotoBrowseVC *vc = [[SDPhotoBrowseVC alloc] initWithArr:_dataArr Num:(int)indexPath.row];
+    [self.mainVC.navigationController presentViewController:vc animated:YES completion:nil];
+}
+
+@end

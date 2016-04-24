@@ -1,0 +1,47 @@
+//
+//  SDNearPeopleModel.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPublicModel.h"
+
+@interface SDNearPeopleModel : SDPublicModel
+
+@property (nonatomic, copy) NSString *avatar;       //头像
+
+@property (nonatomic, copy) NSString *age;          //年龄
+
+@property (nonatomic, copy) NSString *comefrom;     //用户地址
+
+@property (nonatomic, copy) NSString *distance;     //与该用户的地理距离
+
+@property (nonatomic, copy) NSString *groupId;      //用户等级
+
+@property (nonatomic, copy) NSString *groupName;    //等级名称
+
+@property (nonatomic, copy) NSString *groupPoint;   //等级积分
+
+@property (nonatomic, copy) NSString *userID;       //用户id
+
+@property (nonatomic, copy) NSString *lastTime;     //最近登录时间
+
+@property (nonatomic, copy) NSString *lat;          //经度
+
+@property (nonatomic, copy) NSString *lng;          //纬度
+
+@property (nonatomic, copy) NSString *nextgroupName;    //下一等级名称
+
+@property (nonatomic, copy) NSString *nickname;     //昵称
+
+@property (nonatomic, copy) NSString *point;        //经验
+
+@property (nonatomic, copy) NSString *prestige;     //积分
+
+@property (nonatomic, copy) NSString *sex;          //性别
+
+@property (nonatomic, copy) NSString *userName;     //用户名
+
+@end

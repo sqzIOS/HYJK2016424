@@ -1,0 +1,632 @@
+//
+//  SDUserCenterVC.m
+//  sexduoduo
+//
+//  Created by showm on 15/11/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDUserCenterVC.h"
+#import "SDPersonalCenterModel.h"
+#import "SDPersonalCenterHeadView.h"
+#import "EditingView.h"
+#import "CTAssetsPickerController.h"
+#import "AFNetworking.h"
+
+typedef enum {
+    ChangeTypeIcon = 1,
+    ChangeTypePhotoWall,
+} ChangeType;
+
+
+
+@interface SDUserCenterVC ()<UITableViewDataSource,UITableViewDelegate,EditingViewDelegate,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,CTAssetsPickerControllerDelegate>
+{
+    BOOL isLike;
+}
+
+@property (nonatomic, strong) SDPersonalCenterModel *model;
+
+@property (nonatomic, strong) UITableView *tableView;
+
+@property (nonatomic, weak) TopNavView *navView;
+
+@property (nonatomic, strong) SDPersonalCenterHeadView *headView;
+
+@property (nonatomic, strong) UIView *footView;
+
+@property (nonatomic, strong) UIView *sectionView;
+
+@property (nonatomic, strong) NSArray *iconArr;
+
+@property (nonatomic, strong) NSArray *titleArr;
+
+
+// 进入编辑状态
+@property (nonatomic, weak) UIButton *editBtn;
+@property (nonatomic, weak) UIButton *cover;
+@property (nonatomic, weak) EditingView *editingView;
+@property (nonatomic,strong) NSMutableArray *imageArry;
+@property (nonatomic) BOOL isChangeIcon;
+@property (nonatomic,strong) UIImage *iconImage;
+
+// 是否修改
+@property (nonatomic) BOOL isPhotoChange;
+@property (nonatomic) BOOL isIcoChange;
+@property (nonatomic) BOOL hasDeletePhoto;
+
+@end
+
+@implementation SDUserCenterVC
+
+- (instancetype)initWithType:(SDUserCenter)type UserId:(NSString *)userId{
+    
+    if (self = [super init]) {
+        self.type = type;
+        self.userId = userId;
+    }
+    
+    if (_iconArr == nil) {
+        _iconArr = @[@"icon-my-clubbing", @"icon-my-love-record", @"icon-read-the-post", @"icon-change-password", @"icon-address-management"];
+    }
+    if (_titleArr == nil) {
+        _titleArr = @[@"我的泡吧", @"我的爱纪录", @"最近看过的帖子", @"修改密码", @"地址管理"];
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    [self setTopNavView];
+    
+    [self requestData];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int layOutH = -20;
+    if (IOS7_OR_LATER) {
+        layOutH = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, layOutH,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    self.navView = navView;
+    
+    [navView setTitleStr:@"个人主页"];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    // 编辑按钮
+    if (self.type == FromCenter) {
+        UIButton *editBtn = [[UIButton alloc] init];
+        editBtn.frame = CGRectMake(QZMake(300), CGRectGetMinY(navView.leftBtn.frame), navView.leftBtn.frame.size.width, navView.leftBtn.frame.size.height);
+        [navView addSubview:editBtn];
+        [editBtn addTarget:self action:@selector(editingBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        [editBtn setTitleColor:RGBCOLOR16(0x9c46e5) forState:UIControlStateNormal];
+        [editBtn setTitle:@"编辑" forState:UIControlStateNormal];
+        [editBtn setTitle:@"完成" forState:UIControlStateSelected];
+        self.editBtn = editBtn;
+        self.editBtn.hidden = YES;
+    }
+}
+
+- (void)editingBtnClick
+{
+    [self.editingView endEditing:YES];
+    self.editBtn.selected = !self.editBtn.selected;
+    if (self.editBtn.selected == YES) {
+        EditingView *editingView = [EditingView editingViewWithModel:self.model andFrame:CGRectMake(0,CGRectGetMaxY(self.navView.frame), SCREEN_WIDTH, QZMake(230))];
+        self.editingView = editingView;
+        [self.view addSubview:editingView];
+        editingView.delegate = self;
+        
+        NSMutableArray *imageArry = [NSMutableArray array];
+        for (int i = 0; i<self.model.image_url.count;i++) {
+            
+            UIImageView *imageView = [[UIImageView alloc] init];
+            NSString *urlStr = [NSString stringWithFormat:@"%@",[self.model.image_url objectAtIndex:i][@"image_url"]];
+            [imageView sd_setImageWithURL:[NSURL URLWithString:urlStr] placeholderImage:nil];
+            imageView.qzTagString = [NSString stringWithFormat:@"%@",[self.model.image_url objectAtIndex:i][@"image_id"]];
+            [imageArry addObject:imageView];
+        }
+        self.imageArry = imageArry;
+        [self.editingView setScrollContent:imageArry];
+        
+        UIButton *cover = [[UIButton alloc]initWithFrame:CGRectMake(0,CGRectGetMaxY(self.editingView.frame), SCREEN_WIDTH, SCREEN_HEIGHT)];
+        cover.backgroundColor = [UIColor blackColor];
+        [cover addTarget:self action:@selector(editingBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:cover];
+        self.cover = cover;
+        cover.alpha = 0.3;
+        
+        return;
+    }
+    
+    [self.editingView endEditing:YES];
+    
+    // 保存头像和照片墙
+    self.imageArry = self.editingView.imageArry;
+    self.iconImage = self.editingView.iconView.image;
+    
+    // 提交修改的个人信息
+    [self updataInfoWith:self.editingView.imageArry andIconImage:self.editingView.iconView.image andNickName:self.editingView.nickName andSex:self.editingView.chooseSex.tag];
+    
+    // 退出编辑状态
+    [self.editingView removeFromSuperview];
+    self.editingView = nil;
+    [self.cover removeFromSuperview];
+    self.cover = nil;
+    
+    if (self.isPhotoChange || self.hasDeletePhoto) {
+        self.headView = nil;
+        [self requestData];
+        self.isPhotoChange = NO;
+        self.hasDeletePhoto= NO;
+    }
+}
+
+// 提交修改的个人信息
+- (void)updataInfoWith:(NSArray *)imageViewArry andIconImage:(UIImage *)iconImage andNickName:(NSString *)nickName andSex:(sexType)sexType
+{
+    
+    // 更改昵称和性别
+    if (![nickName isEqualToString:self.model.nickname] || sexType != [self.model.sex intValue]) {
+        [MBHud showInView:self.view withTitle:@"提交中..."];
+        self.model.sex = [NSString stringWithFormat:@"%d",1 - [self.model.sex intValue]];
+        NSString *path = @"/shopxx/shop/member!updateProfile.action";
+        NSString *gender = sexType == sexTypeMen ? @"男":@"女";
+        NSDictionary *params = @{@"usernameId":USERID,
+                                 @"gender":gender,
+                                 @"nickname":nickName
+                                 };
+        [AFHTTPClient postJSONPath:path httpHost:SDAFServerIP parameters:params success:^(id responseObject) {
+            
+            [MBHud removeFromView:self.view];
+            
+            NSDictionary *response = [NSJSONSerialization JSONObjectWithData:responseObject options:NSJSONReadingAllowFragments error:Nil];
+            
+            [ShareFunction showToast:response[@"message"]];
+            
+            if ([[NSString stringWithFormat:@"%@",response[@"success"]] isEqualToString:@"1"]){
+                
+                NSString *sex;
+                if (sexType == sexTypeMen) {
+                    sex = @"1";
+                } else {
+                    sex = @"0";
+                }
+                [self.headView resetHeadViewWithNickname:nickName andSex:sex];
+                //                [ShareFunction showToast:@"信息修改成功"];
+                [[NSUserDefaults standardUserDefaults] setObject:nickName forKey:@"nickname"];
+                [[NSUserDefaults standardUserDefaults] setObject:gender forKey:@"userSex"];
+            }
+            
+        } fail:^{
+            [MBHud removeFromView:self.view];
+        }];
+    }
+    
+    // 更改头像
+    if (self.isIcoChange == YES) {
+        [MBHud showInView:self.view withTitle:@"提交中..."];
+        
+        NSString *path = @"/shopxx/shop/member!fileUpload.action";
+        NSDictionary *params = @{@"usernameIdhead":USERID};
+        
+        MKNetworkEngine *engine = [[MKNetworkEngine alloc] initWithHostName:SHOPIP customHeaderFields:nil];
+        MKNetworkOperation *op = [engine operationWithPath:path params:params httpMethod:@"POST"];
+        
+        // 按照尺寸压缩图片
+        UIGraphicsBeginImageContext(CGSizeMake(QZMake(110), QZMake(110)));
+        [self.iconImage drawInRect:CGRectMake(0, 0, QZMake(110), QZMake(110))];
+        UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+        UIGraphicsEndImageContext();
+        
+        // 保存头像致本地
+        NSData *data = UIImageJPEGRepresentation(newImage, 1);
+        [data writeToFile:UserHeadImageFileName atomically:YES];      
+        
+        
+        [op addData:UIImagePNGRepresentation(newImage) forKey:@"myFile" mimeType:@"image/png" fileName:@"myFileHeard.png"];
+        [op addCompletionHandler:^(MKNetworkOperation *operation) {
+            NSDictionary *dic=[AFHTTPClient jsonTurnToDictionary:operation.responseData];
+            if (JudgeSuccess(dic)) {
+                [_headView resetHeadViewWithIcon:self.iconImage];
+            }
+            if (JudgeSuccess(dic)) {
+                if (JudgeDatasourceHaveArrayData(dic)) {
+                    NSDictionary *infoDic=[dic[DATASOURCE] firstObject];
+                    
+                    //头像地址
+                    NSString *headURL=[PublicMethod formatBBSHeadeImageWithImageStr:infoDic[@"imageurl"]];
+                    [UserDefaults setObject:headURL forKey:@"userHeadImageURL"];
+                    self.model.avatar = headURL;
+                    
+                    [MBHud removeFromView:self.view];
+                }
+            }
+            [UIApplication sharedApplication].networkActivityIndicatorVisible=NO;
+        }errorHandler:^(MKNetworkOperation *errorOp, NSError* err) {
+            [MBHud removeFromView:self.view];
+        }];
+        [engine enqueueOperation:op];
+        self.isIcoChange = NO;
+    }
+}
+
+// 修改照片墙
+- (void)upLoadPhoto:(NSArray *)imageArry
+{
+    self.isPhotoChange = YES;
+    NSDictionary *params = @{@"userId":LUNTANUSERID};
+    AFHTTPRequestOperationManager *mgr = [AFHTTPRequestOperationManager manager];
+    mgr.responseSerializer = [AFHTTPResponseSerializer serializer];
+    [mgr POST:@"http://bbs.xingduoduo.com:8080/bbs3/app/userImageUpload.jhtml" parameters:params constructingBodyWithBlock:^(id<AFMultipartFormData> formData) {
+        for (int i = 0; i<imageArry.count; i++) {
+            UIImage *image = imageArry[i];
+            [formData appendPartWithFileData:UIImageJPEGRepresentation(image, 0.1) name:@"files" fileName:[NSString stringWithFormat:@"%d.png",i] mimeType:@"image/png"];
+        }
+    } success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        NSLog(@"%@",[error localizedDescription]);
+    }];
+    
+}
+
+- (void)createActionSheetWithType:(ChangeType)type
+{
+    UIActionSheet *sheet = [[UIActionSheet alloc] initWithTitle:nil delegate:self cancelButtonTitle:@"取消" destructiveButtonTitle:nil otherButtonTitles:@"拍照",@"从相册选择", nil];
+    sheet.tag = type;
+    [sheet showInView:self.view];
+}
+
+#pragma mark - editingViewDelegate
+- (void)editingViewChangeIcon
+{
+    [self createActionSheetWithType:ChangeTypeIcon];
+}
+
+- (void)editingViewChangePhotoWall
+{
+    [self createActionSheetWithType:ChangeTypePhotoWall];
+}
+
+- (void)editingViewDeleteBtnClick
+{
+    self.hasDeletePhoto = YES;
+}
+
+#pragma mark - UIActionSheetDelegate
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    
+    if (buttonIndex == 0) {
+        
+        // 拍照
+        UIImagePickerController *pickerController = [[UIImagePickerController alloc] init];
+        pickerController.delegate = self;
+        
+        if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+            pickerController.sourceType =  UIImagePickerControllerSourceTypeCamera;
+            [self presentViewController:pickerController animated:YES completion:nil];
+        } else {
+            // 相机不可用
+        }
+    }
+    
+    if (buttonIndex == 1 ) {
+        
+        if (actionSheet.tag == ChangeTypeIcon) {
+            // 选择相册
+            UIImagePickerController *pickerController = [[UIImagePickerController alloc] init];
+            pickerController.delegate = self;
+            
+            if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypePhotoLibrary]) {
+                pickerController.sourceType =  UIImagePickerControllerSourceTypePhotoLibrary;
+                [self presentViewController:pickerController animated:YES completion:nil];
+            } else {
+                // 相册无法打开
+            }
+        }
+        
+        if (actionSheet.tag == ChangeTypePhotoWall) {
+            
+            // 多选相册
+            CTAssetsPickerController *picker = [[CTAssetsPickerController alloc] init];
+            picker.assetsFilter = [ALAssetsFilter allAssets];
+            picker.delegate = self;
+            [self presentViewController:picker animated:YES completion:nil];
+        }
+    }
+    
+    
+    if (actionSheet.tag == ChangeTypeIcon) {
+        self.isChangeIcon = YES;
+    } else {
+        self.isChangeIcon = NO;
+    }
+}
+
+
+#pragma mark - UIImagePickerControllerDelegate
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    [picker dismissViewControllerAnimated:YES completion:nil];
+    UIImage *chooseImage = info[@"UIImagePickerControllerOriginalImage"];
+    
+    if (self.isChangeIcon == YES) {
+        self.editingView.iconView.image = chooseImage;
+        self.isIcoChange = YES;
+    } else {
+        UIImageView *imageView = [[UIImageView alloc] init];
+        imageView.image = chooseImage;
+        [self.imageArry addObject:imageView];
+        NSArray *imageArry = [NSArray arrayWithObjects:chooseImage, nil];
+        [self upLoadPhoto:imageArry];
+        [self.editingView setScrollContent:self.imageArry];
+    }
+}
+
+#pragma mark - CTAssetsPickerControllerDelegate
+- (void)assetsPickerController:(CTAssetsPickerController *)picker didFinishPickingAssets:(NSArray *)assets
+{
+    NSMutableArray *imageArry = [NSMutableArray array];
+    for (ALAsset *asset in assets){
+        
+        UIImage *image = [UIImage imageWithCGImage:asset.defaultRepresentation.fullScreenImage];
+        [imageArry addObject:image];
+        
+        UIImageView *imageView = [[UIImageView alloc] init];
+        imageView.image = image;
+        [self.imageArry addObject:imageView];
+    }
+    [self upLoadPhoto:imageArry];
+    [self.editingView setScrollContent:self.imageArry];
+}
+
+
+- (void)initView {
+    if (_tableView == nil) {
+        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) style:UITableViewStylePlain];
+        _tableView.backgroundColor = colorWith05;
+        _tableView.bounces = NO;
+        _tableView.delegate = self;
+        _tableView.dataSource = self;
+        [_tableView clearDefaultLineByAddFootLine];
+        [self.view addSubview:_tableView];
+    }
+    
+    if (_headView == nil) {
+        if (self.type == FromOther) {
+            _headView = [[SDPersonalCenterHeadView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) Model:_model Controller:self Type:1];
+        } else {
+            _headView = [[SDPersonalCenterHeadView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) Model:_model Controller:self Type:2];
+            
+            if (self.editBtn) {
+                self.editBtn.hidden = NO;
+            }
+        }
+        _tableView.tableHeaderView = _headView;
+        
+        __weak typeof(self) weakSelf = self;
+        _headView.headBlock = ^(int num, NSString *toUserId) {
+            [weakSelf requestForReward:num ID:toUserId];
+        };
+    }
+    
+    if (self.type == FromCenter) {
+        _tableView.tableFooterView = self.footView;
+    }
+}
+
+#pragma  mark - btn
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+#pragma mark --- 网络请求
+- (void)requestData {
+    
+    NSDictionary *tempDic = @{@"userId":[NSString stringWithFormat:@"%@",LUNTANUSERID], @"guestId":[NSString stringWithFormat:@"%@",self.userId]};
+    
+    [MBHud showInView:self.view withTitle:@"请稍等..."];
+    
+    [AFHTTPClient postJSONPath:SDINTERFACE_getUserInfo httpHost:BBS_IP parameters:tempDic success:^(id responseObject) {
+        NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:responseObject];
+        if (JudgeDatasourceHaveArrayData(dict)) {
+            
+            _model = [SDPersonalCenterModel SDPublicModelWithDictionary:dict[DATASOURCE][0]];
+            
+            if ([_model.likeed intValue] == 1) {
+                isLike = YES;
+            } else {
+                isLike = NO;
+            }
+            [self initView];
+        }
+        
+        [MBHud removeFromView:self.view];
+    } fail:^{
+        [MBHud removeFromView:self.view];
+    }];
+    
+    
+    
+//        [AFHTTPClient getJSONPath:SDINTERFACE_getUserInfo httpHost:BBS_IP params:tempDic success:^(id json) {
+//    
+//            NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:json];
+//            if (JudgeDatasourceHaveArrayData(dict)) {
+//    
+//                _model = [SDPersonalCenterModel SDPublicModelWithDictionary:dict[DATASOURCE][0]];
+//    
+//                if ([_model.likeed intValue] == 1) {
+//                    isLike = YES;
+//                } else {
+//                    isLike = NO;
+//                }
+//                [self initView];
+//            }
+//    
+//            [MBHud removeFromView:self.view];
+//        } fail:^{
+//            [MBHud removeFromView:self.view];
+//        }];
+    
+}
+/**
+ *  打赏+喜欢
+ */
+- (void)requestForReward:(int)num ID:(NSString *)toUserId {
+    
+    __weak typeof(self) weakSelf = self;
+    NSDictionary *tempDic = @{@"type":[NSString stringWithFormat:@"%zi",num],@"from":[NSString stringWithFormat:@"%@",LUNTANUSERID] ,@"to":toUserId};
+    [AFHTTPClient getJSONPath:SDINTERFACE_userInteraction httpHost:BBS_IP params:tempDic success:^(id json) {
+        
+        NSDictionary *dic = [AFHTTPClient jsonTurnToDictionary:json];
+        
+        [ShareFunction showToast:dic[MESSAGE]];
+        if (num == 2) {
+            isLike = !isLike;
+            [weakSelf.headView changeValue:isLike Num:num];
+        }
+    } fail:^{
+        
+    }];
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    if ([_model.replyPost isKindOfClass:[NSArray class]] && self.type == FromOther) {
+        
+        return _model.replyPost.count;
+    }
+    return _iconArr.count;
+}
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+    return 1;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    static NSString *identify = @"PersonalCell";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identify];
+    
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identify];
+        cell.textLabel.font = FONT_WITH_SIZE(16);
+        cell.textLabel.textColor = RGBCOLOR16(0x616161);
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    }
+    if (self.type == FromOther) {
+        cell.textLabel.text = _model.replyPost[indexPath.row][@"title"];
+    } else {
+        cell.imageView.image = [UIImage imageNamed:_iconArr[indexPath.row]];
+        cell.textLabel.text = _titleArr[indexPath.row];
+    }
+    
+    return cell;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section {
+    
+    return self.sectionView;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    if (self.type == FromOther) {
+        
+        return QZMake(44);
+    }
+    return 0;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (self.type == FromOther) {
+        BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+        controller.forumId= _model.replyPost[indexPath.row][@"forumId"];
+        controller.topicId= _model.replyPost[indexPath.row][@"id"];
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:controller animated:YES];
+    }
+}
+
+- (UIView *)sectionView {
+    if(_sectionView == nil ) {
+        _sectionView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, QZMake(44))];
+        _sectionView.backgroundColor = WHITE_COLOR;
+        
+        UIImageView *imgV = [[UIImageView alloc] initWithFrame:CGRectMake(QZMake(10), QZMake(7), QZMake(30), QZMake(30))];
+        imgV.image = [UIImage imageNamed:@"icon-read-the-post"];
+        [_sectionView addSubview:imgV];
+        
+        UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(imgV.right + QZMake(10), imgV.top, QZMake(200), imgV.height)];
+        titleLab.text = @"最近看过的帖子";
+        titleLab.font = FONT_WITH_SIZE(14);
+        titleLab.textColor = NAV_RED_COLOR;
+        [_sectionView addSubview:titleLab];
+        
+        UILabel *line = [[UILabel alloc] initWithFrame:CGRectMake(0, QZMake(43), SCREEN_WIDTH, QZMake(1))];
+        line.backgroundColor = colorWith05;
+        [_sectionView addSubview:line];
+    }
+    return _sectionView;
+}
+
+- (UIView *)footView {
+    if (_footView == nil) {
+        _footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, QZMake(84))];
+        _footView.backgroundColor = CLEAR_COLOR;
+        
+        UIButton *footBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        footBtn.frame = CGRectMake(QZMake(20), QZMake(20), _footView.width - QZMake(40), QZMake(44));
+        [footBtn setTitle:@"退出登录" forState:UIControlStateNormal];
+        //        footBtn.titleLabel.font = FONT_WITH_SIZE(15);
+        [footBtn setTitleColor:WHITE_COLOR forState:UIControlStateNormal];
+        footBtn.layer.cornerRadius = 5.;
+        footBtn.layer.masksToBounds = YES;
+        footBtn.backgroundColor = NAV_RED_COLOR;
+        [footBtn addTarget:self action:@selector(footBtnAction) forControlEvents:UIControlEventTouchUpInside];
+        [_footView addSubview:footBtn];
+    }
+    return _footView;
+}
+#pragma mark --- btn action
+/**
+ *  退出操作
+ */
+- (void)footBtnAction {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"确定退出?" message:@"退出后，将无法下单，发帖，评论等！" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"退出", nil];
+    [alert show];
+}
+
+
+#pragma mark - alert
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex) {
+        case 0:break;
+            
+        case 1:
+        {
+            //退出登录
+            [SDUserManager userLogOut];
+            [self toBackView];
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

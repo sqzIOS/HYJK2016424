@@ -1,0 +1,306 @@
+//
+//  ClubingViewController.m
+//  
+//
+//  Created by apple on 15/12/10.
+//
+//
+
+#import "ClubingViewController.h"
+#import "TopNavView.h"
+#import "ShareFunction.h"
+#import "ClubingForumModel.h"
+#import "ClubingCell.h"
+#import "ClubingModel.h"
+#import "AFHTTPClient.h"
+#import "AFNetworking.h"
+#import "MenuView.h"
+#import "MJRefresh.h"
+
+#import "SDClubModelManager.h"
+
+@interface ClubingViewController () <UITableViewDelegate,UITableViewDataSource,MenuViewDlegate,ClubingCellDelegate>
+
+@property (nonatomic,weak) TopNavView *topView;
+
+// 当前选择的类别
+@property (nonatomic,weak) UIButton *categoryBtn;
+@property (nonatomic) NSInteger choose;
+
+
+// 数据
+@property (nonatomic,strong) NSMutableArray *dataArry;
+@property (nonatomic,strong) NSMutableArray *forumDataArry;
+
+// 请求主机地址和路径
+@property (nonatomic,strong) NSString *host;
+@property (nonatomic,strong) NSString *path;
+
+@property (nonatomic,weak) UITableView *tableView;
+@property (nonatomic,weak) MenuView *menuView;
+@property (nonatomic) BOOL menuViewIsShow;
+@property (nonatomic,weak) UIButton *cover;
+
+
+
+
+@end
+
+@implementation ClubingViewController
+
+- (NSString *)host
+{
+    if (_host == nil) {
+        _host = @"http://bbs.xingduoduo.com:8080";
+    }
+    return  _host;
+}
+- (NSString *)path
+{
+    if (_path == nil) {
+        _path = @"/bbs3/app/new/appCategoryForumLIst.jhtml";
+    }
+    return  _path;
+}
+
+
+- (void)viewDidLoad {
+        
+    self.view.backgroundColor = RGBCOLOR(240, 240, 240);
+    
+    [self setTopView];
+    [self setContent];
+    
+    [self.tableView addHeaderWithTarget:self action:@selector(loadData)];
+    self.tableView.headerRefreshingText = @"正在刷新数据";
+    [self.tableView headerBeginRefreshing];
+}
+
+- (void)loadData
+{
+    // 获取数据
+//    NSDictionary *params ;
+//    if (ISLOGIN) {
+//        params = @{@"userId":LUNTANUSERID};
+//    }
+//   
+//    [AFHTTPClient getJSONPath:SDINTERFACE_appCategoryForumLIst httpHost:BBS_IP params:params success:^(id json) {
+//        NSDictionary *responseData = [NSJSONSerialization JSONObjectWithData:json options:NSJSONReadingAllowFragments error:nil];
+//        
+//        NSArray *dataSourse = responseData[@"datasource"];
+//        self.dataArry = [NSMutableArray array];
+//        for (int index = 0; index < dataSourse.count; index ++) {
+//            NSDictionary *dict = [dataSourse objectAtIndex:index];
+//            ClubingModel *model = [ClubingModel clubingModelWith:dict];
+//            [self.dataArry addObject:model];
+//        }
+//        ClubingModel *model = self.dataArry[self.choose];
+//        [self.categoryBtn setTitle:[model.name substringToIndex:2] forState:UIControlStateNormal];
+//        self.forumDataArry = model.forumArry;
+//        
+//        [self.tableView reloadData];
+//    } fail:^{
+//        
+//    }];
+    
+    
+    
+    [[SDClubModelManager shareInstance] getDataBlock:^{
+        
+        
+        self.dataArry =[[SDClubModelManager shareInstance] dataArray];
+        
+        ClubingModel *model = self.dataArry[self.choose];
+        [self.categoryBtn setTitle:[model.name substringToIndex:2] forState:UIControlStateNormal];
+        self.forumDataArry = model.forumArry;
+        [self.tableView reloadData];
+        
+    } errorBlock:^{
+        
+    }];
+    
+    [self.tableView headerEndRefreshing];
+}
+
+// 中间标题
+- (void)setContent
+{
+    UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(QZMake(10),CGRectGetMaxY(self.topView.frame) +  QZMake(10), QZMake(45), QZMake(30))];
+    label.text = @"分类:";
+    label.font = [UIFont systemFontOfSize:QZMake(15)];
+    label.textColor = RGBCOLOR(97, 97, 97);
+    label.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:label];
+    
+    UIButton *categoryBtn = [[UIButton alloc] initWithFrame:CGRectMake(QZMake(55), CGRectGetMaxY(self.topView.frame) +  QZMake(10), QZMake(65), QZMake(30))];
+    self.categoryBtn = categoryBtn;
+    categoryBtn.titleLabel.font = [UIFont systemFontOfSize:QZMake(15)];
+    [categoryBtn setTitleColor:RGBCOLOR(156, 70, 229) forState:UIControlStateNormal];
+    categoryBtn.titleLabel.textAlignment = NSTextAlignmentCenter;
+    [categoryBtn setBackgroundImage:[UIImage imageNamed:@"clubing_rounded-rectangle"] forState:UIControlStateNormal];
+    [self.view addSubview:categoryBtn];
+    
+    // 更换按钮
+    UIButton *changeBtn = [[UIButton alloc] initWithFrame:CGRectMake(QZMake(295), CGRectGetMaxY(self.topView.frame) +  QZMake(10), QZMake(65), QZMake(30))];
+    changeBtn.titleLabel.font = [UIFont systemFontOfSize:QZMake(15)];
+    [changeBtn setTitleColor:RGBCOLOR(156, 70, 229) forState:UIControlStateNormal];
+    [changeBtn setTitle:@"更换" forState:UIControlStateNormal];
+    changeBtn.layer.cornerRadius = QZMake(15);
+    changeBtn.clipsToBounds = YES;
+    [changeBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    changeBtn.titleLabel.textAlignment = NSTextAlignmentCenter;
+    changeBtn.backgroundColor = RGBCOLOR(156, 70, 229);
+    [changeBtn addTarget:self action:@selector(changeBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:changeBtn];
+    
+    // tableView
+    UITableView *tableView = [[UITableView alloc] init];
+    self.tableView = tableView;
+    tableView.frame = CGRectMake(0,self.categoryBtn.bottom + QZMake(10), SCREEN_WIDTH, SCREEN_HEIGHT - self.categoryBtn.bottom - QZMake(10));
+    [self.view addSubview:tableView];
+    tableView.delegate = self;
+    tableView.dataSource = self;
+    
+}
+
+// 更换
+- (void)changeBtnClick
+{
+    if (!self.menuView) {
+        MenuView *menuView = [MenuView menuViewWithDataArry:self.dataArry];
+        [self.view addSubview:menuView];
+        self.menuView = menuView;
+        self.menuView.delegate = self;
+//        [self.menuView setPoint:CGPointMake(QZMake(260), QZMake(105))];
+        [self.menuView setPoint:CGPointMake(SCREEN_WIDTH-self.menuView.width - QZMake(10), self.topView.bottom + QZMake(50)) ];
+    }
+    if (!self.menuViewIsShow) {
+        self.menuView.hidden = NO;
+        UIButton *cover = [[UIButton alloc] init];
+        cover.backgroundColor = [UIColor blackColor];
+        cover.alpha = 0.4;
+        cover.frame = self.tableView.frame;
+        self.cover = cover;
+        [cover addTarget:self action:@selector(changeBtnClick) forControlEvents:(UIControlEventTouchUpInside)];
+        [self.view addSubview:cover];
+        [self.view bringSubviewToFront:self.menuView];
+        self.menuViewIsShow = YES;
+    } else {
+        self.menuView.hidden = YES;
+        self.menuViewIsShow = NO;
+        [self.cover removeFromSuperview];
+    }
+}
+
+
+// 顶部view
+- (void)setTopView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *topView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    topView.backgroundColor = [UIColor redColor];
+    [topView setTitleStr:@"更多版块"];
+    self.topView = topView;
+    [self.view addSubview:topView];
+    [topView addLeftBtnTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+}
+
+
+- (void)back
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+#warning 进入下一个界面
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    ClubingForumModel *model = [self.forumDataArry objectAtIndex:indexPath.row];
+    
+    NSString *ID = model.ID;
+    NSString *title = model.title;
+    NSString *description = model.des;
+    NSString *logoUrl = [NSString stringWithFormat:@"%@%@",self.host,model.logo];
+    NSLog(@"%@--%@---%@---%@",ID,title,description,logoUrl);
+}
+
+#pragma mark - tableView数据源
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.forumDataArry.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    ClubingForumModel *model = [self.forumDataArry objectAtIndex:indexPath.row];
+    ClubingCell *cell = [ClubingCell clubingCellWithModel:model inTableView:tableView];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.delegate = self;
+    return cell;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return QZMake(90);
+}
+
+#pragma mark - 添加和删除板块
+- (void)clubingCellAssociatedBtnClickInCell:(ClubingCell *)cell
+{
+//    cell.model.ID; // 板块id
+    if (cell.model.associated == YES) {
+        
+        if(!ISLOGIN)
+        {
+            [PublicMethod gotoLoginWithVC:self];
+        }else
+        {
+            [SDClubModelManager addForumWithId:cell.model.ID success:^{
+                
+                NSInteger count=[[SDClubModelManager shareInstance] countUserForJudgeChange];
+                [[SDClubModelManager shareInstance] setCountUserForJudgeChange:count++];
+                
+                [ShareFunction showToast:@"添加成功"];
+            } errorBlock:^{
+                
+            }];
+            
+        }
+        
+    } else {
+        
+        // 从我的板块删除
+        if(!ISLOGIN)
+        {
+            [PublicMethod gotoLoginWithVC:self];
+        }else
+        {
+            [SDClubModelManager deleteForumWithId:cell.model.ID success:^{
+                
+                NSInteger count=[[SDClubModelManager shareInstance] countUserForJudgeChange];
+                [[SDClubModelManager shareInstance] setCountUserForJudgeChange:count++];
+                
+                [ShareFunction showToast:@"删除成功"];
+            } errorBlock:^{
+                
+            }];
+        }
+    }
+}
+
+#pragma mark - MenuViewDelegate
+- (void)menuViewCategoryBtnClick:(UIButton *)categoryBtn
+{
+    NSString *title = [categoryBtn.titleLabel.text substringFromIndex:2];
+    [self.categoryBtn setTitle:title forState:UIControlStateNormal];
+    self.choose = categoryBtn.tag - 1;
+    ClubingModel *model = [self.dataArry objectAtIndex:self.choose];
+    self.forumDataArry = model.forumArry;
+    [self changeBtnClick];
+    [self.tableView reloadData];
+}
+
+@end

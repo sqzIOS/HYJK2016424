@@ -1,0 +1,30 @@
+//
+//  ClassifyFileObj.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/16.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface ClassifyFileObj : NSObject
+
+// 读NSDictionary
++(NSDictionary *)readClassifyDicWithPath:(NSString *)path;
+// 写NSDictionary
++(void)writeToFileWithDic:(NSDictionary *)dic andFilePath:(NSString *)path;
+
+// 读NSArray
++(NSArray *)readArrayWithPath:(NSString *)path;
+// 写NSArray
++(void)writeToFileWithArray:(NSArray *)arr andFilePath:(NSString *)path;
+
+//------基本
+// 读NSdata
++(NSData *)readClassifyFileWithPath:(NSString *)path;
+// 写NSData
++(void)writeToFileWithData:(NSData *)tempData andFilePath:(NSString *)path;
+
+
+@end

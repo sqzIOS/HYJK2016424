@@ -1,0 +1,33 @@
+//
+//  SDMessageToMeModel.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPublicModel.h"
+
+@interface SDMessageToMeModel : SDPublicModel
+
+@property (nonatomic, strong) NSString *avatar;
+
+@property (nonatomic, strong) NSString *content;
+
+@property (nonatomic, strong) NSString *fromNickname;
+
+@property (nonatomic, strong) NSString *fromUserId;
+
+@property (nonatomic, strong) NSString *fromUserName;
+
+@property (nonatomic, strong) NSString *groupId;
+
+@property (nonatomic, strong) NSString *groupName;
+
+@property (nonatomic, strong) NSString *releaseTime;
+
+@property (nonatomic, strong) NSString *sex;
+
+@property (nonatomic, strong) NSString *type;
+
+@end

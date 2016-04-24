@@ -1,0 +1,551 @@
+//
+//  RegisterViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-6-25.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "RegisterViewController.h"
+
+@interface RegisterViewController ()<UIActionSheetDelegate>
+
+@end
+
+@implementation RegisterViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+    self.registerBtn.backgroundColor = colorWith01;
+    self.registerBtn.layer.cornerRadius = 10.;
+    self.registerBtn.layer.masksToBounds = YES;
+    
+    self.registerScrol.frame = CGRectMake(0, STAR_Y,SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y);
+    [self.view addSubview:self.registerScrol];
+    
+    [self initRegisterScrollView];
+    
+    
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    UILabel *titleImgV = [[UILabel alloc] initWithFrame:CGRectMake(60, 30, SCREEN_WIDTH-120, 38*2/3.)];
+    titleImgV.backgroundColor = [UIColor clearColor];
+    titleImgV.textColor = colorWith01;
+    titleImgV.textAlignment = NSTextAlignmentCenter;
+    titleImgV.font = [UIFont systemFontOfSize:20.0f];
+    titleImgV.text = @"注册";
+    [navView addSubview:titleImgV];
+    
+    //
+    UIButton *leftBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    leftBtn.frame = CGRectMake(0, 20, 64, 44);
+    [leftBtn setImage:[UIImage imageNamed:@"health_navBack"] forState:UIControlStateNormal];
+    [leftBtn addTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:leftBtn];
+    
+    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+    _indicator.frame = CGRectMake(SCREEN_WIDTH - 42, 25 , 32, 32);
+    [navView addSubview:_indicator];
+    _indicator.hidden = YES;
+    
+    
+    
+}
+
+//返回
+-(void)toBackView
+{
+    if([self.navigationController respondsToSelector:@selector(popViewControllerAnimated:)])
+    {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+}
+//返回
+-(void)backToFirstView
+{
+    for (MyCenterVC *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[MyCenterVC class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"updateMyCenterView" object:nil];
+        }
+    }
+}
+- (IBAction)agreeServiceAgreement:(id)sender {
+    if (self.agreeBtn.selected == NO) {
+        [self.agreeBtn setImage:[UIImage imageNamed:@"register_pre.png"] forState:UIControlStateNormal];
+        self.agreeBtn.selected = YES;
+    }else
+    {
+        [self.agreeBtn setImage:[UIImage imageNamed:@"register_nor.png"] forState:UIControlStateNormal];
+        self.agreeBtn.selected = NO;
+    }
+}
+- (IBAction)toServiceAgreement:(id)sender {
+    
+    return;
+    
+    ProtocolViewController *ctrVc = [[ProtocolViewController alloc]initWithNibName:@"ProtocolViewController" bundle:[NSBundle mainBundle]];
+    ctrVc.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:ctrVc animated:YES];
+}
+
+- (IBAction)gotoRegisterAction:(id)sender {
+    
+    //判断用户名
+    if (self.userName.text.length < 1) {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"请输入用户名！" delegate:nil cancelButtonTitle:@"ok" otherButtonTitles: nil];
+        [alert show];
+        
+        return;
+    }else
+    {
+        BOOL isMatch =  [ShareFunction checkPhoneNumInput:self.userName.text];
+        
+        if (!isMatch) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请输入正确的手机号!" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles: nil];
+            [alert show];
+            
+            return;
+        }
+        
+    }
+    
+    //判断密码
+    if(self.codeTextField.text.length < 1)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请输入验证码！" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles: nil];
+        [alert show];
+        return;
+    }
+    
+    //判断密码
+    if(self.passWord.text.length < 1)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请输入密码！" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles: nil];
+        [alert show];
+        return;
+    }
+    
+    // 判断昵称
+    if(self.nickNameField.text.length < 1)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请输入昵称！" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles: nil];
+        [alert show];
+        return;
+    }
+
+    // 判断协议按钮
+    if (self.agreeBtn.selected == NO)
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请阅读服务协议并同意！" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles: nil];
+        [alert show];
+        return;
+    }else
+
+    {
+        [self.userName resignFirstResponder];
+        [self.passWord resignFirstResponder];
+        [self.nickNameField resignFirstResponder];
+        
+        [self.registerScrol setContentOffset:CGPointMake(0, 0) animated:YES];
+        
+        
+        
+        if (self.nickNameField.text.length>0) {
+            int len = [ShareFunction sinaCountWord:self.nickNameField.text];
+            
+            NSLog(@"昵称长度2：%d",len);
+            if (len>12) {
+                self.promptLab.text = @"请缩短您的昵称";
+                [self showPromptLab];
+                return;
+            }
+
+        }
+        
+        
+        
+        NSMutableDictionary *params = [[NSMutableDictionary alloc]init];
+        
+        
+        ///渠道名称 channel
+        
+        [params setObject:self.userName.text forKey:@"registrappusername"];
+        [params setObject:self.passWord.text forKey:@"registrapppassw"];
+        [params setObject:@"" forKey:@"registrappemail"];
+        [params setObject:self.nickNameField.text forKey:@"nickname"];
+        [params setObject:@"男" forKey:@"gender"];
+        [params setObject:[NSString stringWithFormat:@"iOS%@",Flag] forKey:@"channel"];
+        [params setObject:DEVICEUUID forKey:@"imie"];
+        [params setObject:self.codeTextField.text forKey:@"vcode"];
+        
+        NSLog(@"params-->%@",params);
+        
+        
+        
+        [self requestWithUserRegisterWithDic:params];
+        
+        
+    }
+}
+
+-(void)initRegisterScrollView
+{
+    UIView *lineFir = [[UIView alloc] initWithFrame:CGRectMake(0, 30, SCREEN_WIDTH, 0.5)];
+    lineFir.backgroundColor = [UIColor lightGrayColor];
+    [self.registerScrol addSubview:lineFir];
+    
+    UIView *lineSec = [[UIView alloc] initWithFrame:CGRectMake(20, 80, SCREEN_WIDTH - 20, 0.5)];
+    lineSec.backgroundColor = [UIColor lightGrayColor];
+    [self.registerScrol addSubview:lineSec];
+    
+    UIView *lineThr = [[UIView alloc] initWithFrame:CGRectMake(20, 130, SCREEN_WIDTH - 20, 0.5)];
+    lineThr.backgroundColor = [UIColor lightGrayColor];
+    [self.registerScrol addSubview:lineThr];
+    
+    UIView *lineFor = [[UIView alloc] initWithFrame:CGRectMake(20, 180, SCREEN_WIDTH - 20, 0.5)];
+    lineFor.backgroundColor = [UIColor lightGrayColor];
+    [self.registerScrol addSubview:lineFor];
+    
+    UIView *lineFive = [[UIView alloc] initWithFrame:CGRectMake(0, 230, SCREEN_WIDTH, 0.5)];
+    lineFive.backgroundColor = [UIColor lightGrayColor];
+    [self.registerScrol addSubview:lineFive];
+    
+    
+    self.registerBtn.layer.cornerRadius = 3.5;
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    [self.registerScrol addSubview:self.promptLab];
+    
+    
+   
+}
+
+
+
+#pragma mark - action
+
+- (IBAction)codeBtnClick:(id)sender {
+    
+    [self.view endEditing:YES];
+    [self.registerScrol endEditing:YES];
+    
+    //1.验证手机号
+    if(self.userName.text.length==0)
+    {
+        [ShareFunction showToast:@"请输入手机号"];
+        return;
+    }else
+    {
+        BOOL isMatch =  [ShareFunction checkPhoneNumInput:self.userName.text];
+        
+        if (!isMatch) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"请输入正确的手机号!" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles: nil];
+            [alert show];
+            
+            return;
+        }
+    }
+    
+    
+    //2.判断是否可以点击
+    if(![self.codeBtn.currentTitle isEqualToString:@"获取验证码"] && ![self.codeBtn.currentTitle isEqualToString:@"重新获取"])
+    {
+        return;
+    }
+    
+
+    
+    //3.获得验证码  如果获得值则倒计时
+    [self requestCode];
+    
+    
+}
+
+#pragma mark - request
+-(void)requestCode
+{
+    NSDictionary *dic=@{@"appusername":self.userName.text,
+                        @"validation":@"0"
+                        };
+    opration=[[MKHttpServiceEngine shareMyInstance] requestGetValiCodeWithDic:dic completionHandler:^(id responseObject) {
+        
+        NSLog(@"获得验证码=%@",responseObject);
+        
+        
+        if(responseObject[@"success"] && [responseObject[@"success"] intValue]==1)
+        {
+            //4.倒计时
+            //xib的button type要 设置成custom 否则会闪动
+            
+            __block int timeout = 60;//倒计时时间
+            
+            dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+            dispatch_source_t _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,queue);
+            dispatch_source_set_timer(_timer,dispatch_walltime(NULL, 0),1.0*NSEC_PER_SEC, 0); //每秒执行
+            dispatch_source_set_event_handler(_timer, ^{
+                
+                timeout--;//60秒计算时
+                
+                if(timeout<=0){ //倒计时结束，关闭
+                    dispatch_source_cancel(_timer);
+                    //            dispatch_release(_timer);
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        //设置界面的按钮显示 根据自己需求设置
+                        [self.codeBtn setTitle:@"重新获取" forState:UIControlStateNormal];
+                        [self.codeBtn setTitle:@"重新获取" forState:UIControlStateDisabled];
+                        
+                        
+                    });
+                    
+                }else{
+                    int seconds = timeout % 60;
+                    
+                    NSString *strTime=[NSString stringWithFormat:@"%d", seconds];
+                    
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        //设置界面的按钮显示 根据自己需求设置
+                        [self.codeBtn setTitle:strTime forState:UIControlStateNormal];
+                        [self.codeBtn setTitle:strTime forState:UIControlStateDisabled];
+                    });
+                    
+                    
+                }
+            });
+            dispatch_resume(_timer);
+
+        }else
+        {
+            NSString *tiShi=@"";
+            if (responseObject[@"message"]) {
+                tiShi=responseObject[@"message"];
+            }
+            [ShareFunction showToast:tiShi];
+        }
+    } errorHandler:^(NSError *error) {
+        [ShareFunction showToast:@"网络不好奥,稍后再试"];
+    }];
+}
+
+#pragma mark - TextField Delegate
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+    if(textField == self.nickNameField) {
+        [self.registerScrol setContentOffset:CGPointMake(0, 130) animated:YES];
+    }else if(textField == self.passWord) {
+        [self.registerScrol setContentOffset:CGPointMake(0, 80) animated:YES];
+    }
+    
+    return YES;
+}
+- (BOOL)textFieldShouldEndEditing:(UITextField *)textField
+{
+
+    
+    return YES;
+}
+-(BOOL)textFieldShouldReturn:(UITextField *)textField {
+    if (textField == self.userName) {
+        [self.userName resignFirstResponder];
+        [self.registerScrol setContentOffset:CGPointMake(0, 0) animated:YES];
+    }else if(textField == self.passWord)
+    {
+        [self.passWord resignFirstResponder];
+        [self.registerScrol setContentOffset:CGPointMake(0, 0) animated:YES];
+    }
+
+    
+    else
+    {
+        [textField resignFirstResponder];
+        [self.registerScrol setContentOffset:CGPointMake(0, 0) animated:YES];
+    }
+    
+    
+    
+    return YES;
+}
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString*)string{
+    
+    // 不能输入表情
+    if ([[[UITextInputMode currentInputMode]primaryLanguage] isEqualToString:@"emoji"]) {
+        return NO;
+    }
+    return YES;
+}
+
+#pragma registerRequest
+
+-(void)requestWithUserRegisterWithDic:(NSDictionary *)dic
+{
+    self.indicator.hidden = NO;
+    [self.indicator startAnimating];
+    
+    [ShareFunction showHUDWithText:@"注册中..."];
+    
+    [[MKHttpServiceEngine shareMyInstance] requestRegistaraVcodeWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"detaiDic-->%@",responseDic);
+        
+        
+        self.indicator.hidden = YES;
+        [self.indicator stopAnimating];
+        
+        // 提示信息
+        self.promptLab.text = [responseDic objectForKey:@"message"];
+        [self showPromptLab];
+        
+        if ([[responseDic objectForKey:@"success"] boolValue]) {
+            NSDictionary *infoDic=[[responseDic objectForKey:@"datasource"] firstObject];
+            
+            
+            [UserDefaults setBool:1 forKey:@"isLogin"];
+            [UserDefaults setValue:self.userName.text forKey:@"userName"];
+            [UserDefaults setValue:[infoDic objectForKey:@"userId"] forKey:@"userId"];
+
+            // 性别
+            if (![infoDic[@"gender"] isKindOfClass:[NSNull class]]) {
+                if ([infoDic[@"gender"] isEqualToString:@"female"]) {
+                    [UserDefaults setValue:@"女" forKey:@"userSex"];
+                }else [UserDefaults setValue:@"男" forKey:@"userSex"];
+            }else [UserDefaults setValue:@"男" forKey:@"userSex"];
+            
+            // 昵称
+            if (![infoDic[@"nickname"] isKindOfClass:[NSNull class]]) {
+                [UserDefaults setValue:infoDic[@"nickname"] forKey:@"nickname"];
+            }
+            
+            // 论坛id
+            if (![infoDic[@"user_id"] isKindOfClass:[NSNull class]]) {
+                [UserDefaults setValue:[infoDic objectForKey:@"user_id"] forKey:@"BBSId"];//LUNTANUSERID
+            }
+            
+            [UserDefaults synchronize];
+            
+            
+            
+            //获得论坛个人信息
+            [[MKHttpExchangeDemo shareMyInstance] requestExchangeUserInfoCompletionHandler:^(id responseObject) {
+                
+                NSDictionary *dic=(NSDictionary *)responseObject;
+                NSLog(@"请求论坛用户中心=%@",dic);
+                if ([dic[@"success"] intValue]==1) {
+                    
+                    NSDictionary *userInfo=[dic[@"datasource"] objectAtIndex:0];
+                    
+                    NSString *userLevel = @"LV* ***";
+                    
+                    if (userInfo) {
+                        NSString *str=[NSString stringWithFormat:@"LV%@ %@",userInfo[@"groupId"],userInfo[@"groupName"]];
+                        userLevel = str;
+                    }
+                    
+                    
+                    // 用户等级信息
+                    [UserDefaults setValue:userLevel forKey:@"BBSUserLevel"];
+                    [UserDefaults synchronize];
+                    //
+                    [UserDefaults setValue:userInfo[@"groupId"] forKey:@"BBSUserLevelNumber"];
+                    [UserDefaults synchronize];
+                }
+            } errorHandler:^(NSError *error) {
+                
+            }];
+            
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"updateMyCenterView" object:nil];
+            
+            [self performSelector:@selector(backToFirstView) withObject:self afterDelay:1.0];
+            
+                        
+            NSMutableArray *addArray = [NSMutableArray array];
+            [[AppSet shareInstance] setUserAddrArry:addArray];
+            [[AppSet shareInstance] saveAddr];
+            
+            
+            
+            // 统计注册渠道
+            NSDictionary *dict = @{@"channel" : [NSString stringWithFormat:@"iOS%@",Flag]};
+            [MobClick event:@"Register" attributes:dict];
+            NSLog(@"统计注册渠道=%@",dict);
+            
+        }
+        else
+        {
+            
+        }
+        
+        
+        [ShareFunction hiddenHUD];
+
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        self.indicator.hidden = YES;
+        [self.indicator stopAnimating];
+
+        self.promptLab.text = @"注册失败!";
+        [self showPromptLab];
+        
+        [ShareFunction hiddenHUD];
+    }];
+}
+
+
+//显示提示
+-(void)showPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:0.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:nil];
+}
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

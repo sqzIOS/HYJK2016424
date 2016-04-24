@@ -1,0 +1,32 @@
+//
+//  SDGoodRecommendObj.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  商品详情推荐商品/套餐组合推荐 的model
+
+#import <Foundation/Foundation.h>
+
+@interface SDGoodRecommendObj : NSObject
+
+@property (nonatomic, strong) NSString *ThumbnailGoodsImagePath;//小图片
+@property (nonatomic, strong) NSString *marketPrice;     //原价
+@property (nonatomic, strong) NSString *nowThumbnailGoodsImagePath;//newThumbnailGoodsImagePath全连接小图片
+@property (nonatomic, strong) NSString *salesVolume;
+@property (nonatomic, strong) NSString *productId;   //=====套餐组合才有的====
+@property (nonatomic, strong) NSString *goodtype_id;
+@property (nonatomic, strong) NSString *idStr;//id
+@property (nonatomic, strong) NSString *goods_price;    //现价
+@property (nonatomic, strong) NSString *goodsCategoryId;
+@property (nonatomic, strong) NSString *name;
+@property (nonatomic, strong) NSString *goodsSubType;
+@property (nonatomic, strong) NSString *nowSmallGoodsImagePath;//newSmallGoodsImagePath全链接 小图片
+@property (nonatomic, strong) NSString *subTypeId;
+@property (nonatomic, strong) NSString *goodsSn;
+
+- (instancetype)initWithDict:(NSDictionary  *)dict;
+
+
+
+@end

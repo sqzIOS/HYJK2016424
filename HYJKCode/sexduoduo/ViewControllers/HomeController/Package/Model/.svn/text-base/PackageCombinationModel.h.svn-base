@@ -1,0 +1,33 @@
+//
+//  PackageCombinationModel.h
+//  
+//
+//  Created by apple on 15/12/14.
+//
+//
+
+#import <Foundation/Foundation.h>
+
+@interface PackageCombinationModel : NSObject
+
+
+@property (nonatomic,copy) NSString *thumbnailGoodsImagePath;
+@property (nonatomic,copy) NSString *marketPrice;
+@property (nonatomic,copy) NSString *otherThumbnailGoodsImagePath;
+@property (nonatomic,copy) NSString *salesVolume;
+@property (nonatomic,copy) NSString *smallGoodsImagePath;
+@property (nonatomic,copy) NSString *productId;
+@property (nonatomic,copy) NSString *goodtype_id;
+@property (nonatomic,copy) NSString *ID;
+@property (nonatomic,copy) NSString *subTypeId;
+@property (nonatomic,copy) NSString *goods_price;
+@property (nonatomic,copy) NSString *goodsCategoryId;
+@property (nonatomic,copy) NSString *name;
+@property (nonatomic,copy) NSString *goodsSubType;
+@property (nonatomic,copy) NSString *otherSmallGoodsImagePath;
+@property (nonatomic,copy) NSString *goodsSn;
+
++ (instancetype)packageCombinationModelWithDict:(NSDictionary *)dict;
+
+
+@end

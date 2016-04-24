@@ -1,0 +1,236 @@
+//
+//  MKHttpExchangeDemo.h
+//  sexduoduo
+//
+//  Created by sqz on 14-8-26.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "MKNetworkEngine.h"
+typedef void (^HttpResponseSuccessIdObject)(id responseObject);
+
+@interface MKHttpExchangeDemo : MKNetworkEngine
++(id)shareMyInstance;
+
+
+//获取论坛板块列表
+-(MKNetworkOperation*) requestExchangeTypeListcompletionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                  errorHandler:(MKNKErrorBlock) errorBlock;
+
+//获取论坛帖子列表
+-(MKNetworkOperation*) requestExchangePostListWithId:(NSString *)forumId completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                               errorHandler:(MKNKErrorBlock) errorBlock;
+//获取论坛帖子列表 + 分页
+-(MKNetworkOperation*) requestExchangePostListWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+
+//获取论坛帖子详情评论
+-(MKNetworkOperation*) requestExchangePostInfoWithId:(NSString *)topicId completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                        errorHandler:(MKNKErrorBlock) errorBlock;
+//获取论坛帖子详情中评论 + 分页
+-(MKNetworkOperation*) requestExchangePostInfoWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+
+
+
+//获取论坛帖子中的回复
+-(MKNetworkOperation*) requestExchangePostInfoAskWithId:(NSString *)topicId completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                          errorHandler:(MKNKErrorBlock) errorBlock;
+
+//发帖
+-(MKNetworkOperation*) postExchangeInfoWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                           errorHandler:(MKNKErrorBlock) errorBlock;
+//发帖+图片
+-(MKNetworkOperation*) postExchangeInfoWithDic:(NSDictionary *)dic andImageArr:(NSArray *)imageArr completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                  errorHandler:(MKNKErrorBlock) errorBlock;
+
+//回帖
+-(MKNetworkOperation*) postReplyExchangeInfoWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                  errorHandler:(MKNKErrorBlock) errorBlock;
+
+//发图片
+-(MKNetworkOperation *)postImageWithDic:(NSDictionary *)dic
+                      completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                           errorHandler:(MKNKErrorBlock) errorBlock;
+
+//我的发帖
+-(MKNetworkOperation *)requestMyTopicListWithDic:(NSDictionary *)dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock;
+
+//我的回帖
+-(MKNetworkOperation *)requestPostReplyWithDic:(NSDictionary *)dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock;
+
+//精华帖
+-(MKNetworkOperation *)requestTopForumJingListWithDic:(NSDictionary *)dic
+                             completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                  errorHandler:(MKNKErrorBlock) errorBlock;
+
+//广告 or 置顶
+-(MKNetworkOperation *)requestADListWithDic:(NSDictionary *)dic
+                                    completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+
+#pragma mark - 积分相关
+//---------------积分相关--------------
+// 个人中心
+-(MKNetworkOperation *)requestExchangeUserInfoCompletionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                           errorHandler:(MKNKErrorBlock) errorBlock;
+
+
+// 每日首次登陆
+-(MKNetworkOperation *)requestExchangeEveryLoginGetPointexpCompletionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                                                errorHandler:(MKNKErrorBlock) errorBlock;
+
+// 帖子收藏
+-(MKNetworkOperation *)requestBBSCollectWithDic:(NSDictionary *)dic
+                          completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                               errorHandler:(MKNKErrorBlock) errorBlock;
+
+// 帖子收藏列表
+-(MKNetworkOperation *)requestBBSCollectListWithDic:(NSDictionary *)dic
+                              completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                   errorHandler:(MKNKErrorBlock) errorBlock;
+
+// 帖子取消收藏列表
+-(MKNetworkOperation *)requestBBSCancleCollectListWithDic:(NSDictionary *)dic
+                                  completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                       errorHandler:(MKNKErrorBlock) errorBlock;
+#pragma mark -
+// 论坛举报功能
+-(MKNetworkOperation *)requestBBSAppReportWithDic:(NSDictionary *)dic
+                                        completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                             errorHandler:(MKNKErrorBlock) errorBlock;
+
+// 主题分享功能
+-(MKNetworkOperation *)requestBBSAppTopicShareWithDic:(NSDictionary *)dic
+                                        completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                             errorHandler:(MKNKErrorBlock) errorBlock;
+#pragma mark - 广告 激活量 相关
+// 广告点击量
+/*
+ 传入参数：mac、apk（渠道代码，测试使用：cs）、idfa
+ */
+-(MKNetworkOperation *)requestAppClickWithDic:(NSDictionary *)dic
+                                    completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+
+// 本应用激活量
+/*
+ 传入参数：mac、idfa
+ */
+-(MKNetworkOperation *)requestAppActivationWithDic:(NSDictionary *)dic
+                            completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                 errorHandler:(MKNKErrorBlock) errorBlock;
+
+#pragma mark - 二次回复
+//发表二次回复
+/*
+ 传入参数：postTypeId、forumId、postId、content、userId
+ */
+-(MKNetworkOperation *)requestAppSecondaryReplyWithDic:(NSDictionary *)dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock;
+//获取二次回复详情
+/*传入参数：postId*/
+-(MKNetworkOperation *)requestAppSecondaryInfoWithDic:(NSDictionary *)dic
+                                     completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                          errorHandler:(MKNKErrorBlock) errorBlock;
+
+#pragma mark - 新版论坛
+//热门话题
+/*  传入参数：pageNo、pageSize */
+-(MKNetworkOperation *)requestAppRecommendedTopicWithDic:(NSDictionary *)dic
+                                    completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+
+/*
+ 热门话题：
+ /app/new/appRecommendedTopic.jhtml
+ 传入参数：pageNo、pageSize
+ 
+ 添加关注板块：
+ /app/new/appAddAttentionForum.jhtml
+ 传入参数：forumId、userId
+ 
+ 取消关注板块：
+ /app/new/appCancelAttentionForum.jhtml
+ 传入参数：forumId、userId
+ 
+ 板块列表接口加入：
+ 传入参数：userId
+ 返回参数：associated（是否关注）
+ */
+//获取论坛帖子详情中评论 + 分页
+-(MKNetworkOperation*) requestExchangePostInfoNewWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+
+
+
+#pragma mark 点赞
+-(MKNetworkOperation*) requestExchangeAppUserPraiseWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                            errorHandler:(MKNKErrorBlock) errorBlock;
+
+
+#pragma mark 论坛消息通知相关
+
+/*
+ 获取未读消息
+ /app/new/appPostRead.jhtml
+ 传入参数：userId
+ 
+ 获取未读消息数量
+ /app/new/appPostReadCount.jhtml
+ 传入参数：userId
+ */
+// 获取未读消息
+-(MKNetworkOperation*) requestExchangeAppPostReadWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                              errorHandler:(MKNKErrorBlock) errorBlock;
+
+// 获取未读消息数量
+-(MKNetworkOperation*) requestExchangeAppPostReadCountWithDic:(NSDictionary *)dic completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                            errorHandler:(MKNKErrorBlock) errorBlock;
+
+
+#pragma mark - 合成一个请求方法
+
+-(MKNetworkOperation *) requestPostWithURL:(NSString *)urlStr andParamDic:(NSDictionary *)dic  completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                              errorHandler:(MKNKErrorBlock) errorBlock;
+
+#pragma mark - 宏定义接口路径
+
+#pragma mark 4.2版本之后的个人主页
+/*
+ *userId
+ */
+#define MKPathGetUserInfo  @"/app/new/getUserInfo.jhtml"
+
+
+
+
+#pragma mark 板块列表 和 推广的板块列表
+
+/**
+ *  获得帖子列表
+ *  当有参数category =10的时候获得推广的板块
+ */
+
+#define MKPath_appForumList @"/app/new/appForumList.jhtml"
+
+/**
+ *  带有最热评论的帖子详情+评论
+ *
+ *  参数：pageNo
+ *  参数：pageSize
+ *  参数：topicId
+ *  参数：desc
+ *  参数：userId
+ *  @return datasource是字典格式 hotpost数组是最热评论 normalPost数组是一般评论 mainContent是帖子内容
+ */
+#define MKPath_appPostWithHotPostInfo @"/app/new/appPostWithHotPostInfo.jhtml"
+
+
+
+@end

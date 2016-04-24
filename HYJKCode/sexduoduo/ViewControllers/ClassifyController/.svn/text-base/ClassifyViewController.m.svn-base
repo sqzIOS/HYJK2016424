@@ -1,0 +1,1188 @@
+//
+//  ClassifyViewController.m
+//  sexduoduo
+//
+//  Created by showm on 14-5-20.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//   分类页
+
+#import "ClassifyViewController.h"
+#import "GoodsViewController.h"
+
+@interface ClassifyViewController ()
+{
+    NSArray *statisticArr;//需统计数组
+    NSInteger statisticIndex;//统计index
+}
+@end
+
+@implementation ClassifyViewController
+@synthesize classifyTableV;
+@synthesize shopDataArray;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+-(void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    firClassifyIndex = 0;
+    
+    self.firClassifyArry = [NSMutableArray arrayWithCapacity:0];
+    self.shopDataArray = [NSMutableArray arrayWithCapacity:0];
+    self.searchArry = [NSMutableArray arrayWithCapacity:0];
+
+    
+   
+   // 本地保存的分类信息
+    if ([[AppSet shareInstance] classifyArray].count > 0) {
+        self.firClassifyArry = [NSMutableArray arrayWithArray:[[AppSet shareInstance] classifyArray]];
+        
+        [self getSecondArray];
+        
+
+    }
+    
+    // 统计使用的数组
+    statisticArr=@[@"情趣内衣",@"避孕套专区",@"女性道具",@"男性道具",@"延时喷剂",@"调情助兴",@"同性道具",@"另类道具"];
+    statisticIndex=-1;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(classifyViewToFront) name:@"displayView1" object:nil];
+ 
+    
+    [self setTopNavView];
+    [self initClassifyTableV];
+    [self initFirClassifyTableView];
+    
+    [self requestClassifyWithDic:nil];
+    
+    
+    
+    self.firClassifyTableView.scrollsToTop=NO;
+    self.classifyTableV.scrollsToTop=NO;
+    
+}
+//分类页面
+-(void)classifyViewToFront
+{
+    AppDelegate *delegate1 = (AppDelegate*)[UIApplication sharedApplication].delegate;
+    [delegate1.tabController hidesTabBar:NO animated:YES];
+    
+//    NSLog(@"-->>%@--%@",[[AppSet shareInstance] classifyArray],self.shopDataArray);
+    
+     [self requestClassifyWithDic:nil];
+    
+}
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+
+    
+   UIImageView *titleImgV = [[UIImageView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH/2.-92/3., 30, 92*2/3., 38*2/3.)];
+
+    [titleImgV setImage:[UIImage imageNamed:@"store_fenlei.png"]];
+    [navView addSubview:titleImgV];
+    
+    if(isPassStoreCheck)
+    {
+        self.topSearchView = [[UIView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, 44)];
+        self.topSearchView.backgroundColor = [UIColor clearColor];
+        self.topSearchView.alpha = 1.0;
+        [self.view addSubview:self.topSearchView];
+        
+        [self initTopSearchView];
+    }
+    
+    
+
+}
+
+
+
+
+//rightBtn搜索方法
+- (void)toSearch
+{
+    SearchViewController *controller = [[SearchViewController alloc] initWithNibName:@"SearchViewController" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:controller animated:YES];
+
+    
+}
+
+//取消搜索
+-(void)cancelToSearchView
+{
+
+    [self.searchField resignFirstResponder];
+    self.searchField.text = @"";
+    
+    [UIView animateWithDuration:0.3 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{
+        toSearchBgView.frame = CGRectMake(10, 10, SCREEN_WIDTH-20, 30);
+        self.topSearchView.frame=CGRectMake(0, STAR_Y, SCREEN_WIDTH, 44);
+    } completion:nil];
+    
+    self.searchTableView.hidden = YES;
+    
+}
+
+
+
+-(void)initTopSearchView
+{
+    UIButton *cancelSearchBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    cancelSearchBtn.backgroundColor = [UIColor clearColor];
+    cancelSearchBtn.frame = CGRectMake(270, 10, 50, 30);
+    //    [cancelSearchBtn setBackgroundImage:[UIImage imageNamed:@"chooseCancel.png"] forState:UIControlStateNormal];
+    [cancelSearchBtn setTitle:@"取消" forState:UIControlStateNormal];
+    cancelSearchBtn.titleLabel.textAlignment = NSTextAlignmentLeft;
+    [cancelSearchBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateNormal];
+    cancelSearchBtn.titleLabel.font = [UIFont systemFontOfSize:15.0];
+    [cancelSearchBtn addTarget:self action:@selector(cancelToSearchView) forControlEvents:UIControlEventTouchUpInside];
+    [self.topSearchView addSubview:cancelSearchBtn];
+    
+    
+    
+    toSearchBgView = [[UIView alloc] init];
+    toSearchBgView.frame = CGRectMake(10, 10, 300, 30);
+    toSearchBgView.layer.cornerRadius = 15.0;
+    toSearchBgView.layer.borderColor = NAV_RED_COLOR.CGColor;
+    toSearchBgView.layer.borderWidth = 1.0;
+    toSearchBgView.backgroundColor = [UIColor whiteColor];
+    toSearchBgView.clipsToBounds=YES;
+    [self.topSearchView addSubview:toSearchBgView];
+    
+    self.searchField = [[UITextField alloc] initWithFrame:CGRectMake(35, 5, 260, 21)];
+    self.searchField.placeholder = @"搜索你要的宝贝";
+    self.searchField.delegate = self;
+    [self.searchField setReturnKeyType:UIReturnKeySearch];
+    self.searchField.font = [UIFont systemFontOfSize:14.0];
+    self.searchField.backgroundColor = NAV_COLOR;
+    [toSearchBgView addSubview:self.searchField];
+    
+    UIButton *search = [UIButton buttonWithType:UIButtonTypeCustom];
+    search.frame = CGRectMake(5, 0, 32, 32);
+    search.backgroundColor = [UIColor clearColor];
+    [search setImage:[UIImage imageNamed:@"searchViewBtn.png"] forState:UIControlStateNormal];
+    //    [search addTarget:self action:@selector(toSearchAction) forControlEvents:UIControlEventTouchUpInside];
+    [toSearchBgView addSubview:search];
+    
+ 
+    
+}
+
+//关键字
+-(void)initSearchKeyWordsView
+{
+    
+    if (!self.searchTableView) {
+        self.searchTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y - 48)];
+        self.searchTableView.delegate = self;
+        self.searchTableView.dataSource = self;
+        [self.view addSubview:self.searchTableView];
+        
+    }else
+    {
+        self.searchTableView.hidden = NO;
+    }
+    
+//    self.searchArry = [NSMutableArray arrayWithArray:@[@"延时",@"避孕套",@"振动棒",@"制服诱惑",@"比基尼",@"杜蕾斯",@"飞机杯",@"蕾丝"]];
+    isHistory = 0;
+//    [self.searchTableView reloadData];
+    
+}
+
+//一级分类列表
+-(void)initFirClassifyTableView
+{
+    UIImageView *firClassifyBgImg = [[UIImageView alloc] initWithFrame:CGRectMake(0, STAR_Y, 100, [UIScreen mainScreen].bounds.size.height - STAR_Y - OFFSET_Y)];
+    [firClassifyBgImg setImage:[UIImage imageNamed:@"firClassifyBg.png"]];
+//    [self.view addSubview:firClassifyBgImg];
+    
+    
+    if (isPassStoreCheck) {
+        self.firClassifyTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y+44, 100, [UIScreen mainScreen].bounds.size.height - STAR_Y - 44 - OFFSET_Y)];
+    }else
+    {
+        self.firClassifyTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, 100, [UIScreen mainScreen].bounds.size.height - STAR_Y  - OFFSET_Y)];
+    }
+    
+    
+    self.firClassifyTableView.dataSource = self;
+    self.firClassifyTableView.delegate = self;
+    self.firClassifyTableView.backgroundView = firClassifyBgImg;
+    self.firClassifyTableView.showsVerticalScrollIndicator = NO;
+    self.firClassifyTableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    if (IOS7_OR_LATER) {
+        [self.firClassifyTableView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.firClassifyTableView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.firClassifyTableView];
+    
+    UIView *footerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 50)];
+    self.firClassifyTableView.tableFooterView = footerView;
+    
+}
+
+//产品分类列表
+-(void)initClassifyTableV
+{
+    
+    if (isPassStoreCheck) {
+         self.classifyTableV = [[UITableView alloc] initWithFrame:CGRectMake(100, STAR_Y+44, SCREEN_WIDTH - 100, [UIScreen mainScreen].bounds.size.height - STAR_Y-44 - OFFSET_Y-TABBARHEIGHT) ];
+    }else
+    {
+         self.classifyTableV = [[UITableView alloc] initWithFrame:CGRectMake(100, STAR_Y, SCREEN_WIDTH - 100, [UIScreen mainScreen].bounds.size.height - STAR_Y - OFFSET_Y-TABBARHEIGHT) ];
+    }
+   
+    self.classifyTableV.dataSource = self;
+    self.classifyTableV.delegate = self;
+    self.classifyTableV.showsVerticalScrollIndicator = NO;
+    self.classifyTableV.separatorStyle = UITableViewCellSeparatorStyleNone;
+    if (IOS7_OR_LATER) {
+        [self.classifyTableV setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.classifyTableV.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.classifyTableV];
+    
+    
+    
+    UIView *footerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 50)];
+    self.classifyTableV.tableFooterView = footerView;
+
+    
+
+    
+    // 1.上拉加载更多(进入刷新状态就会调用self的footerRereshing)
+    [self.classifyTableV addHeaderWithTarget:self action:@selector(headerRereshing)];
+    
+    // 设置文字(也可以不设置,默认的文字在MJRefreshConst中修改)
+    
+    self.classifyTableV.headerPullToRefreshText = @"查看上个商品分类";
+    self.classifyTableV.headerReleaseToRefreshText = @"查看上个商品分类";
+    self.classifyTableV.headerRefreshingText = @"查看上个商品分类";
+    
+    
+    // 2.上拉加载更多(进入刷新状态就会调用self的footerRereshing)
+    [self.classifyTableV addFooterWithTarget:self action:@selector(footerRereshing)];
+    
+    // 设置文字(也可以不设置,默认的文字在MJRefreshConst中修改)
+    
+    self.classifyTableV.footerPullToRefreshText = @"查看下个商品分类";
+    self.classifyTableV.footerReleaseToRefreshText = @"查看下个商品分类";
+    self.classifyTableV.footerRefreshingText = @"查看下个商品分类";
+    
+    self.classifyTableV.isFenLei=YES;
+}
+
+-(void)headerRereshing
+{
+     [self performSelector:@selector(hearderRereshingEnd) withObject:nil afterDelay:0.2];
+}
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.classifyTableV headerEndRefreshing];
+    
+    if (firClassifyIndex>0) {
+        
+        if(self.firClassifyArry.count==0)
+        {
+            return;
+        }
+        
+        
+        firClassifyIndex -=1;
+        
+        
+        [self.firClassifyTableView reloadData];
+        
+        [self.shopDataArray removeAllObjects];
+        if (![[[self.firClassifyArry objectAtIndex:firClassifyIndex] objectForKey:@"goodsCategoryparams"] isKindOfClass:[NSNull class]]) {
+            [self getSecondArray];
+        }
+        [self.classifyTableV reloadData];
+        [self.classifyTableV scrollRectToVisible:CGRectMake(0, 0, 100, 1) animated:YES];
+        
+    }else
+    {
+        if(self.firClassifyArry.count==0)
+        {
+            return;
+        }
+        
+        
+        
+        firClassifyIndex = (int)self.firClassifyArry.count-1;
+        [self.firClassifyTableView reloadData];
+        
+        [self.shopDataArray removeAllObjects];
+        if (![[[self.firClassifyArry objectAtIndex:firClassifyIndex] objectForKey:@"goodsCategoryparams"] isKindOfClass:[NSNull class]]) {
+            [self getSecondArray];
+        }
+        [self.classifyTableV reloadData];
+        [self.classifyTableV scrollRectToVisible:CGRectMake(0, 0, 100, 1) animated:YES];
+    }
+}
+-(void)footerRereshing
+{
+    [self performSelector:@selector(footRereshingEnd) withObject:nil afterDelay:0.2];
+}
+-(void)footRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.classifyTableV footerEndRefreshing];
+    
+    if (firClassifyIndex< self.firClassifyArry.count-1) {
+        
+        if (self.firClassifyArry.count==0) {
+            return;
+        }
+        
+        
+        firClassifyIndex +=1;
+        
+        
+        [self.firClassifyTableView reloadData];
+        
+        [self.shopDataArray removeAllObjects];
+        if (![[[self.firClassifyArry objectAtIndex:firClassifyIndex] objectForKey:@"goodsCategoryparams"] isKindOfClass:[NSNull class]]) {
+            [self getSecondArray];
+        }
+        [self.classifyTableV reloadData];
+        [self.classifyTableV scrollRectToVisible:CGRectMake(0, 0, 100, 1) animated:YES];
+    }else
+    {
+        if (self.firClassifyArry.count==0) {
+            return;
+        }
+        
+        firClassifyIndex = 0;
+        [self.firClassifyTableView reloadData];
+        
+        [self.shopDataArray removeAllObjects];
+        if (![[[self.firClassifyArry objectAtIndex:firClassifyIndex] objectForKey:@"goodsCategoryparams"] isKindOfClass:[NSNull class]]) {
+            [self getSecondArray];
+        }
+        [self.classifyTableV reloadData];
+        [self.classifyTableV scrollRectToVisible:CGRectMake(0, 0, 100, 1) animated:YES];
+    }
+}
+-(void)historyBtnAction
+{
+    self.searchArry = [NSMutableArray arrayWithArray:[[AppSet shareInstance] historyArray]];
+    isHistory = 1;
+    [self.searchTableView reloadData];
+}
+-(void)hotBtnAction
+{
+//    self.searchArry = [NSMutableArray arrayWithArray:@[@"延时",@"避孕套",@"振动棒",@"制服诱惑",@"比基尼",@"杜蕾斯",@"飞机杯",@"蕾丝"]];
+    [self requestKeyWordWithDic:nil];
+    isHistory = 0;
+//    [self.searchTableView reloadData];
+}
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+    //    return 5;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (tableView == self.searchTableView) {
+        return self.searchArry.count;
+    }else if (tableView == self.classifyTableV)
+    {
+//        if(self.secondCellFirstDic!=nil)
+//            return ([shopDataArray count] - 1 )/2 + 1  +1;//加一个横
+        return ([shopDataArray count] - 1 )/2 + 1;
+        
+//        else return ([shopDataArray count] - 1 )/2 + 1;
+    }else
+        return self.firClassifyArry.count;
+    
+    
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (tableView == self.searchTableView) {
+        return 40;
+    }
+    return 0;
+}
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *topView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 40)];
+    topView.backgroundColor = [UIColor whiteColor];
+    
+    UIImageView *hotImg = [[UIImageView alloc] initWithFrame:CGRectMake(20, 6, 27, 27)];
+    [hotImg setImage:[UIImage imageNamed:@"hotSearchSort.png"]];
+    [topView addSubview:hotImg];
+    
+    UIButton *hotBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    hotBtn.frame = CGRectMake(0, 0, 160, 40);
+    hotBtn.backgroundColor = [UIColor clearColor];
+    hotBtn.titleLabel.font = [UIFont systemFontOfSize:15.0];
+    [hotBtn setTitle:@"热门搜索" forState:UIControlStateNormal];
+    [hotBtn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+    [hotBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateSelected];
+    [hotBtn addTarget:self action:@selector(hotBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    [topView addSubview:hotBtn];
+    
+    UIImageView *historyImg = [[UIImageView alloc] initWithFrame:CGRectMake(180, 6, 27, 27)];
+    [historyImg setImage:[UIImage imageNamed:@"historySearchSort.png"]];
+    [topView addSubview:historyImg];
+    
+    UIButton *historyBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    historyBtn.frame = CGRectMake(160, 0, 160, 40);
+    historyBtn.backgroundColor = [UIColor clearColor];
+    historyBtn.titleLabel.font = [UIFont systemFontOfSize:15.0];
+    [historyBtn setTitle:@"搜索历史" forState:UIControlStateNormal];
+    [historyBtn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+    [historyBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateSelected];
+    [historyBtn addTarget:self action:@selector(historyBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    [topView addSubview:historyBtn];
+    
+    
+    if (isHistory == 1) {
+        historyBtn.selected = YES;
+        hotBtn.selected = NO;
+        
+    }else{
+        historyBtn.selected = NO;
+        hotBtn.selected = YES;
+        
+    }
+    
+    
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 39.5, topView.frame.size.width, 0.5)];
+    line.backgroundColor = [UIColor lightGrayColor];
+    [topView addSubview:line];
+    
+    
+    
+    return topView;
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (tableView == self.searchTableView) {
+        return 45;
+    }else if(tableView == self.classifyTableV)
+    {
+//        if (indexPath.row==0) {
+//            return 90;
+//        }
+        return 130;
+    }
+        return 50;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    if (tableView == self.searchTableView) {
+        static NSString *CellIdentifier = @"Cell";
+        UITableViewCell *cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            
+            UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 20, 20)];
+            lab.tag = 100;
+            
+            lab.textColor = [UIColor whiteColor];
+            lab.textAlignment = NSTextAlignmentCenter;
+            [cell.imageView addSubview:lab];
+        }
+        
+        cell.backgroundColor = [UIColor clearColor];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        cell.textLabel.text = [[self.searchArry objectAtIndex:indexPath.row] objectForKey:@"hotsearch"];
+        cell.textLabel.font = [UIFont systemFontOfSize:14.0];
+        cell.textLabel.textColor = [UIColor darkGrayColor];
+        
+        UILabel *lab = (UILabel *)[cell viewWithTag:100];
+        lab.text = [NSString stringWithFormat:@"%d",(int)indexPath.row + 1];
+        
+        [cell.imageView setImage:[UIImage imageNamed:@"whiteImg.png"]];
+        
+
+        
+        if (indexPath.row == 0) {
+            lab.backgroundColor = [UIColor colorWithRed:253/255.f green:113/255.f blue:163/255.f alpha:1.0];
+        }else if(indexPath.row == 1)
+        {
+            lab.backgroundColor = [UIColor colorWithRed:253/255.f green:113/255.f blue:163/255.f alpha:0.9];
+        }else if(indexPath.row == 2)
+        {
+            lab.backgroundColor = [UIColor colorWithRed:253/255.f green:113/255.f blue:163/255.f alpha:0.8];
+        }else if(indexPath.row == 3)
+        {
+            lab.backgroundColor = [UIColor colorWithRed:253/255.f green:113/255.f blue:163/255.f alpha:0.7];
+        }else if(indexPath.row == 4)
+        {
+            lab.backgroundColor = [UIColor colorWithRed:253/255.f green:113/255.f blue:163/255.f alpha:0.6];
+        }else
+        {
+            lab.backgroundColor = [UIColor colorWithRed:253/255.f green:113/255.f blue:163/255.f alpha:0.5];
+        }
+        
+        
+        
+        return cell;
+        
+
+    }else if (tableView == self.firClassifyTableView)
+    {
+        static NSString *CellIdentifier = @"FirClassifyCell";
+        FirClassifyCell *cell = (FirClassifyCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+        if (cell == nil) {
+            cell = [[[NSBundle mainBundle] loadNibNamed:@"FirClassifyCell" owner:self options:nil] lastObject];
+        }
+        
+        cell.backgroundColor = [UIColor clearColor];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+
+        
+        if (judgeUrlIsHave(self.firClassifyArry[indexPath.row],@"newLogoPath")) {
+            NSURL * url = [NSURL URLWithString:self.firClassifyArry[indexPath.row][@"newLogoPath"]];
+            [cell.firClassifyImg sd_setImageWithURL:url placeholderImage:nil];
+        }else
+        {
+           NSURL * url = [PublicMethod imgWithUrl:self.firClassifyArry[indexPath.row][@"logoPath"]];
+           [cell.firClassifyImg sd_setImageWithURL:url placeholderImage:nil];
+        }
+        
+        if (judgeUrlIsHave(self.firClassifyArry[indexPath.row],@"newAdlogoPath")) {
+            NSURL * url = [NSURL URLWithString:self.firClassifyArry[indexPath.row][@"newAdlogoPath"]];
+            [cell.firClassifyUnSelectImg sd_setImageWithURL:url placeholderImage:nil];
+        }else
+        {
+            NSURL * url = [PublicMethod imgWithUrl:self.firClassifyArry[indexPath.row][@"adlogoPath"]];
+            [cell.firClassifyUnSelectImg sd_setImageWithURL:url placeholderImage:nil];
+        }
+        
+     
+        
+        
+        if (indexPath.row == firClassifyIndex) {
+            cell.firClassifyMark.hidden = NO;
+            
+            cell.firClassifyImg.hidden = NO;
+            cell.firClassifyUnSelectImg.hidden = YES;
+            
+        }else
+        {
+            cell.firClassifyMark.hidden = YES;
+            
+            cell.firClassifyImg.hidden = YES;
+            cell.firClassifyUnSelectImg.hidden = NO;
+        }
+        
+        
+        return cell;
+
+        
+        //二级分类
+    }else
+    {
+        
+        
+//        if(indexPath.row==0)
+//        {
+//            static NSString *CellIdentifier = @"ClassifyCellIndex0";
+//            ClassifyCellIndex0 *cell = (ClassifyCellIndex0 *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+//            if (cell == nil) {
+//                cell = [[[NSBundle mainBundle] loadNibNamed:@"ClassifyCellIndex0" owner:self options:nil] lastObject];
+//            }
+//            
+//            cell.backgroundColor = [UIColor whiteColor];
+//            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+//            cell.delegate=self;
+//            if (self.secondCellFirstDic) {
+//                
+//                NSArray *subArray = [NSArray arrayWithObject:self.secondCellFirstDic];
+//                [cell configCellWithArray:subArray indexRow:0];
+//            }
+//            
+//           
+//            
+//            
+//            return cell;
+//            
+//        }else
+//        {
+//            
+            static NSString *CellIdentifier = @"ClassifyCell";
+            ClassifyCell *cell = (ClassifyCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+            if (cell == nil) {
+                cell = [[[NSBundle mainBundle] loadNibNamed:@"ClassifyCell" owner:self options:nil] lastObject];
+            }
+            
+            cell.backgroundColor = [UIColor whiteColor];
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+            cell.delegate = self;
+            
+//            int index= (int)indexPath.row -1;//从第二行开始
+            int index= (int)indexPath.row ;
+                
+            if ([shopDataArray count]%2 == 0) {
+                NSArray *subArray = [shopDataArray subarrayWithRange:NSMakeRange(index*2  , 2)];
+                [cell configCellWithArray:subArray indexRow:(int)index];
+                
+            }else if([shopDataArray count]%2 == 1)
+            {
+                if ( (index + 1) * 2 < [shopDataArray count]) {
+                    NSArray *subArray = [shopDataArray subarrayWithRange:NSMakeRange(index*2  ,2)];
+                    [cell configCellWithArray:subArray indexRow:(int)index];
+                }else
+                {
+                    NSArray *subArray = [shopDataArray subarrayWithRange:NSMakeRange(index *2  ,1)];
+                    [cell configCellWithArray:subArray indexRow:(int)index];
+                }
+                
+            }
+                
+            
+            
+            
+            
+             return cell;
+        }
+        
+       
+//    }
+    
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (tableView == self.searchTableView) {
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.disPlayTwo = YES;
+        ctrVc.requestType = searchGoodsType;
+        ctrVc.searchStr = [[self.searchArry objectAtIndex:indexPath.row] objectForKey:@"hotsearch"];
+        ctrVc.titleStr = [[self.searchArry objectAtIndex:indexPath.row] objectForKey:@"hotsearch"];
+        [self.navigationController pushViewController:ctrVc animated:YES];
+        
+        [self cancelToSearchView];
+        
+        NSMutableArray *arry = [NSMutableArray arrayWithArray:[[AppSet shareInstance] historyArray]];
+        if (![arry containsObject:[self.searchArry objectAtIndex:indexPath.row]]) {
+            [arry addObject:[self.searchArry objectAtIndex:indexPath.row]];
+            [[AppSet shareInstance] setHistoryArray:arry];
+            [[AppSet shareInstance] saveHistoryData];
+        }
+        
+    }else if (tableView == self.firClassifyTableView)
+    {
+        firClassifyIndex = (int)indexPath.row;
+        [self.shopDataArray removeAllObjects];
+        
+        if (![[[self.firClassifyArry objectAtIndex:indexPath.row] objectForKey:@"goodsCategoryparams"] isKindOfClass:[NSNull class]]) {
+            
+            
+            [self getSecondArray];
+
+        }
+        
+        [self.classifyTableV reloadData];
+        [self.firClassifyTableView reloadData];
+        
+        //二级分类滚动到顶部
+        [self.classifyTableV scrollRectToVisible:CGRectMake(0, 1, self.classifyTableV.frame.size.width, 1) animated:YES];
+        
+        
+        // 统计分类点击次数
+        statisticIndex=-1;
+        for (int i=0; i<statisticArr.count; i++) {
+            if ([statisticArr[i] isEqualToString:self.firClassifyArry[indexPath.row][@"categoryName"] ]) {
+                statisticIndex=i+1;
+            }
+        }
+        if (statisticIndex>0 ) {
+            [MobClick event:[NSString stringWithFormat:@"Category_%d",(int)statisticIndex]];
+        }
+      
+        
+        
+    }
+    
+}
+
+#pragma RefreshView  触底加载更多
+-(void)getMoreData
+{
+    
+}
+
+
+#pragma RefreshView
+#pragma mark -
+#pragma mark Data Source Loading / Reloading Methods
+
+- (void)reloadTableViewDataSource{
+	
+	//  should be calling your tableviews data source model to reload
+	//  put here just for demo
+	_reloading = YES;
+	
+}
+
+- (void)doneLoadingTableViewData{
+	
+	//  model should call this when its done loading
+	_reloading = NO;
+	[_refreshHeaderView egoRefreshScrollViewDataSourceDidFinishedLoading:self.classifyTableV];
+	
+}
+
+
+#pragma mark -
+#pragma mark UIScrollViewDelegate Methods
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    [_refreshHeaderView egoRefreshScrollViewWillBeginScroll:scrollView];
+}
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+	
+   
+    if (scrollView == self.searchTableView) {
+        [self.searchField resignFirstResponder];
+    }else
+    {
+        [_refreshHeaderView egoRefreshScrollViewDidScroll:scrollView];
+    }
+    
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
+	
+    [_refreshHeaderView egoRefreshScrollViewDidEndDragging:scrollView];
+}
+
+
+#pragma mark -
+#pragma mark EGORefreshTableHeaderDelegate Methods
+
+- (void)egoRefreshTableHeaderDidTriggerRefresh:(EGORefreshTableHeaderView*)view{
+	
+	[self reloadTableViewDataSource];
+    //request  data
+	[self performSelector:@selector(doneLoadingTableViewData) withObject:nil afterDelay:3.0];
+	
+}
+
+- (BOOL)egoRefreshTableHeaderDataSourceIsLoading:(EGORefreshTableHeaderView*)view{
+	
+	return _reloading; // should return if data source model is reloading
+	
+}
+
+- (NSDate*)egoRefreshTableHeaderDataSourceLastUpdated:(EGORefreshTableHeaderView*)view{
+	
+	return [NSDate date]; // should return date data source was last changed
+	
+}
+
+#pragma mark ClassifyCellDelegate Methods
+-(void)goodsBtnClick:(NSUInteger)row
+{
+//    NSLog(@"商品列表>>%@",[shopDataArray objectAtIndex:row]);
+    
+    GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+    ctrVc.hidesBottomBarWhenPushed = YES;
+    ctrVc.disPlayTwo = YES;
+    ctrVc.titleStr = [[shopDataArray objectAtIndex:row ] objectForKey:@"categoryName"];
+    ctrVc.requestType = classifyType;
+    ctrVc.classifyId = [[shopDataArray objectAtIndex:row ] objectForKey:@"categoryId"];
+    [self.navigationController pushViewController:ctrVc animated:YES];
+    
+    
+//    GoodsListVC *ctrVc = [[GoodsListVC alloc] initWithNibName:@"GoodsListVC" bundle:[NSBundle mainBundle]];
+//    ctrVc.hidesBottomBarWhenPushed = YES;
+//    ctrVc.disPlayTwo = YES;
+//    ctrVc.titleStr = [[shopDataArray objectAtIndex:row ] objectForKey:@"categoryName"];
+//    ctrVc.requestType = classifyType;
+//    ctrVc.classifyId = [[shopDataArray objectAtIndex:row ] objectForKey:@"categoryId"];
+//    
+//    [self getSecondArrayWithIndex:row];
+//    ctrVc.subClassifyArray=self.shopDataArray;
+    
+    
+//    [self.navigationController pushViewController:ctrVc animated:YES];
+    
+    
+    
+    
+    // 统计分类点击事件
+    if (statisticIndex>0 ) {
+        [MobClick event:[NSString stringWithFormat:@"Category_%d",(int)statisticIndex]];
+    }
+}
+-(void)getSecondArrayWithIndex:(int)index
+{
+    [self.shopDataArray removeAllObjects];
+    
+    if(!isPassStoreCheck){
+        NSArray *array=[[self.firClassifyArry objectAtIndex:index] objectForKey:@"goodsCategoryparams"];
+        
+        for (int i=0; i<array.count; i++) {
+            if (![array[i][@"categoryName"] isEqualToString:@"充气娃娃"]  && ![array[i][@"categoryName"] isEqualToString:@"仿真阳具"] && ![array[i][@"categoryName"] isEqualToString:@"名模名器"]) {
+                [self.shopDataArray addObject:array[i]];
+            }
+        }
+        
+    }else{
+        
+        [self.shopDataArray addObjectsFromArray:[[self.firClassifyArry objectAtIndex:index] objectForKey:@"goodsCategoryparams"]];
+        
+    }
+    
+    
+    //    self.secondCellFirstDic =nil;
+    //    for (NSDictionary *dic in self.shopDataArray) {
+    //        if ([dic[@"isAdcategory"] intValue]==1 ) {
+    //            self.secondCellFirstDic=[NSDictionary dictionaryWithDictionary:dic];
+    //
+    //            if([self.secondCellFirstDic[@"isType"] intValue]==0)//分类的时候才删除
+    //            {
+    //                [self.shopDataArray removeObject:dic];
+    //            }
+    //
+    //            break;
+    //        }
+    //    }
+    
+    
+}
+-(void)firstCellGoodsBtnClick:(NSUInteger)row
+{
+    if (self.secondCellFirstDic) {
+        
+        if (self.secondCellFirstDic[@"isType"] ) {
+            
+            int isType=[self.secondCellFirstDic[@"isType"] intValue];
+            
+            
+            switch (isType) {
+                case 0://分类
+                {
+                    GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+                    ctrVc.hidesBottomBarWhenPushed = YES;
+                    ctrVc.disPlayTwo = YES;
+                    ctrVc.titleStr = [self.secondCellFirstDic objectForKey:@"categoryName"];
+                    ctrVc.requestType = classifyType;
+                    ctrVc.classifyId = [self.secondCellFirstDic objectForKey:@"categoryId"];
+                    //    [appDelegate.leveyTabBarController hidesTabBar:YES animated:YES];
+                    [self.navigationController pushViewController:ctrVc animated:YES];
+                    
+                }
+                    break;
+                case 1://专区
+                {
+                    GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+                    ctrVc.hidesBottomBarWhenPushed = YES;
+                    ctrVc.disPlayOne = YES;
+                    ctrVc.classifyStr = [self.secondCellFirstDic objectForKey:@"typdId"];
+                    ctrVc.titleStr = [self.secondCellFirstDic objectForKey:@"categoryName"];;
+                    ctrVc.requestType = homeViewType;
+                    
+                    [self.navigationController pushViewController:ctrVc animated:YES];
+                }
+                    break;
+                case 2://商品
+                {
+                    GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+                    ctrVc.hidesBottomBarWhenPushed = YES;
+                    ctrVc.goodsIdStr = [self.secondCellFirstDic objectForKey:@"typdId"];
+                    
+                    [self.navigationController pushViewController:ctrVc animated:YES];
+                }
+                    break;
+                default:
+                    break;
+            }
+            
+            
+        }else
+        {
+            GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.titleStr = [self.secondCellFirstDic objectForKey:@"categoryName"];
+            ctrVc.requestType = classifyType;
+            ctrVc.classifyId = [self.secondCellFirstDic objectForKey:@"categoryId"];
+            //    [appDelegate.leveyTabBarController hidesTabBar:YES animated:YES];
+            [self.navigationController pushViewController:ctrVc animated:YES];
+            
+        }
+        
+        
+        // 统计分类点击事件
+        if (statisticIndex>0 ) {
+            [MobClick event:[NSString stringWithFormat:@"Category_%d",(int)statisticIndex]];
+        }
+    }
+    
+}
+
+#pragma mark - TextField Delegate
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+    
+    [self requestKeyWordWithDic:nil];
+    [self toSearch];
+    return YES;
+}
+-(BOOL)textFieldShouldReturn:(UITextField *)textField {
+
+    [textField resignFirstResponder];
+    
+    
+    
+    GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+    ctrVc.hidesBottomBarWhenPushed = YES;
+    ctrVc.disPlayTwo = YES;
+    ctrVc.requestType = searchGoodsType;
+    ctrVc.searchStr = self.searchField.text;
+    ctrVc.titleStr = self.searchField.text;
+    [self.navigationController pushViewController:ctrVc animated:YES];
+    
+    NSMutableArray *arry = [NSMutableArray arrayWithArray:[[AppSet shareInstance] historyArray]];
+    NSMutableDictionary *dic = [[NSMutableDictionary alloc] initWithCapacity:0];
+    [dic setObject:self.searchField.text forKey:@"hotsearch"];
+    if (![arry containsObject:dic]) {
+        [arry addObject:dic];
+        [[AppSet shareInstance] setHistoryArray:arry];
+        [[AppSet shareInstance] saveHistoryData];
+    }
+    
+    
+    [self cancelToSearchView];
+    
+    return YES;
+}
+
+
+#pragma mark - requestClassify
+//一二级分类
+-(void)requestClassifyWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestClassifyWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"分类responseArray-->%@",responseDic);
+        
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+
+            [self.firClassifyArry removeAllObjects];
+            if (![[responseDic objectForKey:@"datasource"] isKindOfClass:[NSNull class]]) {
+                [self.firClassifyArry removeAllObjects];
+                
+
+                if (!isPassStoreCheck) {
+                    //发布APPstore isPassStoreCheck
+                    for (int i = 0; i < [[responseDic objectForKey:@"datasource"] count]; i++) {
+                        if (![[[[responseDic objectForKey:@"datasource"] objectAtIndex:i] objectForKey:@"categoryName"] isEqualToString:@"情趣内衣"]
+//                            &&![[[[responseDic objectForKey:@"datasource"] objectAtIndex:i] objectForKey:@"categoryName"] isEqualToString:@"女性道具"]
+                            &&![[[[responseDic objectForKey:@"datasource"] objectAtIndex:i] objectForKey:@"categoryName"] isEqualToString:@"男性道具"]
+                            && [[[[responseDic objectForKey:@"datasource"] objectAtIndex:i] objectForKey:@"isHidden"] intValue] != 1) {
+                            
+                            
+                            [self.firClassifyArry addObject:[[responseDic objectForKey:@"datasource"] objectAtIndex:i]];
+                        }
+                    }
+       
+                }
+                else
+                {
+                    //发布其他版本
+                    [self.firClassifyArry addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+                }
+                
+                
+                
+                
+                //数组逆序
+                self.firClassifyArry =[NSMutableArray arrayWithArray:[[self.firClassifyArry reverseObjectEnumerator] allObjects]];
+                
+                [self.firClassifyTableView reloadData];
+                
+                [self.shopDataArray removeAllObjects];
+                
+                
+                if (![[[self.firClassifyArry objectAtIndex:firClassifyIndex] objectForKey:@"goodsCategoryparams"] isKindOfClass:[NSNull class]]) {
+                    
+                    //获得当前二级分类
+                    [self getSecondArray];
+
+                    [self.classifyTableV reloadData];
+                }
+                
+
+                
+                
+                for (int i = 0; i < self.firClassifyArry.count; i++) {
+                    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithDictionary:[self.firClassifyArry objectAtIndex:i]];
+                    if ([[dic objectForKey:@"adlogoPath"] isKindOfClass:[NSNull class]]) {
+                        [dic setValue:@"" forKey:@"adlogoPath"];
+                    }
+                    NSMutableArray *arry = [NSMutableArray arrayWithArray:[[self.firClassifyArry objectAtIndex:i] objectForKey:@"goodsCategoryparams"]];
+                    
+                    for (int j = 0; j < [arry count]; j++) {
+                        NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:[arry objectAtIndex:j]];
+                        
+                        if ([[dict objectForKey:@"adlogoPath"] isKindOfClass:[NSNull class]]) {
+                            [dict setValue:@"" forKey:@"adlogoPath"];
+                        }
+                        
+                        [arry removeObjectAtIndex:j];
+                        [arry insertObject:dict atIndex:j];
+                    }
+                    
+                    [dic removeObjectForKey:@"goodsCategoryparams"];
+                    [dic setObject:arry forKey:@"goodsCategoryparams"];
+                    
+                    [self.firClassifyArry removeObjectAtIndex:i];
+                    [self.firClassifyArry insertObject:dic atIndex:i];
+                }
+                
+                [[AppSet shareInstance] setClassifyArray:self.firClassifyArry];
+                NSLog(@"--cla>>%@",[[AppSet shareInstance] classifyArray]);
+                [[AppSet shareInstance] saveClassifyData];
+            }
+            
+            
+            
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"分类error-->%@",error);
+        //        self.promptLab.text = @"请检查网络设置!";
+        //        [self showPromptLab];
+
+        
+    }];
+}
+
+
+//获取关键字
+-(void)requestKeyWordWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestGetKeyWordWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+            [self.searchArry removeAllObjects];
+            if (!isPassStoreCheck) {
+                
+            }else
+                [self.searchArry addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            [self.searchTableView reloadData];
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        //        self.promptLab.text = @"请检查网络设置!";
+        //        [self showPromptLab];
+        
+        
+    }];
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+#pragma mark - 获得二级分类
+
+-(void)getSecondArray
+{
+    if(!isPassStoreCheck){
+        NSArray *array=[[self.firClassifyArry objectAtIndex:firClassifyIndex] objectForKey:@"goodsCategoryparams"];
+        
+        for (int i=0; i<array.count; i++) {
+            if (![array[i][@"categoryName"] isEqualToString:@"充气娃娃"]
+                && ![array[i][@"categoryName"] isEqualToString:@"仿真阳具"]
+                && ![array[i][@"categoryName"] isEqualToString:@"名模名器"]
+                && ![array[i][@"categoryName"] isEqualToString:@"束缚颈绳"]
+                && ![array[i][@"categoryName"] isEqualToString:@"情趣道具"]
+                ) {
+                [self.shopDataArray addObject:array[i]];
+            }
+        }
+        
+    }else{
+        
+        [self.shopDataArray addObjectsFromArray:[[self.firClassifyArry objectAtIndex:firClassifyIndex] objectForKey:@"goodsCategoryparams"]];
+        
+    }
+    
+    
+    self.secondCellFirstDic =nil;
+    for (NSDictionary *dic in self.shopDataArray) {
+        if ([dic[@"isAdcategory"] intValue]==1 ) {
+            self.secondCellFirstDic=[NSDictionary dictionaryWithDictionary:dic];
+            if([self.secondCellFirstDic[@"isType"] intValue]==0)//分类的时候才删除
+            {
+                 [self.shopDataArray removeObject:dic];
+            }
+            
+            break;
+        }
+    }
+}
+
+@end

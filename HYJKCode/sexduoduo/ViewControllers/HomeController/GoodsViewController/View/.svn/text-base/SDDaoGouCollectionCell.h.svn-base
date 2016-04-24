@@ -1,0 +1,32 @@
+//
+//  SDDaoGouCollectionCell.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/16.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  首页导购的collectionCell
+
+#import <UIKit/UIKit.h>
+
+@interface SDDaoGouCollectionCell : UICollectionViewCell
+
+
+@property (strong, nonatomic)  UIButton *btn;
+
+@property (strong, nonatomic)  UIImageView *img;
+
+@property (strong, nonatomic)  UILabel *nameLab;
+
+@property (strong, nonatomic)  UILabel *property;
+
+@property (strong, nonatomic)  UIImageView *headImage;
+
+@property (strong, nonatomic)  UILabel *zan;
+
+@property (strong, nonatomic)  UILabel *pingLun;
+
+@property (strong, nonatomic)  UIView *view;
+
+-(void)configCellWithDic:(NSDictionary *)dic indexRow:(int)row;
+
+@end

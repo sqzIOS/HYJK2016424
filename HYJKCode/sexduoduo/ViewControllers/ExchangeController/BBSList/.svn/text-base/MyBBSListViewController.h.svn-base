@@ -1,0 +1,58 @@
+//
+//  MyBBSListViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-9-4.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  我的帖子 我的回复 帖子收藏 最热帖子
+
+#import <UIKit/UIKit.h>
+#import "BBSCell.h"
+#import "UIScrollView+SVInfiniteScrolling.h"
+#import "EGORefreshTableHeaderView.h"
+#import "BBSDetailNewViewController.h"
+#import "PostMsgViewController.h"
+#import "NvShenDetailViewController.h"
+
+#import "NoNetworkView.h"
+#import "NoDataView.h"
+typedef enum _MyListType {
+    myListMyTopic = 0,    //我的帖子
+    myListPostReply,      //我的回复
+    myListBBSCollect,     //我的收藏
+    mylistHotBBS,         //最热帖子
+} MyListType;
+
+
+@interface MyBBSListViewController : UIViewController<UITableViewDelegate,UITableViewDataSource,NoNetworkViewProtocol>
+{
+  
+    
+    GoTopView *goTopView;
+    
+    MKNetworkOperation *opration;
+    MKNetworkOperation *opration1;
+}
+@property (strong, nonatomic) UITableView *bbsTableView;
+@property (strong, nonatomic) NSString *titleStr;
+@property (strong, nonatomic) NSMutableArray *dataArray;
+
+@property (strong, nonatomic) NSMutableArray *replyMeDataArray;
+
+@property (assign, nonatomic) MyListType mylistType;
+@property (assign, nonatomic) BOOL isReplyME;//我的帖子页面中是回复我的
+
+@property (strong, nonatomic) UILabel *promptLab;
+
+@property (strong, nonatomic) NoNetworkView *noNetworkView;
+@property (strong, nonatomic) NoDataView *noDataView;
+
+
+//提示消失
+-(void)dismissPromptLab;
+//显示提示
+-(void)showPromptLab;
+
+
+
+@end

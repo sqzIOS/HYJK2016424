@@ -1,0 +1,18 @@
+//
+//  AppRecommendViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-9-4.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  应用推荐
+
+#import <UIKit/UIKit.h>
+#import "AppRecommendCell.h"
+
+@interface AppRecommendViewController : UIViewController<UITableViewDataSource,UITableViewDelegate>
+
+@property (strong, nonatomic) UITableView *recommendTableView;
+
+@property (strong, nonatomic) NSMutableArray *appArray;
+
+@end

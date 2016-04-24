@@ -1,0 +1,243 @@
+//
+//  SDDouble11SubVC1.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/31.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDDouble11SubVC1.h"
+
+@interface SDDouble11SubVC1 ()
+@property (strong,nonatomic)UIScrollView *scView;
+@property (strong,nonatomic)NSMutableArray *contentBgViewArray;
+
+@property (strong, nonatomic)NSMutableArray *btnViewArray;//按钮View的数组
+
+@property (strong, nonatomic)NSMutableArray *homeGoodsArray;//数据数组
+@end
+
+@implementation SDDouble11SubVC1
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    self.homeGoodsArray = [[NSMutableArray alloc] init];
+    self.contentBgViewArray = [[NSMutableArray alloc] init];
+    self.btnViewArray = [[NSMutableArray alloc] init];
+    
+    [self setTopNavView];
+    
+    self.scView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y)];
+    [self.view addSubview:self.scView];
+    
+    
+    // ---------背景--------------
+    NSArray *array =@[@"305",@"285",@"87",@"285",@"103"];
+    CGFloat begin_y=0;
+    for (int i=0; i<array.count; i++)
+    {
+        UIImageView *imageView =  [[UIImageView alloc] initWithFrame:CGRectMake(0, begin_y, QZMake(375), QZMake([array[i] floatValue]))];
+        NSString *imageName =[NSString stringWithFormat:@"singleDog_bg_%d",i+1];
+        imageView.image = UIImageByName(imageName);
+        
+        [self.scView addSubview:imageView];
+        [self.contentBgViewArray addObject:imageView];
+        
+        
+        begin_y += QZMake([array[i] floatValue]);
+        
+        self.scView.contentSize = CGSizeMake(QZMake(375), begin_y);
+        
+    }
+    
+    // ---------按钮--------------
+
+    UIImageView *contentView = [self.contentBgViewArray objectAtIndex:1];//第二块bg放三个按钮
+    contentView.userInteractionEnabled = YES;
+    
+    {
+        UIButton *btn = [UIButton buttonWithType:0];
+        btn.frame = CGRectMake(QZMake(41) , 0, QZMake(375-82), QZMake(149));
+        btn.backgroundColor = BLUE_COLOR;
+        [contentView addSubview:btn];
+        btn.tag = 1000;
+        btn.qzTagString = @"goodBtn";
+        [self.btnViewArray addObject:btn];
+        [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+        for (int i=0; i<2; i++)
+        {
+            UIButton *btn = [UIButton buttonWithType:0];
+            btn.frame = CGRectMake(QZMake(41)+ QZMake(137+18)*i , QZMake(172), QZMake(137), QZMake(102));
+            btn.backgroundColor = BLUE_COLOR;
+            [contentView addSubview:btn];
+            btn.tag = 1001 +i;
+            btn.qzTagString = @"goodBtn";
+            [self.btnViewArray addObject:btn];
+            [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    
+    
+    contentView = [self.contentBgViewArray objectAtIndex:3];//第四块bg放三个按钮
+    contentView.userInteractionEnabled = YES;
+    
+    {
+        UIButton *btn = [UIButton buttonWithType:0];
+        btn.frame = CGRectMake(QZMake(41) , 0, QZMake(375-82), QZMake(149));
+        btn.backgroundColor = BLUE_COLOR;
+        [contentView addSubview:btn];
+        btn.tag = 1003;
+        btn.qzTagString = @"goodBtn";
+        [self.btnViewArray addObject:btn];
+        [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+        for (int i=0; i<2; i++)
+        {
+            UIButton *btn = [UIButton buttonWithType:0];
+            btn.frame = CGRectMake(QZMake(41)+ QZMake(137+18)*i , QZMake(172), QZMake(137), QZMake(102));
+            btn.backgroundColor = BLUE_COLOR;
+            [contentView addSubview:btn];
+            btn.tag = 1004+i;
+            btn.qzTagString = @"goodBtn";
+            [self.btnViewArray addObject:btn];
+            [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    
+    [self requestThemeActivityData];
+
+}
+//顶部NavView
+-(void)setTopNavView
+{
+    int layOutH = -20;
+    if (IOS7_OR_LATER) {
+        layOutH = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, layOutH,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    if (self.titleStr) {
+        [navView setTitleStr:self.titleStr];
+    }else
+        [navView setTitleStr:@"单身男"];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+}
+
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+-(void)btnClick:(id)sender
+{
+    UIButton *senderBtn = sender;
+    
+    if ([senderBtn.qzTagString isEqualToString:@"goodBtn"]) {
+        
+        if (self.homeGoodsArray.count>0) {
+            
+            int index = senderBtn.tag -1000;
+            NSLog(@"--%d",index);
+            if (index<self.homeGoodsArray.count) {
+
+                // 统计 计数事件
+                [MobClick event:[NSString stringWithFormat:@"Theme_sub1_%zi",index]];
+                
+                NSDictionary *dic=[self.homeGoodsArray objectAtIndex:index];
+                [PublicMethod themeGotoSubViewWithThisVC:self andDic:dic];
+            }
+        }
+        
+    }
+
+    
+}
+-(void)requestThemeActivityData
+{
+    // 分类
+    NSDictionary *params = [[NSDictionary alloc]init];
+    params = @{@"showAdress":@"14"};
+    
+    [[MKHttpServiceEngine shareMyInstance] requestThemeActivityWithDic:params completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray单身狗活动分类及商品-->%@",responseDic);
+        NSLog(@"responseArray单身狗分类及商品");
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            [self.homeGoodsArray removeAllObjects];
+            [self.homeGoodsArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            [self setGoodsViewData:self.homeGoodsArray];
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        
+    }];
+    
+}
+-(void)setGoodsViewData:(NSArray *)dataArray
+{
+    
+    if (self.homeGoodsArray.count>0)
+    {
+        //商品
+        for (int index = 0; index <self.btnViewArray.count; index++) {
+            NSLog(@"%d",index);
+            if (index>=self.homeGoodsArray.count) {
+                break;
+            }
+            
+            UIButton *btn=self.btnViewArray[index];
+            if (self.homeGoodsArray[index][@"newLogoPath"] && ![self.homeGoodsArray[index][@"newLogoPath"] isKindOfClass:[NSNull class]]) {
+                NSString *urlStr=self.homeGoodsArray[index][@"newLogoPath"];
+                [btn sd_setBackgroundImageWithURL:[NSURL URLWithString:urlStr] forState:UIControlStateNormal];
+            }
+            
+        }
+        
+        
+        // 背景
+        for (int index = 0; index <self.contentBgViewArray.count; index++) {
+            NSLog(@"--%d",index);
+            
+            if (index>=self.homeGoodsArray.count) {
+                break;
+            }
+            if (self.homeGoodsArray[index][@"newGuardPath"] && ![self.homeGoodsArray[index][@"newGuardPath"] isKindOfClass:[NSNull class]]) {
+                UIImageView *imageView=self.contentBgViewArray[index];
+                NSString *urlStr=self.homeGoodsArray[index][@"newGuardPath"];
+                [imageView sd_setImageWithURL:[NSURL URLWithString:urlStr]];
+                
+            }
+        }
+    }
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

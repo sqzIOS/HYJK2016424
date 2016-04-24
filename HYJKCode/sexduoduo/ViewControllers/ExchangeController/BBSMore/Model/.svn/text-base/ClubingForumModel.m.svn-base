@@ -1,0 +1,89 @@
+//
+//  ClubingForumModel.m
+//  
+//
+//  Created by apple on 15/12/10.
+//
+//
+
+#import "ClubingForumModel.h"
+
+//@property (nonatomic,copy) NSString *ID;
+//@property (nonatomic,copy) NSString *logo;
+//@property (nonatomic,copy) NSString *postToday;
+//@property (nonatomic,copy) NSString *title;
+//@property (nonatomic) BOOL associated;
+//@property (nonatomic,copy) NSString *des;
+//@property (nonatomic) BOOL isHot;
+//@property (nonatomic,copy) NSString *url;
+//@property (nonatomic) BOOL isShow;
+
+
+@implementation ClubingForumModel
+
+
+
++ (instancetype)clubingForumModelWithDict:(NSDictionary *)dict
+{
+    ClubingForumModel *model = [[self alloc] init];
+    
+    model.ID = dict[@"id"];
+    model.logo = dict[@"logo"];
+    model.postToday = dict[@"postToday"];
+    model.title = dict[@"title"];
+    model.associated = [dict[@"associated"] boolValue];
+    model.des = dict[@"description"];
+    model.isHot = [dict[@"isHot"] boolValue];
+    model.url = dict[@"url"];
+    model.isShow = [dict[@"isShow"] boolValue];
+    
+    return model;
+}
+
+/*
+ @property (nonatomic,copy) NSString *ID;
+ @property (nonatomic,copy) NSString *logo;
+ @property (nonatomic,copy) NSString *postToday;
+ @property (nonatomic,copy) NSString *title;
+ @property (nonatomic) BOOL associated;
+ @property (nonatomic,copy) NSString *des;
+ @property (nonatomic) BOOL isHot;
+ @property (nonatomic,copy) NSString *url;
+ @property (nonatomic) BOOL isShow;
+ */
+-(id)initWithCoder:(NSCoder *)aDecoder
+{
+    if (self = [super init]) {
+        self.ID = [aDecoder decodeObjectForKey:@"ID"];
+        self.logo = [aDecoder decodeObjectForKey:@"logo"];
+        self.postToday = [aDecoder decodeObjectForKey:@"postToday"];
+        self.title = [aDecoder decodeObjectForKey:@"title"];
+        self.des = [aDecoder decodeObjectForKey:@"des"];
+        self.url = [aDecoder decodeObjectForKey:@"url"];
+        
+        self.associated = [aDecoder decodeBoolForKey:@"associated"];
+        self.isHot = [aDecoder decodeBoolForKey:@"isHot"];
+        self.isShow = [aDecoder decodeBoolForKey:@"isShow"];
+    }
+    
+    return self;
+}
+
+-(void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:self.ID forKey:@"ID"];
+    [aCoder encodeObject:self.logo forKey:@"logo"];
+    [aCoder encodeObject:self.postToday forKey:@"postToday"];
+    [aCoder encodeObject:self.title forKey:@"title"];
+    [aCoder encodeObject:self.des forKey:@"des"];
+    [aCoder encodeObject:self.url forKey:@"url"];
+    
+    [aCoder encodeBool:self.associated forKey:@"associated"];
+    [aCoder encodeBool:self.isHot forKey:@"isHot"];
+    [aCoder encodeBool:self.isShow forKey:@"isShow"];
+
+}
+
+
+
+@end

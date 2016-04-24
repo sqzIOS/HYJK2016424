@@ -1,0 +1,238 @@
+//
+//  SDHomeHeaderView.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDHomeHeaderView.h"
+
+#import "StyledPageControl.h"
+#import "ClassifyFileObj.h"
+#import "GoodListMainController.h"
+
+@interface SDHomeHeaderView()
+//滚动点
+@property(weak,nonatomic)StyledPageControl* pageControl;
+//滚动数据
+@property(strong,nonatomic)NSMutableArray* svData;
+
+@end
+
+@implementation SDHomeHeaderView
+- (id)initWithFrameAndType:(CGRect)frame pvc:(id)pvc
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.svData = [NSMutableArray array];
+        self.parentVC = pvc;
+        XLCycleScrollView *adScrollView = [[XLCycleScrollView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height)];
+        adScrollView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+        adScrollView.delegate = self;
+        adScrollView.datasource = self;
+        adScrollView.scrollView.scrollsToTop = NO;
+        adScrollView.autoScrollDuration = 3;
+        adScrollView.autoScroll = YES;
+        adScrollView.pageControl.hidden = YES;
+        [self addSubview:adScrollView];
+        self.scrollView = adScrollView;
+       
+        //点
+        StyledPageControl* pageControl = [[StyledPageControl alloc]initWithFrame:CGRectMake(0, frame.size.height-20, frame.size.width, 20)];
+        pageControl.diameter = 8;
+        pageControl.gapWidth = 8;
+        pageControl.coreNormalColor = [UIColor colorWithRed:241/255.f green:51/255.f blue:125/255.f alpha:1.0];
+        pageControl.coreSelectedColor = [UIColor colorWithRed:232/255.f green:232/255.f blue:232/255.f alpha:1.0];
+        pageControl.pageControlStyle = PageControlStyleDefault;
+        [self addSubview:pageControl];
+        self.pageControl = pageControl;
+        
+        
+        // 自定义pageControl
+        // programmatically add the page control
+//        self.pageControl = [[DDPageControl alloc] init] ;
+//        [self.pageControl setCenter: CGPointMake(self.view.center.x,self.adsScrollView.bottom -10)] ;
+//        [self.pageControl setNumberOfPages: [self.slideImages count]] ;
+//        [self.pageControl setCurrentPage: 0] ;
+//        //    [self.pageControl addTarget: self action: @selector(pageControlClicked:) forControlEvents: UIControlEventValueChanged] ;
+//        //    [self.pageControl setDefersCurrentPageDisplay: YES] ;
+//        [self.pageControl setType: DDPageControlTypeOnFullOffEmpty] ;
+//        [self.pageControl setOnColor: [UIColor colorWithRed:241/255.f green:51/255.f blue:125/255.f alpha:1.0]] ;
+//        [self.pageControl setOffColor: [UIColor colorWithRed:232/255.f green:232/255.f blue:232/255.f alpha:1.0]] ;
+//        [self.pageControl setIndicatorDiameter: 4.0f] ;
+//        [self.pageControl setIndicatorSpace: 10.0f] ;
+//        [self addSubview:self.pageControl];
+        
+        NSArray *localArray = [ClassifyFileObj readArrayWithPath:FILE_HomeADView_path];
+        if (localArray) {
+            [self.svData addObjectsFromArray:localArray];
+            [self.scrollView reloadData];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self requestData];
+        });
+        
+        self.userInteractionEnabled = YES;
+    }
+    return self;
+}
+
+#pragma mark ---Data
+-(void)requestData
+{
+    [self requestHomeAdsListWithWithDic:nil];
+}
+//广告
+-(void)requestHomeAdsListWithWithDic:(NSDictionary *)dic
+{
+    NSDictionary *params = [[NSDictionary alloc]init];
+    if(IS_APPSTORE && !isPassStoreCheck)//AppStore审核状态
+    {
+        params = @{@"showAdress":@"10"};
+    }else
+    {
+        params = @{@"showAdress":@"1"};
+    }
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestHomeAdsWithDic:params completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray广告-->%@",responseDic);
+        NSLog(@"responseArray广告-->");
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+
+            [_svData removeAllObjects];
+
+            [self.svData addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+        
+            //保存缓存
+            if ([self.svData count]>0) {
+                [ClassifyFileObj writeToFileWithArray:self.svData andFilePath:FILE_HomeADView_path];
+            }
+            
+            [_scrollView reloadData];
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+    }];
+}
+
+
+#pragma mark ---Delegate
+- (NSInteger)numberOfPages
+{
+    NSInteger count = [self.svData count];
+    return count;
+}
+- (UIView *)cycleScrollView:(XLCycleScrollView *)scrollView pageAtIndex:(NSInteger)index
+{
+    QzImageView *AdView = [_scrollView dequeueReusableView];
+    if (!AdView) {
+        AdView = [[QzImageView alloc] initWithFrame:_scrollView.bounds];
+    }
+    AdView.userInteractionEnabled = YES;
+    
+    NSDictionary *dic = _svData[index];
+    if (1 == _svData.count) {
+        self.pageControl.numberOfPages = 0;
+    } else {
+        self.pageControl.numberOfPages = (int)_svData.count;
+    }
+    self.pageControl.currentPage = (int)scrollView.currentPage;
+    AdView.contentMode = UIViewContentModeScaleAspectFill;
+    
+    if ([dic[@"newLogoPath"] hasPrefix:@"http://"]) {
+        [AdView sd_setImageWithURL:[NSURL URLWithString:dic[@"newLogoPath"]]];
+    }else
+        AdView.image = [UIImage imageNamed:dic[@"newLogoPath"]];
+    
+    
+    return AdView;
+}
+
+//点击事件
+-(void)didClickPage:(XLCycleScrollView *)csView atIndex:(NSInteger)index
+{
+
+    
+    NSLog(@"点击");
+    
+    int tag = index;
+    
+    
+    NSString *str=[NSString stringWithFormat:@"ADBanner_%zi",tag+1];
+    // 统计 计数事件
+    [MobClick event:str];
+    
+    
+    // 商品
+    if ([[[self.svData objectAtIndex:tag] objectForKey:@"gdCategory"] intValue] == 1) {
+        NSDictionary *dic = [self.svData objectAtIndex:tag];
+        GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.goodsIdStr = [dic objectForKey:@"homeId"];
+        //        ctrVc.classifyIdStr = [dic objectForKey:@"goodsCategoryId"];
+        [self.parentVC.navigationController pushViewController:ctrVc animated:YES];
+        
+        // 分类
+    }else if ([[[self.svData objectAtIndex:tag] objectForKey:@"gdCategory"] intValue] == 2) {
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.isHiddenSort=YES;
+        ctrVc.disPlayTwo = YES;
+        ctrVc.titleStr = self.svData[tag][@"name"];
+        ctrVc.requestType = classifyType;
+        ctrVc.classifyId = [[self.svData objectAtIndex:tag] objectForKey:@"homeId"];
+        //    [appDelegate.leveyTabBarController hidesTabBar:YES animated:YES];
+        [self.parentVC.navigationController pushViewController:ctrVc animated:YES];
+        
+        // 帖子
+    }else if ([[[self.svData objectAtIndex:tag] objectForKey:@"gdCategory"] intValue] == 3) {
+        
+        BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+        controller.forumId = [[self.svData objectAtIndex:tag] objectForKey:@"introduction"];
+        controller.topicId = [[self.svData objectAtIndex:tag] objectForKey:@"homeId"];
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.parentVC.navigationController pushViewController:controller animated:YES];
+        
+        // 专区
+    }else if ([[[self.svData objectAtIndex:tag] objectForKey:@"gdCategory"] intValue] == 4){
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.disPlayOne = YES;
+        ctrVc.classifyStr = self.svData[tag][@"homeId"];
+        ctrVc.titleStr = self.svData[tag][@"name"];
+        ctrVc.requestType = homeViewType;
+        [self.parentVC.navigationController pushViewController:ctrVc animated:YES];
+        
+        //论坛板块
+    }else if([[[self.svData objectAtIndex:tag] objectForKey:@"gdCategory"] intValue] == 5)
+    {
+        
+        //淘宝网店推广
+    }else if ([[[self.svData objectAtIndex:tag] objectForKey:@"gdCategory"] intValue] == 6 )
+    {
+        TaoBaoWebViewController *ctrVc = [[TaoBaoWebViewController alloc] initWithNibName:@"TaoBaoWebViewController" bundle:nil];
+        //        ctrVc.webURLStr=@"http://shop116244450.taobao.com/?spm=a230r.7195193.1997079397.2.TrKzTs&qq-pf-to=pcqq.c2c";
+        ctrVc.webURLStr=self.svData[tag][@"homeId"];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.nameStr=self.svData[tag][@"name"];
+        [self.parentVC.navigationController pushViewController:ctrVc animated:YES];
+        
+        //年货专区 主题活动
+    }else if ([[[self.svData objectAtIndex:tag] objectForKey:@"gdCategory"] intValue] == 7)
+    {
+        GoodListMainController *ctrVc = [GoodListMainController goodListMainControllerWithTitle:self.svData[tag][@"name"]];
+        
+        [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+    }
+}
+
+
+@end

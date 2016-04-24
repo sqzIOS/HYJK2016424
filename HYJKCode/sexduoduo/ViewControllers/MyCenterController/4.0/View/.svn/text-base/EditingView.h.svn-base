@@ -1,0 +1,36 @@
+//
+//  EditingView.h
+//  
+//
+//  Created by apple on 15/12/16.
+//
+//
+
+#import <UIKit/UIKit.h>
+
+@class SDPersonalCenterModel;
+
+typedef enum {    
+    sexTypeWomen = 0,
+    sexTypeMen = 1
+} sexType;
+
+@protocol EditingViewDelegate <NSObject>
+
+- (void)editingViewChangeIcon;
+- (void)editingViewChangePhotoWall;
+- (void)editingViewDeleteBtnClick;
+
+@end
+
+@interface EditingView : UIView
+@property (nonatomic,strong) UIButton *chooseSex;
+@property (nonatomic,weak) id<EditingViewDelegate> delegate;
+@property (nonatomic,strong) NSMutableArray *imageArry;
+@property (nonatomic,copy) NSString *nickName;
+@property (nonatomic,weak) UIImageView *iconView;
+
+- (void)setScrollContent:(NSMutableArray *)imageArry;
++ (instancetype)editingViewWithModel:(SDPersonalCenterModel *)model andFrame:(CGRect)frame;
+
+@end

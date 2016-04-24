@@ -1,0 +1,35 @@
+//
+//  WeekRankingController.m
+//  
+//
+//  Created by sqz on 15/12/1.
+//
+//
+
+#import "WeekRankingController.h"
+#import "RankingCell.h"
+#import "RankingModel.h"
+#import "ShareFunction.h"
+#import "MJRefresh.h"
+
+@interface WeekRankingController ()
+
+
+@end
+
+@implementation WeekRankingController
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    // 请求参数
+    self.params = [NSMutableDictionary dictionaryWithDictionary:@{@"pageSize":@"10",
+                                                                  @"standingsType":@"Week",
+                                                                  }];
+    // 发送请求
+    [self.tableView headerBeginRefreshing];
+}
+
+
+@end

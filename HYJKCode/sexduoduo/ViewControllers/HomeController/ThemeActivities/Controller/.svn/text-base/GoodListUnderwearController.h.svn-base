@@ -1,0 +1,13 @@
+//
+//  GoodListUnderwearController.h
+//  
+//
+//  Created by apple on 16/1/4.
+//
+//
+
+#import "GoodListBaseController.h"
+
+@interface GoodListUnderwearController : GoodListBaseController
+
+@end

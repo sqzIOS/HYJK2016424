@@ -1,0 +1,314 @@
+//
+//  MyOrderViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-7-18.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "MyOrderViewController.h"
+
+@interface MyOrderViewController ()
+
+@end
+
+@implementation MyOrderViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        
+        self.orderArray = [NSMutableArray arrayWithCapacity:0];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    [self setTopNavView];
+    [self initMyOrderTableView];
+}
+
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    currentPage = 1;
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    if (ISLOGIN) {
+        NSLog(@".>>%@",[defaults objectForKey:@"userId"]);
+        params = @{@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"userId":[defaults objectForKey:@"userId"]};
+
+    }else
+        params = @{@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"userId":@"",@"imiestatus":@"0",@"imie":DEVICEUUID};
+    
+    
+    [self requestMyOrderListWithDic:params];
+    
+    self.noOrderView.frame=CGRectMake(0,STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    [self.view bringSubviewToFront:self.noOrderView];
+}
+
+-(void)showOrderView:(BOOL)isshow
+{
+    if (isshow) {
+        self.noOrderView.hidden=NO;
+    }else self.noOrderView.hidden=YES;
+    
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"我的订单"];
+   
+
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+
+-(void)initMyOrderTableView
+{
+    self.myOrderTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, [[UIScreen mainScreen] bounds].size.height - STAR_Y - OFFSET_Y)];
+    self.myOrderTableView.backgroundColor = [UIColor clearColor];
+    self.myOrderTableView.dataSource = self;
+    self.myOrderTableView.delegate = self;
+    [self.view addSubview:self.myOrderTableView];
+    
+    if (IOS7_OR_LATER) {
+        self.myOrderTableView.separatorInset = UIEdgeInsetsZero;
+    }
+    self.myOrderTableView.separatorColor = CLEAR_COLOR;
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0.5)];
+    line.backgroundColor = [UIColor clearColor];
+    self.myOrderTableView.tableFooterView = line;
+    
+
+    // 1.下拉刷新
+    
+    [self.myOrderTableView addHeaderWithTarget:self action:@selector(headerRereshing)];
+	
+   
+}
+-(void)headerRereshing
+{
+    
+//    [self.scrollView refrashData];
+    [self performSelector:@selector(hearderRereshingEnd) withObject:nil afterDelay:2];
+    
+    currentPage = 1;
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    if (ISLOGIN) {
+        NSLog(@".>>%@",[defaults objectForKey:@"userId"]);
+        
+        params = @{@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"userId":[defaults objectForKey:@"userId"]};
+    }else
+    {
+        params = @{@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"userId":@"",@"imiestatus":@"0",@"imie":DEVICEUUID};
+    }
+    
+    
+    [self requestMyOrderListWithDic:params];
+}
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.myOrderTableView headerEndRefreshing];
+}
+
+
+
+-(void)getMoreOrderData
+{
+    currentPage ++;
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    NSLog(@".>>%@",[defaults objectForKey:@"userId"]);
+    
+    params = @{@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"userId":[defaults objectForKey:@"userId"]};
+    
+    [self requestMoreMyOrderListWithDic:params];
+}
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return self.orderArray.count;
+    
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 110;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"MyOrderCell";
+    MyOrderCell *cell = (MyOrderCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"MyOrderCell" owner:self options:nil] lastObject];
+    }
+    
+    cell.contentView.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    
+    [cell configCellWithDic:[self.orderArray objectAtIndex:indexPath.row]];
+    
+    
+    
+    return cell;
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+    OrderDetailViewController *controller = [[OrderDetailViewController alloc] initWithNibName:@"OrderDetailViewController" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    controller.orderIdStr = [[self.orderArray objectAtIndex:indexPath.row] objectForKey:@"id"];
+    [self.navigationController pushViewController: controller animated:YES];
+    
+}
+
+
+#pragma OrderRequest
+
+-(void)requestMyOrderListWithDic:(NSDictionary *)dic
+{
+
+    [[MKHttpServiceEngine shareMyInstance] requestMyOrderListWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        [self.orderArray removeAllObjects];
+
+        if ([[responseDic objectForKey:@"success"] boolValue]) {
+            [self.orderArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            NSLog(@"self.orderArray=%@",self.orderArray);
+            
+            [self showOrderView:NO];
+            
+            __weak typeof(self) weakSelf = self;
+            if ([[responseDic objectForKey:@"datasource"] count] > 9) {
+                weakSelf.myOrderTableView.infiniteScrollingView.enabled = YES;
+                [self.myOrderTableView addInfiniteScrollingWithActionHandler:^{
+                    
+                    [weakSelf getMoreOrderData];
+                    [weakSelf.myOrderTableView.infiniteScrollingView stopAnimating];
+                }];
+                
+            }else
+            {
+                if (self.myOrderTableView.infiniteScrollingView != nil) {
+                    weakSelf.myOrderTableView.infiniteScrollingView.enabled = NO;
+                }
+            }
+        }else
+        {
+            [self showOrderView:YES];
+        }
+        [self.myOrderTableView reloadData];
+       
+
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+    }];
+}
+
+-(void)requestMoreMyOrderListWithDic:(NSDictionary *)dic
+{
+ 
+    [[MKHttpServiceEngine shareMyInstance] requestMyOrderListWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue]) {
+            [self.orderArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            [self.myOrderTableView reloadData];
+            
+            if (self.orderArray.count>0) {
+                [self showOrderView:NO];
+            }else [self showOrderView:YES];
+            
+            __weak typeof(self) weakSelf = self;
+            if ([[responseDic objectForKey:@"datasource"] count] > 9) {
+                weakSelf.myOrderTableView.infiniteScrollingView.enabled = YES;
+                [self.myOrderTableView addInfiniteScrollingWithActionHandler:^{
+                    
+                    [weakSelf getMoreOrderData];
+                    [weakSelf.myOrderTableView.infiniteScrollingView stopAnimating];
+                }];
+                
+            }else
+            {
+                if (self.myOrderTableView.infiniteScrollingView != nil) {
+                    weakSelf.myOrderTableView.infiniteScrollingView.enabled = NO;
+                }
+            }
+
+            
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+    
+        currentPage --;
+        
+    }];
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

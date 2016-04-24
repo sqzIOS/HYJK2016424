@@ -1,0 +1,19 @@
+//
+//  BBSLevelViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-11-11.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  我的等级
+
+#import <UIKit/UIKit.h>
+
+@interface BBSLevelViewController : UIViewController
+{
+    
+}
+@property (strong, nonatomic) UITableView *setTableView ;
+@property (strong, nonatomic) NSArray *listAry;
+
+@property (strong, nonatomic) NSDictionary *userInfo;
+@end

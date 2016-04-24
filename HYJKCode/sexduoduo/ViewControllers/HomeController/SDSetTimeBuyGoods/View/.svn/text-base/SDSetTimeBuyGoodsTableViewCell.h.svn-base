@@ -1,0 +1,43 @@
+//
+//  SDSetTimeBuyGoodsTableViewCell.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/1.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "SDGoodsModel.h"
+
+@interface SDSetTimeBuyGoodsTableViewCell : UITableViewCell
+
+@property (nonatomic, strong) UIImageView   *goodsImageView;        //商品图片
+
+@property (nonatomic, strong) UILabel       *goodsNameLab;          //商品名称
+
+@property (nonatomic, strong) UILabel       *goodsNowPriceLab;      //商品抢购价格
+
+@property (nonatomic, strong) UILabel       *goodsOldPriceLab;      //商品原价
+
+@property (nonatomic, strong) UILabel       *buyedRatio;            //已抢购比率
+
+@property (nonatomic, strong) UILabel       *buyedNum;              //已抢购件数
+
+@property (nonatomic, strong) UIButton      *sibmitBtn;             //抢购按钮
+
+@property (nonatomic, strong) UILabel       *progressLab;           //剩余量
+
+@property (nonatomic, strong) UIView        *tempView;              //进度条背景
+
+@property (nonatomic, strong) UIViewController *mainVC;
+
+@property (nonatomic, strong) SDGoodsModel *model;
+
+@property (nonatomic, strong) UIProgressView *progressView;         //进度条
+
+//赋值
+- (void)theDataWith:(SDGoodsModel *)model;
+
+-(instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier Controller:(UIViewController *)vc;
+
+@end

@@ -1,0 +1,305 @@
+//
+//  SDDouble11VC.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDDouble11VC.h"
+#import "SDDouble11SubVC1.h"
+#import "SDDouble11SubVC2.h"
+#import "SDDouble11SubVC3.h"
+
+@interface SDDouble11VC ()
+
+@property (strong,nonatomic)UIScrollView *scView;
+@property (strong,nonatomic)NSMutableArray *contentBgViewArray;//背景View数组
+@property (strong, nonatomic)NSMutableArray *btnViewArray;//按钮View的数组
+
+@property (strong, nonatomic)NSMutableArray *homeGoodsArray;//数据数组
+
+@end
+
+@implementation SDDouble11VC
+
+- (void)viewDidLoad {
+    
+    [super viewDidLoad];
+    
+    // Do any additional setup after loading the view from its nib.
+    self.homeGoodsArray = [[NSMutableArray alloc] init];
+    self.contentBgViewArray = [[NSMutableArray alloc] init];
+    self.btnViewArray = [[NSMutableArray alloc] init];
+    
+    [self setTopNavView];
+    
+    self.scView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y)];
+    [self.view addSubview:self.scView];
+    
+    
+    NSArray *array =@[@"169",@"94",@"102",@"469",@"111",@"469",@"115",@"468",@"157"];
+    
+    CGFloat begin_y=0;
+    
+
+    for (int i=0; i<array.count; i++)
+    {
+        UIImageView *imageView =  [[UIImageView alloc] initWithFrame:CGRectMake(0, begin_y, QZMake(375), QZMake([array[i] floatValue]))];
+        NSString *imageName =[NSString stringWithFormat:@"bg_theme%d",i+1];
+        imageView.image = UIImageByName(imageName);
+        
+        [self.scView addSubview:imageView];
+        [self.contentBgViewArray addObject:imageView];
+
+        
+        begin_y += QZMake([array[i] floatValue]);
+        
+        self.scView.contentSize = CGSizeMake(QZMake(375), begin_y);
+        
+    }
+    
+    
+    UIImageView *contentView = [self.contentBgViewArray objectAtIndex:1];//第二块bg放三个按钮
+    contentView.userInteractionEnabled = YES;
+    NSArray *threeBtnArray= @[@"bg_theme_single_male",@"bg_theme_single_female",@"bg_theme_lovers"];
+    for (int i=0; i<3; i++)
+    {
+        UIButton *btn = [UIButton buttonWithType:0];
+        btn.frame = CGRectMake(QZMake(20)+ QZMake(102+15)*i , 0, QZMake(102), QZMake(102));
+        [btn setBackgroundImage:UIImageByName(threeBtnArray[i]) forState:UIControlStateNormal];
+        [contentView addSubview:btn];
+        [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+        btn.tag = 1000 +i;
+        btn.qzTagString= @"categoryBtn";
+        [self.btnViewArray addObject:btn];
+        
+        
+    }
+    
+    
+    
+    
+    
+    contentView = [self.contentBgViewArray objectAtIndex:3];//第四块bg放三个按钮
+    contentView.userInteractionEnabled = YES;
+
+    for (int i=0; i<3; i++)
+    {
+        for (int j=0; j<2; j++) {
+            UIButton *btn = [UIButton buttonWithType:0];
+            btn.frame = CGRectMake(QZMake(33)+ QZMake(151+7.5)*j , QZMake(151+7.5)*i, QZMake(151), QZMake(151));
+            btn.backgroundColor = BLUE_COLOR;
+            [contentView addSubview:btn];
+            btn.tag = 1003 +i*2 +j;
+            btn.qzTagString = @"goodBtn";
+            [self.btnViewArray addObject:btn];
+            [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    
+    
+    
+    
+    contentView = [self.contentBgViewArray objectAtIndex:5];//第六块bg放六个按钮
+    contentView.userInteractionEnabled = YES;
+
+    for (int i=0; i<3; i++)
+    {
+        for (int j=0; j<2; j++) {
+            UIButton *btn = [UIButton buttonWithType:0];
+            btn.frame = CGRectMake(QZMake(33)+ QZMake(151+7.5)*j , QZMake(151+7.5)*i, QZMake(151), QZMake(151));
+            btn.backgroundColor = BLUE_COLOR;
+            [contentView addSubview:btn];
+            btn.tag = 1009 +i*2 +j;
+            btn.qzTagString = @"goodBtn";
+            [self.btnViewArray addObject:btn];
+            [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    
+    
+    contentView = [self.contentBgViewArray objectAtIndex:7];//第八块bg放六个按钮
+    contentView.userInteractionEnabled = YES;
+
+    for (int i=0; i<3; i++)
+    {
+        for (int j=0; j<2; j++) {
+            UIButton *btn = [UIButton buttonWithType:0];
+            btn.frame = CGRectMake(QZMake(33)+ QZMake(151+7.5)*j , QZMake(151+7.5)*i, QZMake(151), QZMake(151));
+            btn.backgroundColor = BLUE_COLOR;
+            [contentView addSubview:btn];
+            btn.tag = 1015 +i*2 +j;
+            btn.qzTagString = @"goodBtn";
+            [self.btnViewArray addObject:btn];
+            [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        }
+    }
+    
+    
+    
+    [self requestThemeActivityData];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int layOutH = -20;
+    if (IOS7_OR_LATER) {
+        layOutH = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, layOutH,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    if (self.titleStr) {
+        [navView setTitleStr:self.titleStr];
+    }else
+        [navView setTitleStr:@"活动"];
+    
+     [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+}
+#pragma mark - 
+-(void)btnClick:(id)sender
+{
+    UIButton *senderBtn = sender;
+    NSLog(@"%zi",senderBtn.tag);
+    if ([senderBtn.qzTagString isEqualToString:@"categoryBtn"]) {
+        if (senderBtn.tag == 100)
+        {
+            SDDouble11SubVC1 *vc = [[SDDouble11SubVC1 alloc] initWithNibName:@"SDDouble11SubVC1" bundle:nil];
+            if (self.homeGoodsArray.count>=1) {
+                vc.titleStr = self.homeGoodsArray[0][@"name"];
+            }
+            [self.navigationController pushViewController:vc animated:YES];
+            
+            
+        }else if (senderBtn.tag == 101)
+        {
+            SDDouble11SubVC2 *vc = [[SDDouble11SubVC2 alloc] initWithNibName:@"SDDouble11SubVC2" bundle:nil];
+            if (self.homeGoodsArray.count>=2) {
+                vc.titleStr = self.homeGoodsArray[1][@"name"];
+            }
+            [self.navigationController pushViewController:vc animated:YES];
+            
+        }else if (senderBtn.tag == 102)
+        {
+            SDDouble11SubVC3 *vc = [[SDDouble11SubVC3 alloc] initWithNibName:@"SDDouble11SubVC3" bundle:nil];
+            if (self.homeGoodsArray.count>=3) {
+                vc.titleStr = self.homeGoodsArray[2][@"name"];
+            }
+            [self.navigationController pushViewController:vc animated:YES];
+        }
+
+    }
+    
+    
+    
+    if ([senderBtn.qzTagString isEqualToString:@"goodBtn"]) {
+        
+        if (self.homeGoodsArray.count>0) {
+            
+            int index = senderBtn.tag -1000;
+            NSLog(@"--%d",index);
+
+            if (index<self.homeGoodsArray.count) {
+                // 统计 计数事件
+                [MobClick event:[NSString stringWithFormat:@"Theme_home_%zi",index]];
+                
+                NSDictionary *dic=[self.homeGoodsArray objectAtIndex:index];
+                [PublicMethod themeGotoSubViewWithThisVC:self andDic:dic];
+            }
+           
+        }
+
+    }
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+-(void)requestThemeActivityData
+{
+    // 分类
+    NSDictionary *params = [[NSDictionary alloc]init];
+    params = @{@"showAdress":@"13"};
+    
+    [[MKHttpServiceEngine shareMyInstance] requestThemeActivityWithDic:params completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray双十一活动分类及商品-->%@",responseDic);
+        NSLog(@"responseArray主题活动分类及商品");
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            [self.homeGoodsArray removeAllObjects];
+            [self.homeGoodsArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            [self setGoodsViewData:self.homeGoodsArray];
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        
+    }];
+    
+}
+-(void)setGoodsViewData:(NSArray *)dataArray
+{
+    
+    if (self.homeGoodsArray.count>0)
+    {
+        //商品
+        for (int index = 0; index <self.btnViewArray.count; index++) {
+            NSLog(@"%d",index);
+            if (index>=self.homeGoodsArray.count) {
+                break;
+            }
+            
+            UIButton *btn=self.btnViewArray[index];
+            if (self.homeGoodsArray[index][@"newLogoPath"] && ![self.homeGoodsArray[index][@"newLogoPath"] isKindOfClass:[NSNull class]]) {
+                NSString *urlStr=self.homeGoodsArray[index][@"newLogoPath"];
+                [btn sd_setBackgroundImageWithURL:[NSURL URLWithString:urlStr] forState:UIControlStateNormal];
+            }
+          
+        }
+        
+        
+        // 背景
+        for (int index = 0; index <self.contentBgViewArray.count; index++) {
+            NSLog(@"--%d",index);
+
+            if (index>=self.homeGoodsArray.count) {
+                break;
+            }
+            if (self.homeGoodsArray[index][@"newGuardPath"] && ![self.homeGoodsArray[index][@"newGuardPath"] isKindOfClass:[NSNull class]]) {
+                UIImageView *imageView=self.contentBgViewArray[index];
+                NSString *urlStr=self.homeGoodsArray[index][@"newGuardPath"];
+                [imageView sd_setImageWithURL:[NSURL URLWithString:urlStr]];
+                
+            }
+        }
+    }
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

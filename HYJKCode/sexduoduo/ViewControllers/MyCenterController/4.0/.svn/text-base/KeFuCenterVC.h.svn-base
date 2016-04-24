@@ -1,0 +1,25 @@
+//
+//  KeFuCenterVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/30.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  客服中心
+
+#import <UIKit/UIKit.h>
+
+#import "QQInterface.h"
+#import "CustomSeverViewController.h"
+#import "UMFeedback.h"
+@interface KeFuCenterVC : UIViewController
+{
+    NSArray *imageArr;//图片数组
+}
+@property (strong, nonatomic) UITableView *setTableView ;
+@property (strong, nonatomic) NSArray *listAry;
+@property (strong, nonatomic) NSArray *listSubAry;
+
+
+@property (strong, nonatomic) NSMutableArray *qqListAry;
+@property (strong, nonatomic) NSMutableArray *isQQOnlineArray;
+@end

@@ -1,0 +1,39 @@
+//
+//  monthRankingController.m
+//  
+//
+//  Created by sqz on 15/12/1.
+//
+//
+
+#import "MonthRankingController.h"
+#import "RankingModel.h"
+#import "RankingCell.h"
+#import "ShareFunction.h"
+#import "MJRefresh.h"
+
+@interface MonthRankingController ()
+
+
+@end
+
+@implementation MonthRankingController
+
+
+// commentType=2&pageNo=1&interactionType=1&standingsType=month&pageSize=15&
+- (void)viewDidLoad
+{
+    
+    [super viewDidLoad];
+    
+    // 请求参数
+    self.params = [NSMutableDictionary dictionaryWithDictionary:@{@"pageSize":@"10",
+                                                                  @"standingsType":@"month",
+                                                                  }];
+    // 发送请求
+    [self.tableView headerBeginRefreshing];
+}
+
+
+
+@end

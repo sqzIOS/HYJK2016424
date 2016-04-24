@@ -1,0 +1,64 @@
+//
+//  OrderViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-7-10.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  订单确认 目前只剩积分商城还在使用
+
+#import <UIKit/UIKit.h>
+#import "AddrViewController.h"
+#import "OrderCell.h"
+#import "AddrListViewController.h"
+#import "GoodsDetailTwoViewController.h"
+
+#import "OrderRemindController.h"
+
+#import "SDOrderRootVC.h"
+@interface OrderViewController : SDOrderRootVC<UIScrollViewDelegate,UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate>
+{
+    int layOutH;
+    UILabel *totalPriceLab;
+    SEL _result;
+    NSString *orderIdStr;
+    
+    int activityNum;  //活动商品数量
+}
+@property (nonatomic,assign) SEL result;//这里声明为属性方便在于外部传入
+
+@property (strong, nonatomic) UIScrollView *orderScrollView;
+
+@property (strong, nonatomic) IBOutlet UIView *addrView;    //地址view
+@property (strong, nonatomic) IBOutlet UIView *noAddrView; //请填写地址view
+
+@property (strong, nonatomic) UITableView *orderTableView;
+@property (strong, nonatomic) UITableView *payTableView;
+@property (assign, nonatomic) int selectNum;  //付款方式  支付宝 ：0    货到付款：1
+
+@property (strong, nonatomic) NSMutableArray *orderArray;
+@property (strong, nonatomic) NSMutableArray *orderDetailArray; //购物车内容
+
+@property (weak, nonatomic) IBOutlet UILabel *userNameLab;
+@property (weak, nonatomic) IBOutlet UILabel *userPhoneLab;
+@property (weak, nonatomic) IBOutlet UILabel *userAddrLab;
+
+@property (strong, nonatomic) UIImageView *detailIconImg;
+
+@property (strong, nonatomic) UITextField *remarkField;
+
+@property (strong, nonatomic) NSMutableArray *payArray;  //支付方式
+@property (strong, nonatomic) NSMutableArray *sendArray;  //物流配送
+@property (strong, nonatomic) NSString *payStrId;  //支付方式
+@property (strong, nonatomic) NSString *sendStrId;  //物流配送
+
+@property (weak, nonatomic) IBOutlet UIImageView *addrBgImgView;
+@property (weak, nonatomic) IBOutlet UIImageView *locationImg;
+@property (weak, nonatomic) IBOutlet UIImageView *toEditAddrImg;
+
+@property (assign,nonatomic) BOOL isJiFenShop;
+
+
+-(void)paymentResult:(NSString *)result;
+
+-(void)paymentResultDelegate:(NSString *)result;
+@end

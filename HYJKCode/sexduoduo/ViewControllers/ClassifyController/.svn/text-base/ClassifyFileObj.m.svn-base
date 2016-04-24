@@ -1,0 +1,129 @@
+//
+//  ClassifyFileObj.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/16.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "ClassifyFileObj.h"
+
+@implementation ClassifyFileObj
+
+
++(NSDictionary *)readClassifyDicWithPath:(NSString *)path
+{
+    //先读取NSdata
+    NSData *fileData=[ClassifyFileObj readClassifyFileWithPath:path];
+    NSDictionary *data2dic;
+    if (fileData) {
+        NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:fileData];
+        data2dic = [unarchiver decodeObjectForKey:@"ClassifyData"];
+        [unarchiver finishDecoding];
+    }
+    
+    return data2dic;
+}
+// 写NSDictionary
++(void)writeToFileWithDic:(NSDictionary *)responseDic andFilePath:(NSString *)path
+{
+    //把字典转成nsdata
+    NSMutableData *dic2data = [[NSMutableData alloc] init];
+    NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:dic2data];
+    [archiver encodeObject:responseDic forKey:@"ClassifyData"];
+    [archiver finishEncoding];
+    
+    [ClassifyFileObj writeToFileWithData:dic2data andFilePath:path];
+}
+
+// 读NSArray
++(NSArray *)readArrayWithPath:(NSString *)path
+{
+    //先读取NSdata
+    NSData *fileData=[ClassifyFileObj readClassifyFileWithPath:path];
+    NSArray *dataArr;
+    if (fileData) {
+        NSKeyedUnarchiver *unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:fileData];
+        dataArr = [unarchiver decodeObjectForKey:@"ClassifyData"];
+        [unarchiver finishDecoding];
+    }
+    
+    return dataArr;
+    
+}
+// 写NSArray
++(void)writeToFileWithArray:(NSArray *)arr andFilePath:(NSString *)path
+{
+
+    //把字典转成nsdata
+    NSMutableData *dic2data = [[NSMutableData alloc] init];
+    NSKeyedArchiver *archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:dic2data];
+    [archiver encodeObject:arr forKey:@"ClassifyData"];
+    [archiver finishEncoding];
+    
+    [ClassifyFileObj writeToFileWithData:dic2data andFilePath:path];
+    
+}
+
+
+
+
+
++(NSData *)readClassifyFileWithPath:(NSString *)path
+{
+    
+//    NSString *path= [NSHomeDirectory() stringByAppendingString:@"/Documents/classifyData.txt"];
+    
+     NSData * fileData;
+    fileData =[NSData dataWithContentsOfFile:path];
+
+    
+    return fileData;
+}
+
+
++(void)writeToFileWithData:(NSData *)tempData andFilePath:(NSString *)path
+{
+    //创建文件管理器
+    /*NSFileManager可以用来查询单词库目录，创建，重命名，删除目录以及获取／设置文件属性的方法*/
+    NSFileManager * fm;
+    fm = [NSFileManager defaultManager];
+    //创建缓冲区，利用NSFileManager对象来获取文件中的内容，也就是这个文件的属性可修改
+//    NSData * fileData;
+//    fileData = [fm contentsAtPath:@"/tmp/ver.txt"];
+//    //打印
+//    NSLog(@"file data is %@",fileData);
+//    //对NSData对象进行判断
+//    if(fileData)
+//    {
+//        NSLog(@"file read success");
+//    }
+//    else
+//    {
+//        NSLog(@"file read failed");
+//    }
+    
+    
+    //定义一个布尔类型的对象
+    BOOL ifsucess;
+    //在objective－c种，正确是YES 错误是NO
+    ifsucess = NO;
+    
+//    NSString *path= [NSHomeDirectory() stringByAppendingString:@"/Documents/classifyData.txt"];
+    
+    //获取上面fileData对象中通过NSFileManager对象获取的文件中的内容，然后再创建一个新的路径，并存储
+    ifsucess = [fm createFileAtPath:path contents:tempData attributes:nil];
+    
+//    ifsucess = [tempData writeToFile:path atomically:YES];
+    //对布尔型对象进行判断
+    if(ifsucess)
+    {
+        NSLog(@"文件 create file sucess");
+    }
+    else
+    {
+        NSLog(@"文件 create file failed");
+    }
+}
+
+@end

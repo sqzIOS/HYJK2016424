@@ -1,0 +1,630 @@
+//
+//  PackageCombinationController.m
+//  
+//
+//  Created by apple on 15/12/14.
+//
+//
+
+#import "PackageCombinationController.h"
+#import "ShareFunction.h"
+#import "PackageCombinationCell.h"
+#import "AFHTTPClient.h"
+#import "AFNetworking.h"
+#import "SDGoodRecommendObj.h"
+#import "TopNavView.h"
+
+@interface PackageCombinationController ()<UITableViewDataSource,UITableViewDelegate,PackageCombinationCellDelegate>
+
+
+@property (nonatomic,weak) UIView *topView;
+@property (nonatomic,weak) UITableView *tableView;
+@property (nonatomic,weak) UIView *mainGoodsView;
+
+// 商品详情 icon detail marketprice goodsprice
+@property (nonatomic,weak) UIImageView *iconView;
+@property (nonatomic,weak) UILabel *detailLabel;
+@property (nonatomic,weak) UILabel *marketPriceLabel;
+@property (nonatomic,weak) UILabel *goodsPriceLabel;
+
+// 套餐组合请求参数
+@property (nonatomic,copy) NSString *categoryId;
+@property (nonatomic,copy) NSString *sorting;
+@property (nonatomic,copy) NSString *goodsId;
+
+// 请求获得的数据
+@property (nonatomic,strong) NSMutableArray *dataArry;
+
+// 被选中的数据数组
+@property (nonatomic,strong) NSMutableArray *chooseArry;
+
+// 合计和优惠label
+@property (nonatomic,weak) UILabel *totalLabel;
+@property (nonatomic,weak) UILabel *favourableLabel;
+@property (nonatomic) float total;
+@property (nonatomic) float favourable;
+
+
+@end
+
+@implementation PackageCombinationController
+
+
+
++ (instancetype)packageCombinationControllerWithListData:(NSArray *)listArray
+{
+    PackageCombinationController *packageCombinationController = [[PackageCombinationController alloc] init];
+ 
+    packageCombinationController.dataArry = [NSMutableArray arrayWithArray:listArray];
+
+    [packageCombinationController setView];
+    
+    return packageCombinationController;
+}
+
++ (instancetype)packageCombinationControllerWithListData:(NSArray *)listArray andColorArray:(NSArray*)colorArr andGoodDetailDic:(NSDictionary *)goodsDic
+{
+    PackageCombinationController *packageCombinationController = [[PackageCombinationController alloc] init];
+    
+    
+    
+    packageCombinationController.colorArray=[NSMutableArray arrayWithArray:colorArr];
+    packageCombinationController.goodsDetailDic = [NSMutableDictionary dictionaryWithDictionary:goodsDic];
+    
+    packageCombinationController.dataArry = [NSMutableArray arrayWithArray:listArray];
+    
+    [packageCombinationController setView];
+    
+
+
+    return packageCombinationController;
+}
+
+
+
+
+-(void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+//    [self setView];
+}
+
+- (void)setView
+{
+    self.view.backgroundColor = RGBCOLOR(230, 230, 230);
+    [self setTopView];
+    
+    [self setTableView];
+    
+    [self setMainGoodsView];
+    
+    
+    [self setBottomView];
+    
+    [self initColorChooseView];
+    
+}
+
+// 创建自定义导航栏
+- (void)setTopView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *topView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:topView];
+    self.topView = topView;
+    [topView setTitleStr:@"套餐组合"];
+    
+    [topView addLeftBtnTarget:self action:@selector(back) forControlEvents:UIControlEventTouchUpInside];
+    
+}
+
+- (void)back
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+
+- (void)setMainGoodsView
+{
+    UIView *mainGoodsView = [[UIView alloc] init];
+    mainGoodsView.backgroundColor = [UIColor whiteColor];
+    mainGoodsView.frame = CGRectMake(0,0, SCREEN_WIDTH, QZMake(115));
+    self.tableView.tableHeaderView = mainGoodsView;
+    self.mainGoodsView = mainGoodsView;
+    
+    // 图片
+    UIImageView *iconView = [[UIImageView alloc] init];
+    self.iconView = iconView;
+    iconView.frame = CGRectMake(QZMake(10), QZMake(10), QZMake(90), QZMake(90));
+    [self.mainGoodsView addSubview:iconView];
+    
+    // 描述
+    UILabel *detailLabel = [[UILabel alloc] init];
+    detailLabel.numberOfLines = 2;
+    self.detailLabel = detailLabel;
+    detailLabel.font = [UIFont systemFontOfSize:QZMake(14)];
+    detailLabel.textColor = RGBCOLOR(97, 97, 97);
+    detailLabel.frame = CGRectMake(CGRectGetMaxX(iconView.frame) + QZMake(10), CGRectGetMinY(iconView.frame), SCREEN_WIDTH - CGRectGetMaxX(iconView.frame) - QZMake(20), QZMake(45));
+    [self.mainGoodsView addSubview:detailLabel];
+    
+    // goodsPrice
+    UILabel *goodsPrice = [[UILabel alloc] init];
+    self.goodsPriceLabel = goodsPrice;
+    goodsPrice.textColor = RGBCOLOR(252, 122, 36);
+    goodsPrice.font = [UIFont systemFontOfSize:QZMake(16)];
+    goodsPrice.frame = CGRectMake(CGRectGetMaxX(iconView.frame) + QZMake(10), CGRectGetMaxY(detailLabel.frame) + QZMake(10),QZMake(100) , QZMake(30));
+    [self.mainGoodsView addSubview:goodsPrice];
+    
+    // marketPrice
+    UILabel *marketPrice = [[UILabel alloc] init];
+    self.marketPriceLabel = marketPrice;
+    marketPrice.textColor = RGBCOLOR(165, 165, 165);
+    marketPrice.font = [UIFont systemFontOfSize:QZMake(12)];
+//    marketPrice.textAlignment = NSTextAlignmentRight;
+    marketPrice.frame = CGRectMake(CGRectGetMaxX(goodsPrice.frame) + QZMake(10), CGRectGetMaxY(detailLabel.frame) + QZMake(10), QZMake(100), QZMake(30));
+    [self.mainGoodsView addSubview:marketPrice];
+    
+    UIView *bottomView = [[UIView alloc] initWithFrame:CGRectMake(0, QZMake(100), SCREEN_WIDTH, mainGoodsView.frame.size.height - QZMake(100))];
+    bottomView.backgroundColor = RGBCOLOR(240, 240, 240);
+    [mainGoodsView addSubview:bottomView];
+}
+
+// 创建tableview
+- (void)setTableView
+{
+    UITableView *tableView = [[UITableView alloc] init];
+    tableView.frame = CGRectMake(0, CGRectGetMaxY(self.topView.frame), SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.frame.size.height - QZMake(60));
+    [self.view addSubview:tableView];
+    self.tableView = tableView;
+    tableView.delegate = self;
+    tableView.dataSource = self;
+    
+    [tableView clearDefaultLineByAddFootLine];
+}
+
+// 创建底部view
+- (void)setBottomView
+{
+    UIView *bottomView = [[UIView alloc] initWithFrame:CGRectMake(0,SCREEN_HEIGHT-QZMake(60), SCREEN_WIDTH, QZMake(60))];
+    bottomView.backgroundColor = WHITE_COLOR;
+    [self.view addSubview:bottomView];
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 0 ,SCREEN_WIDTH, 0.5)];
+    line.backgroundColor = [UIColor colorWithRed:244/255.f green:244/255.f blue:244/255.f alpha:1.0];
+    [bottomView addSubview:line];
+    
+    // 合计价格
+    UILabel *totalLabel = [[UILabel alloc] init];
+    totalLabel.frame = CGRectMake(QZMake(10), QZMake(3), QZMake(200), QZMake(20));
+    totalLabel.centerY= bottomView.height/2. - QZMake(13);
+    [bottomView addSubview:totalLabel];
+    totalLabel.font = [UIFont systemFontOfSize:QZMake(14)];
+    totalLabel.text = [NSString stringWithFormat:@"合计:¥%.2f",self.total];
+    totalLabel.textColor = RGBCOLOR16(0x9446e5);
+    self.totalLabel = totalLabel;
+    
+    // 优惠价格
+    UILabel *favourableLabel = [[UILabel alloc] init];
+    favourableLabel.frame = CGRectMake(QZMake(10), QZMake(27), QZMake(200), QZMake(20));
+    favourableLabel.centerY= bottomView.height/2. + QZMake(13);
+
+    [bottomView addSubview:favourableLabel];
+    favourableLabel.textColor = RGBCOLOR16(0xa5a5a5);
+    favourableLabel.text = [NSString stringWithFormat:@"优惠:¥%.2f",self.favourable];
+    favourableLabel.font = [UIFont systemFontOfSize:QZMake(12)];
+    self.favourableLabel = favourableLabel;
+    
+    // 立即购买
+    UIButton *payBtn = [[UIButton alloc] init];
+    payBtn.backgroundColor = NAV_MoreBg_COLOR;
+    payBtn.layer.cornerRadius = QZMake(5);
+    payBtn.clipsToBounds = YES;
+    payBtn.frame = CGRectMake(QZMake(265), QZMake(10), QZMake(90), QZMake(40));
+    payBtn.centerY = bottomView.height/2.;
+    [bottomView addSubview:payBtn];
+    [payBtn setTitle:@"立即购买" forState:UIControlStateNormal];
+    [payBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [payBtn addTarget:self action:@selector(payBtnClick) forControlEvents:UIControlEventTouchUpInside];
+}
+-(void)initColorChooseView
+{
+    self.goodColorChooseView = [[SDGoodsDetailChooseColorView alloc] initWithFrame:CGRectMake(0, SCREEN_HEIGHT, SCREEN_WIDTH, MAKEOF5(382))];
+    
+    self.goodColorChooseView.mainVC = self;
+    [self.view addSubview:self.goodColorChooseView];
+    
+    UIView *line1 = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0.5)];
+    line1.backgroundColor = [UIColor lightGrayColor];
+    [self.goodColorChooseView addSubview:line1];
+    
+    
+    // 键盘上面的 输入辅助view
+    UIView *popV1 = [[UIView alloc]initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 30)];
+    popV1.backgroundColor = [UIColor colorWithRed:244/255.f green:244/255.f blue:244/255.f alpha:1.0];
+    UIButton *btn1 = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btn1 setTitle:@"完成" forState:UIControlStateNormal];
+    //    [btn setBackgroundImage:[UIImage imageNamed:@"keyboard_down.png"] forState:UIControlStateNormal];
+    [btn1 setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+    [btn1 addTarget:self action:@selector(goodsNumChoose:) forControlEvents:UIControlEventTouchUpInside];
+    btn1.frame = CGRectMake(SCREEN_WIDTH-46, 0, 46, 30);
+    [popV1 addSubview:btn1];
+    self.goodColorChooseView.goodsNumField.inputAccessoryView = popV1;
+    
+    if(judgeUrlIsHave(self.goodsDetailDic, @"newThumbnailGoodsImagePath"))
+    {
+        [self.goodColorChooseView.productImg sd_setImageWithURL:[NSURL URLWithString:[self.goodsDetailDic objectForKey:@"newThumbnailGoodsImagePath"]] placeholderImage:nil];
+    }else
+    {
+        [self.goodColorChooseView.productImg sd_setImageWithURL:[PublicMethod imgWithUrl:[self.goodsDetailDic objectForKey:@"ThumbnailGoodsImagePath"]] placeholderImage:nil];
+    }
+    self.goodColorChooseView.productPrice.text = [NSString stringWithFormat:@"￥%.2f",[[self.goodsDetailDic objectForKey:@"goods_price"] floatValue]];
+    self.goodColorChooseView.productColor.text = [NSString stringWithFormat:@"%@",[self.goodsDetailDic objectForKey:@"name"]];
+    
+  
+    [self setupGridView];
+    
+}
+
+#pragma mark  商品规格选择 效果设计
+- (void)setupGridView{
+    
+    self.goodColorChooseView.colorArray = self.colorArray ;
+    [self.goodColorChooseView setupGridView];
+    
+}
+#pragma mark 选择规格购买   点击购物车
+- (void)toBuy:(id)sender {
+    
+    self.goodColorChooseView.hidden = NO;
+    
+    self.tableView.userInteractionEnabled=NO;
+    
+    [UIView animateWithDuration:0.3 animations:^{
+        self.goodColorChooseView.frame = CGRectMake(0, SCREEN_HEIGHT - self.goodColorChooseView.frame.size.height, self.goodColorChooseView.frame.size.width, self.goodColorChooseView.frame.size.height);
+        
+        CALayer *layer = self.tableView.layer;
+        layer.zPosition = -4000;
+        CATransform3D rotationAndPerspectiveTransform = CATransform3DIdentity;
+        rotationAndPerspectiveTransform.m34 = 1.0 / -300;
+        layer.transform = CATransform3DRotate(rotationAndPerspectiveTransform, 10.0f * M_PI / 180.0f, 1.0f, 0.0f, 0.0f);
+        
+//        self.primaryShadeView.alpha = 0.35;
+    } completion:^(BOOL finished) {
+        [UIView animateWithDuration:0.3 animations:^{
+            self.tableView.transform = CGAffineTransformMakeScale(0.9, 0.9);
+            
+//            self.primaryShadeView.alpha = 0.5;
+        }];
+    }];
+    
+    
+}
+
+#pragma mark 完成购买数量选择
+-(void)goodsNumChoose:(id)sender
+{
+    [self.goodColorChooseView.goodsNumField resignFirstResponder];
+    [self.goodColorChooseView.numChooseScrol setContentOffset:CGPointMake(0, 0)];
+    if ([self.goodColorChooseView.goodsNumField.text intValue] >= 999) {
+        self.goodColorChooseView.goodsNumField.text = @"999";
+        [ShareFunction showToast:@"超出范围"];
+    }else if ([self.goodColorChooseView.goodsNumField.text intValue] < 1)
+    {
+        self.goodColorChooseView.goodsNumField.text = @"1";
+        [ShareFunction showToast:@"超出范围"];
+
+    }
+    
+    
+}
+
+#pragma mark 增加商品数量
+- (void)plusGoodsNumAction:(id)sender {
+    
+    if ([self.goodColorChooseView.goodsNumField.text intValue] < 999) {
+        self.goodColorChooseView.goodsNumField.text = [NSString stringWithFormat:@"%d",[self.goodColorChooseView.goodsNumField.text intValue] + 1];
+    }else
+    {
+        [ShareFunction showToast:@"超出范围"];
+    }
+    
+    
+    
+}
+#pragma mark 减少商品数量
+- (void)minusGoodsNumAction:(id)sender {
+    if ([self.goodColorChooseView.goodsNumField.text intValue] > 1) {
+        self.goodColorChooseView.goodsNumField.text = [NSString stringWithFormat:@"%d",[self.goodColorChooseView.goodsNumField.text intValue] - 1];
+        
+    }else
+    {
+        [ShareFunction showToast:@"超出范围"];
+
+    }
+}
+#pragma mark 确定购买 加入购物车
+
+- (void)sureBuyAction:(NSInteger )numIndex {
+    if (self.numIndexColor == 100) {
+        [ShareFunction showToast:@"请选择规格"];
+    }else
+    {
+        [self cancelBuyAction:nil];
+        
+        //防止偶尔出现bug
+        if (!_colorArray || _colorArray.count==0) {
+            return;
+        }
+        
+        NSLog(@"--<>>%@",[_colorArray objectAtIndex:_numIndexColor]);
+        
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        //        if ([defaults objectForKey:@"isLogin"]) {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        if (ISLOGIN) {
+            params = @{@"userId":[defaults objectForKey:@"userId"],@"productId":[[_colorArray objectAtIndex:_numIndexColor] objectForKey:@"productId"],@"quantity":self.goodColorChooseView.goodsNumField.text};
+        }else// 未登录
+            params = @{@"userId":@"",@"productId":[[_colorArray objectAtIndex:_numIndexColor] objectForKey:@"productId"],@"quantity":self.goodColorChooseView.goodsNumField.text,@"imiestatus":@"0",@"imie":DEVICEUUID,@"channel":[NSString stringWithFormat:@"iOS%@",Flag]};
+        
+        
+        [self requestAddGoodsToShopCarWithDic:params];
+        
+        
+        // 统计购物车
+        NSDictionary *dict = @{ @"quantity" :[NSString stringWithFormat:@"%@",self.goodColorChooseView.goodsNumField.text], @"total_price" : [NSString stringWithFormat:@"%.2f",[_colorArray[_numIndexColor][@"price"] floatValue]* [self.goodColorChooseView.goodsNumField.text intValue] ], @"channel" : [NSString stringWithFormat:@"iOS%@",Flag]};
+        [MobClick event:@"Add_Cart" attributes:dict];
+        NSLog(@"统计购物车=%@",dict);
+        
+    }
+}
+
+
+#pragma mark 取消购买
+- (void)cancelBuyAction:(id)sender {
+    
+    self.tableView.userInteractionEnabled=YES;
+    
+    [UIView animateWithDuration:0.3 animations:^{
+        CALayer *layer = self.tableView.layer;
+        layer.zPosition = -4000;
+        CATransform3D rotationAndPerspectiveTransform = CATransform3DIdentity;
+        rotationAndPerspectiveTransform.m34 = 1.0 / 300;
+        layer.transform = CATransform3DRotate(rotationAndPerspectiveTransform, -10.0f * M_PI / 180.0f, 1.0f, 0.0f, 0.0f);
+        
+//        self.primaryShadeView.alpha = 0.35;
+    } completion:^(BOOL finished) {
+        [UIView animateWithDuration:0.3 animations:^{
+            self.tableView.transform = CGAffineTransformMakeScale(1.0, 1.0);
+            
+//            self.primaryShadeView.alpha = 0.0;
+            
+            self.goodColorChooseView.frame = CGRectMake(0, SCREEN_HEIGHT, self.goodColorChooseView.frame.size.width, self.goodColorChooseView.frame.size.height);
+        }];
+    }];
+    
+    
+    [self.goodColorChooseView.goodsNumField resignFirstResponder];
+    [self.goodColorChooseView.numChooseScrol setContentOffset:CGPointMake(0, 0) animated:YES];
+}
+
+#pragma mark 跳转到购物车
+- (void)toShopCarView:(id)sender {
+    
+    ShopCarController *controller = [[ShopCarController alloc] initWithNibName:@"ShopCarController" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:controller animated:YES];
+    
+}
+
+
+#pragma mark - 提交订单
+- (void)payBtnClick
+{
+    NSLog(@"%f",self.total);
+    
+    [self toBuy:nil];
+    
+}
+
+#pragma mark 主商品加入购物车
+-(void)requestAddGoodsToShopCarWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestAddGoodsToShopCarWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        NSString *showText= [responseDic objectForKey:@"message"];
+        [ShareFunction showToast:showText];
+        
+        if (self.chooseArry.count>0) {
+            
+            [self requestAddGoodsToShopCarWithIndex:0];
+        
+        }else
+        {
+            [self toShopCarView:nil];
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        NSString *showText = @"请检查网络设置!";
+        [ShareFunction showToast:showText];
+        
+    }];
+}
+
+#pragma mark 加入购物车
+-(void)requestAddGoodsToShopCarWithIndex:(NSInteger )index
+{
+    if (index>=self.chooseArry.count) {
+        return;
+    }
+    
+    NSInteger nextIndex = index + 1;
+
+    
+    SDGoodRecommendObj *model = [self.chooseArry objectAtIndex:index];
+    
+    NSDictionary *dic = [[NSDictionary alloc]init];
+
+    if (ISLOGIN) {
+        dic = @{@"userId":USERID,
+                @"productId":model.productId ,
+                @"quantity":@"1"};
+    }else// 未登录
+        dic = @{@"userId":@"",
+                @"productId":model.productId,
+                @"quantity":@"1",
+                @"imiestatus":@"0",
+                @"imie":DEVICEUUID,
+                @"channel":[NSString stringWithFormat:@"iOS%@",Flag]};
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestAddGoodsToShopCarWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        if (JudgeSuccess(responseDic)) {
+        
+            [self requestAddGoodsToShopCarWithIndex:nextIndex];
+            
+            //套餐内选择的所有商品 都添加入购物车
+            if (nextIndex == self.chooseArry.count) {
+               
+                [self toShopCarView:nil];
+            }
+            
+        }else
+        {
+            if (JudgeHavaKey(responseDic, MESSAGE)) {
+                NSString *message =[NSString stringWithFormat:@"%@",[responseDic objectForKey:@"message"]];
+                [ShareFunction showToast:message];
+            }
+           
+        }
+        
+    } errorHandler:^(NSError *error) {
+
+        [ShareFunction showToast:@"请检查网络设置!"];
+        
+    }];
+}
+
+#pragma mark - UITableViewDataSource数据源
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return  self.dataArry.count;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+        return QZMake(100);
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    PackageCombinationCell *cell = [PackageCombinationCell packageCombinationCellInTableView:tableView];
+    cell.delegate = self;
+    cell.model = self.dataArry[indexPath.row];
+    return cell;
+}
+
+
+#pragma mark - PackageCombinationCellDelegate
+- (void)PackageCombinationCellChooseBtnClick:(PackageCombinationCell *)cell
+{
+    if (!self.chooseArry) {
+        self.chooseArry = [NSMutableArray array];
+    }
+    
+    BOOL isExit = NO;
+    for (int index = 0; index < self.chooseArry.count; index++) {
+        SDGoodRecommendObj *model = self.chooseArry[index];
+        
+        // 之前为选中状态
+        if ([model isEqual:cell.model]) {
+            isExit = YES;
+            [self.chooseArry removeObject:model];
+            self.total -= [cell.model.goods_price floatValue];
+            self.favourable -= ([cell.model.marketPrice floatValue] - [cell.model.goods_price floatValue]);
+            break;
+        }
+    }
+    
+    
+    // 之前未被选中
+    if (!isExit) {
+        [self.chooseArry addObject:cell.model];
+        self.total += [cell.model.goods_price floatValue];
+        self.favourable += ([cell.model.marketPrice floatValue] - [cell.model.goods_price floatValue]);
+    }
+    
+    self.totalLabel.text = [NSString stringWithFormat:@"合计:¥%.2f",self.total];
+    self.favourableLabel.text = [NSString stringWithFormat:@"优惠:¥%.2f",self.favourable];
+}
+
+#pragma mark - 重写set方法
+- (void)setGoodsImage:(UIImage *)goodsImage
+{
+    _goodsImage = goodsImage;
+    self.iconView.image = goodsImage;
+}
+
+- (void)setGoodsDetail:(NSString *)goodsDetail
+{
+    _goodsDetail = goodsDetail;
+    self.detailLabel.text = goodsDetail;
+}
+
+// 原价
+- (void)setMarketPrice:(float)marketPrice
+{
+    _marketPrice = marketPrice;
+    self.marketPriceLabel.text = [NSString stringWithFormat:@"¥%.2f",marketPrice];
+    
+    
+    UIView *line = [[UIView alloc] init];
+    line.backgroundColor = self.marketPriceLabel.textColor;
+    line.frame = CGRectMake(0, 0, [self.marketPriceLabel.text sizeWithAttributes:nil].width, 1);
+    line.centerY = self.marketPriceLabel.height/2.;
+    [self.marketPriceLabel addSubview:line];
+    
+    [self formatPrice];
+}
+
+// 现价
+- (void)setGoodsPrice:(float)goodsPrice
+{
+    _goodsPrice = goodsPrice;
+    self.goodsPriceLabel.text = [NSString stringWithFormat:@"¥%.2f",goodsPrice];
+    CGSize size=[NSString getTextContent:self.goodsPriceLabel.text withFont:self.goodsPriceLabel.font];
+    self.goodsPriceLabel.width = size.width +QZMake(5);
+    
+    self.marketPriceLabel.left = self.goodsPriceLabel.right;
+    
+    [self formatPrice];
+    
+}
+
+
+-(void)formatPrice
+{
+    self.total = self.goodsPrice;
+    self.favourable = self.marketPrice-self.goodsPrice;
+    
+    self.totalLabel.text = [NSString stringWithFormat:@"合计:¥%.2f",self.total];
+    
+    self.favourableLabel.text = [NSString stringWithFormat:@"优惠:¥%.2f",self.favourable];
+}
+
+
+
+@end

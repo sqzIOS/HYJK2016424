@@ -1,0 +1,289 @@
+//
+//  SDNvShenListVC.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/3.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDNvShenListVC.h"
+#import "NvShenDaoGouListCell.h"
+#import "NvShenDetailViewController.h"
+@interface SDNvShenListVC ()<UITableViewDataSource,UITableViewDelegate,NvShenDaoGouListCellProtocol>
+
+
+@end
+
+
+@implementation SDNvShenListVC
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.dataArray = [[NSMutableArray alloc] init];
+    [self setTopNavView];
+
+    self.view.backgroundColor = WHITE_COLOR;
+    [self.view addSubview:self.tbView];
+
+    // 点击返回顶部
+    goTopView=[[GoTopView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH-60, SCREEN_HEIGHT, 44, 44)];
+    goTopView.targetScrollView = self.tbView;
+    [self.view addSubview:goTopView];
+    
+    
+    
+    [self.tbView headerBeginRefreshing];
+    
+    [self requestNvShenDaoGouList];
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    //    [self requestBBSData];
+}
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"达人导购"];
+    
+}
+
+
+-(UITableView *)tbView
+{
+    if (_tbView==nil) {
+        
+        _tbView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) style:UITableViewStylePlain];
+        _tbView.dataSource = self;
+        _tbView.delegate = self;
+        
+        _tbView.backgroundColor = [UIColor clearColor];
+        
+        [_tbView setLineZero];
+        [_tbView clearDefaultLineByAddFootLine];
+        
+        
+       
+        // 1.下拉刷新
+        [_tbView addHeaderWithTarget:self action:@selector(headerRereshing)];
+        
+        [_tbView addFooterWithTarget:self action:@selector(footerRereshing)];
+    }
+    
+    return _tbView;
+}
+
+#pragma mark - 
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    // 点击返回顶部 3
+    [goTopView scrollViewDidScroll:scrollView];
+}
+
+#pragma mark- tableView detegate
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+        return self.dataArray.count;
+ 
+    
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 190;
+}
+
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+  
+    self.tbView.separatorStyle=UITableViewCellSeparatorStyleNone;
+    
+    static NSString *CellIdentifier = @"NvShenDaoGouListCell";
+    NvShenDaoGouListCell *cell = (NvShenDaoGouListCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    
+    if (cell == nil) {
+        
+        cell = [[[NSBundle mainBundle] loadNibNamed:CellIdentifier owner:self options:nil] lastObject];
+        
+    }
+    
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.controlDelegate=self;
+    
+    [cell configCellWithArray:self.dataArray indexRow:(int)indexPath.row];
+    
+    return cell;
+    
+}
+
+#pragma mark 女神导购点赞登陆
+-(void)didNotLogin
+{
+    UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"提示" message:@"您尚未登录,是否去登录" delegate:self cancelButtonTitle:@"否" otherButtonTitles:@"是", nil];
+    alert.tag=111;
+    [alert show];
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag==111) {
+        if (buttonIndex==1) {
+            [PublicMethod gotoLoginWithVC:self];
+            
+        }
+    }
+}
+
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+  
+    NSString *topicId=@"0";
+    if (self.dataArray.count>indexPath.row) {
+        topicId=self.dataArray[indexPath.row][@"id"];
+    }
+    
+    NvShenDetailViewController *controller = [[NvShenDetailViewController alloc] initWithNibName:@"NvShenDetailViewController" bundle:[NSBundle mainBundle]];
+    controller.forumId=@"22";
+    controller.topicId=topicId;
+    controller.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController: controller animated:YES];
+        
+        
+
+        
+  
+    
+}
+
+
+
+-(void)headerRereshing
+{
+    
+    [self performSelector:@selector(hearderRereshingEnd) withObject:nil afterDelay:2];
+    
+//    [self requestBBSData];
+    
+}
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [_tbView headerEndRefreshing];
+}
+
+-(void)footerRereshing
+{
+    if (isHaveNextPage) {
+        pageIndex ++;
+        [self requestNvShenDaoGouListMore];
+    }else
+    {
+        [ShareFunction showToast:@"已加载到最后"];
+        [_tbView footerEndRefreshing];
+
+    }
+   
+    
+}
+-(void)footerRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [_tbView footerEndRefreshing];
+}
+
+
+-(void)requestNvShenDaoGouList
+{
+  
+    NSString *nvShenForumId=@"22";
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:[NSString stringWithFormat:@"%zi",pageNum] forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%zi",pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:nvShenForumId forKey:@"forumId"];
+    if(ISLOGIN)
+    {
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    
+    //请求列表
+    [[MKHttpExchangeDemo shareMyInstance] requestExchangePostListWithDic:tempDic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"--<>>%@-女神导购%@列表请求-%@",responseDic,nvShenForumId,[responseDic objectForKey:@"message"]);
+        
+        if (responseDic[@"success"] && responseDic[@"datasource"]) {
+            [self.dataArray removeAllObjects];//帖子列表内容清空
+            
+            [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:self.dataArray];
+            
+            [_tbView reloadData];
+            [self judgeIsHaveNextPageWithDownDataNum:[responseDic[@"datasource"] count]];
+            
+            //保存本地
+            [[AppSet shareInstance] setNvShenDaoGouListArr:self.dataArray];
+            [[AppSet shareInstance] saveNvShenDaoGouListArray];
+        }
+        
+        [_tbView headerEndRefreshing];
+    } errorHandler:^(NSError *error) {
+        
+    }];
+}
+-(void)requestNvShenDaoGouListMore
+{
+    NSString *nvShenForumId=@"22";
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:[NSString stringWithFormat:@"%zi",pageNum] forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%zi",pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:nvShenForumId forKey:@"forumId"];
+    
+    if(ISLOGIN)
+    {
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    //请求列表
+    [[MKHttpExchangeDemo shareMyInstance] requestExchangePostListWithDic:tempDic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"--<>>%@-女神导购%@列表请求-%@",responseDic,nvShenForumId,[responseDic objectForKey:@"message"]);
+        
+        if (responseDic[@"success"] && responseDic[@"datasource"]) {
+            
+            [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:self.dataArray];
+            
+            [_tbView reloadData];
+            [self judgeIsHaveNextPageWithDownDataNum:[responseDic[@"datasource"] count]];
+            
+            [_tbView footerEndRefreshing];
+        }
+        
+        
+    } errorHandler:^(NSError *error) {
+        [self.tbView footerEndRefreshing];
+    }];
+    
+}
+
+
+@end

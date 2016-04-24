@@ -1,0 +1,726 @@
+//
+//  SRRecordVC.m
+//  Sexduoduo
+//
+//  Created by ly1992 on 15/5/11.
+//  Copyright (c) 2015年 dsz. All rights reserved.
+//
+
+#import "SRRecordVC.h"
+#import "UINavigationBar+Extend.h"
+#import "SRecordView.h"
+#import "SRDairyVC.h"
+#import "SRReportVC.h"
+#import "NSDate+Extend.h"
+#import "ClassifyFileObj.h"
+#define kTrackNumbers 7
+#define kSlideWeight (SCREEN_WIDTH - SCREEN_SPACE(20) - SCREEN_SPACE(5)*(kTrackNumbers-1))/kTrackNumbers  //按比例适配轨迹条 宽
+
+@interface SRRecordVC ()<UIScrollViewDelegate>
+{
+    UIView        *view_bg_icon;
+    UIImageView   *img_track;
+    UIImageView   *img_slide;
+    UIScrollView  *sc_track;
+    PublicView    *alertView;
+    PublicView    *windowView;
+    NSInteger      selectedCount;
+    UIButton      *rightBt;
+    BOOL           flag;  //标记箭头是否存在
+    LYButtonWithImage *btnImage;
+    NSTimer *timer;
+    CGFloat progress;
+    NSInteger lastIndex;  //纪录最后 一个按钮
+    NSTimer *rightTimer;
+    BOOL isShowRight;
+}
+@property (strong, nonatomic) UIScrollView *scrollView;
+//导航栏
+@property (strong,nonatomic)UIView *navView;
+//子视图集合
+@property (nonatomic,strong) NSMutableArray *subViews;
+@end
+
+@implementation SRRecordVC
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    flag = NO;
+    
+    if ([m_appDelegate.av isPlaying]) {
+        musicBtn.selected=NO;
+    }else musicBtn.selected=YES;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self initData];
+    
+    [self initView];
+}
+
+#pragma mark ---UI
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    UIView *navView=[[UIView alloc] initWithFrame:CGRectMake(0, imgY, SCREEN_WIDTH, 64)];
+    if (_type == ExternalTypeSexMan) {
+        navView.backgroundColor = RGBCOLOR(255, 145, 123);
+    } else {
+        navView.backgroundColor = RGBCOLOR(233, 151, 189);
+    }
+    navView.userInteractionEnabled = YES;
+    [self.view addSubview:navView];
+    _navView = navView;
+    //
+    UIButton *leftBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    leftBtn.frame = CGRectMake(SCREEN_SPACE(10), SCREEN_SPACE(25) , SCREEN_SPACE(44), SCREEN_SPACE(44));
+    [leftBtn setImage:[UIImage imageNamed:@"record_back"] forState:UIControlStateNormal];
+    [leftBtn addTarget:self action:@selector(bt_action_topEvent:) forControlEvents:UIControlEventTouchUpInside];
+    leftBtn.tag = 1111;
+    [navView addSubview:leftBtn];
+    //
+    UIImageView *imageTitle = [[UIImageView alloc]init];
+    imageTitle.frame = CGRectMake(160-92/3., 30, 92*2/3., 38*2/3.);
+    imageTitle.centerX = SCREEN_WIDTH/2.;
+    imageTitle.backgroundColor = [UIColor clearColor];
+    imageTitle.image =[UIImage imageNamed:@"record_title_nav"];
+    [navView addSubview:imageTitle];
+    
+    
+    musicBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    musicBtn.frame = CGRectMake(SCREEN_WIDTH - SCREEN_SPACE(44) - SCREEN_SPACE(10), SCREEN_SPACE(44 +25 +10) , SCREEN_SPACE(44), SCREEN_SPACE(44));
+    [musicBtn setImage:[UIImage imageNamed:@"musicPlay"] forState:UIControlStateNormal];
+    [musicBtn setImage:[UIImage imageNamed:@"musicStop"] forState:UIControlStateSelected];
+    if ([m_appDelegate.av isPlaying]) {
+        musicBtn.selected=NO;
+    }else musicBtn.selected=YES;
+    [musicBtn addTarget:self action:@selector(playOrStopMusic:) forControlEvents:UIControlEventTouchUpInside];
+    [self.view addSubview:musicBtn];
+}
+- (void)initView
+{
+    //背景图
+    UIImageView *img_bg = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, SCREEN_HEIGHT)];
+    img_bg.backgroundColor = [UIColor clearColor];
+    if (_type == ExternalTypeSexMan) {
+        img_bg.image = [UIImage imageNamed:@"record_background_man"];
+    } else {
+        img_bg.image = [UIImage imageNamed:@"record_background_women"];
+    }
+    img_bg.userInteractionEnabled = YES;
+    [self.view addSubview:img_bg];
+    
+    _scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, 64, SCREEN_WIDTH, SCREEN_HEIGHT-64)];
+    //
+//    _scrollView.top = SCREEN_SPACE(64);
+//    _scrollView.width = SCREEN_WIDTH;
+//    _scrollView.bottom = SCREEN_HEIGHT;
+    [self.view addSubview:_scrollView];
+    //
+    [self setTopNavView];
+    //
+    [self initTrack];
+}
+//轨迹
+- (void)initTrack
+{
+    //蝌蚪
+    NSArray *kdImageArr = [NSArray arrayWithObjects:
+                              [UIImage imageNamed:@"record_kedou00"],
+                              [UIImage imageNamed:@"record_kedou01"],
+                              [UIImage imageNamed:@"record_kedou02"],
+                               nil];
+    UIImageView *imgV = [[UIImageView alloc]init];
+    imgV.frame = CGRectMake(SCREEN_SPACE(10), SCREEN_SPACE(126) - SCREEN_SPACE(20), kSlideWeight, SCREEN_SPACE(25));
+    imgV.animationImages = kdImageArr;
+    imgV.animationRepeatCount = -1;
+    imgV.animationDuration = 0.3f;
+    [_scrollView addSubview:imgV];
+    [imgV startAnimating];
+    img_track = imgV;
+    //轨迹条
+    UIImage* image = [UIImage imageNamed:@"record_slide_yes"];
+    imgV = [[UIImageView alloc]init];
+    imgV.frame = CGRectMake(SCREEN_SPACE(10), SCREEN_SPACE(136), kSlideWeight, image.size.height);
+    imgV.image = image;
+    [_scrollView addSubview:imgV];
+    img_slide = imgV;
+    
+    image = [UIImage imageNamed:@"record_slide"];
+    for (int i = 0; i < kTrackNumbers; i++) {
+        NSInteger spaceRow = (SCREEN_SPACE(5) + kSlideWeight) * i;
+        UIImageView *imgV = [[UIImageView alloc]init];
+        imgV.frame = CGRectMake(SCREEN_SPACE(10) + spaceRow, SCREEN_SPACE(136), kSlideWeight, image.size.height);
+        imgV.image = image;
+        [_scrollView addSubview:imgV];
+    }
+    
+    [self initScrollView];
+}
+- (void)initScrollView
+{
+    UIImage* image = [UIImage imageNamed:@"record_slide"];
+    UIScrollView *scrollView = [[UIScrollView alloc]init];
+    scrollView.frame = CGRectMake(0, SCREEN_SPACE(146) + image.size.height, SCREEN_WIDTH,SCREEN_HEIGHT - SCREEN_SPACE(146) - image.size.height -STAR_Y);
+    
+    if(SCREEN_HEIGHT<568)
+    {
+        scrollView.frame = CGRectMake(0, SCREEN_SPACE(146) + image.size.height, SCREEN_WIDTH,SCREEN_HEIGHT - SCREEN_SPACE(146));
+    }
+    
+    scrollView.backgroundColor = [UIColor clearColor];
+    scrollView.pagingEnabled = YES;
+    scrollView.showsHorizontalScrollIndicator = NO;
+    scrollView.delegate = self;
+    scrollView.scrollEnabled = NO;
+    [_scrollView addSubview:scrollView];
+    sc_track = scrollView;
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH * kTrackNumbers, 0);
+    
+    [self initSubView];
+    
+}
+
+- (void)initSubView
+{
+    if (SCREEN_HEIGHT <568) {//4s
+        UIImage* image = [UIImage imageNamed:@"record_bottom"];
+        sc_track.height = image.size.height;
+    }
+
+    
+    BOOL isSex = NO;
+    if (_type == ExternalTypeSexMan) {
+        isSex = YES;
+    }
+    for (int i = 0; i < kTrackNumbers; i++) {
+        PublicView *subView = [SRecordView buildWithFrame:sc_track.frame withIndex:i withSex:isSex];
+        subView.left = SCREEN_WIDTH * i;
+        
+        [sc_track addSubview:subView];
+        lastIndex = 1000;
+        for (int i = 0; i < subView.buttonArr.count; i++) {
+            UIButton *bt = subView.buttonArr[i];
+            [bt addTarget:self action:@selector(bt_action_event:) forControlEvents:UIControlEventTouchUpInside];
+        }
+        subView.tag = i;
+        [_subViews addObject:subView];
+    }
+
+    _scrollView.contentSize = CGSizeMake(0, sc_track.bottom );
+
+}
+//初始化向右箭头 跳转
+- (void)initRightView:(BOOL)isShow
+{
+    if (rightBt == nil) {
+        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+        btn.frame = CGRectMake(SCREEN_WIDTH - SCREEN_SPACE(65), SCREEN_SPACE(185) , SCREEN_SPACE(44), SCREEN_SPACE(44));
+        if (_type == ExternalTypeSexMan) {
+            [btn setImage:[UIImage imageNamed:@"record_right_man"] forState:UIControlStateNormal];
+        } else {
+            [btn setImage:[UIImage imageNamed:@"record_right_women"] forState:UIControlStateNormal];
+        }
+        [btn addTarget:self action:@selector(bt_action_rightEvent:) forControlEvents:UIControlEventTouchUpInside];
+        [_scrollView addSubview:btn];
+        btn.alpha = 0.0f;
+        rightBt = btn;
+    }
+    [_scrollView addSubview:rightBt];
+    if (isShow) {
+        if (!flag) {
+            rightBt.transform = CGAffineTransformMakeScale(0.0f, 0.0f);
+            rightBt.alpha = 1.0f;
+            [UIView animateWithDuration:0.4 animations:^{
+                rightBt.transform = CGAffineTransformMakeScale(1.4f, 1.4f);
+            } completion:^(BOOL finished) {
+                rightBt.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
+                rightTimer = [NSTimer scheduledTimerWithTimeInterval:0.4 target:self selector:@selector(rightSimulation) userInfo:self repeats:YES];
+            }];
+        }
+         flag = isShow;
+    } else {
+        rightBt.transform = CGAffineTransformMakeScale(1.0f, 1.0f);
+        rightBt.alpha = 1.0f;
+        [UIView animateWithDuration:0.2 animations:^{
+            rightBt.transform = CGAffineTransformMakeScale(1.2f, 1.2f);
+        } completion:^(BOOL finished) {
+            [UIView animateWithDuration:0.2 animations:^{
+                rightBt.transform = CGAffineTransformMakeScale(0.0f, 0.0f);
+                [rightTimer invalidate];
+            }];
+        }];
+        flag = isShow;
+    }
+    
+}
+
+
+#pragma mark ---Data
+- (void)initData
+{
+    if (_subViews == nil) {
+        _subViews = [[NSMutableArray alloc]init];
+    }
+    [_subViews removeAllObjects];
+}
+
+//提交数据给后台
+- (void)postData
+{
+    
+    NSMutableDictionary *dict = [self getResultDic];
+    [ShareFunction showHUDWithText:@"请稍等..."];
+    [[MKHttpServiceEngine shareMyInstance] requestSRRecordWithDic:dict completionHandler:^(id responseObject) {
+        
+        [self performSelector:@selector(hideHud:) withObject:nil afterDelay:0.1];
+        
+        
+        [ShareFunction hiddenHUD];
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"%@--",responseDic);
+        if ([responseDic[@"success"] intValue]==1 && responseDic[@"datasource"])
+        {
+            id reportModel= responseDic[@"datasource"];
+            if ([reportModel isKindOfClass:[NSNull class]]  || [reportModel count] == 0 ) {
+                [ShareFunction showToast:@"请求失败,请重试..."];
+                return;
+            }
+            
+            // 保存爱记录的 时间 和 用户id
+            [self saveRecordHistory];
+            
+            
+            NSDictionary *reportDic = reportModel;
+            if (_type == ExternalTypeSexMan) {
+                [SRReportVC gotoMySelf:self withDict:reportDic withType:ReportTypeSexMan withForm:ExternalTypeRecord];
+            } else {
+                [SRReportVC gotoMySelf:self withDict:reportDic withType:ReportTypeSexWomen withForm:ExternalTypeRecord];
+            }
+            
+        } else {
+//            [ShareFunction hiddenHUD];
+//            [ShareFunction showToast:@"请求失败,请重试..."];
+
+            
+            if ([responseDic[@"message"] isEqualToString:@"记录已存在"]) {
+                
+                // 保存爱记录的 时间 和 用户id
+                [self saveRecordHistory];
+                
+                NSString *dateStr=[NSDate dateStringYMDFromDate:[NSDate date]];
+                [self getMonthDayWithDate:dateStr];
+                
+                
+            }
+            
+        }
+        
+    } errorHandler:^(NSError *error) {
+
+        [ShareFunction hiddenHUD];
+        [ShareFunction showToast:@"请求失败,请重试..."];
+
+    }];
+    
+}
+-(void)hideHud:(id)sender
+{
+    [ShareFunction hiddenHUD];
+}
+
+//分析得到结果报告
+- (NSMutableDictionary*)getResultDic
+{
+    NSMutableDictionary *dic = [NSMutableDictionary dictionary];
+    if(USERID)
+    {
+        [dic setObject:USERID forKey:@"memberId"]; //todo USERID
+
+    }
+    [dic setObject:DEVICEUUID forKey:@"imie"];
+    //性别
+     PublicView *subView;
+//    PublicView *subView  = _subViews[0];
+//    for (int i = 0; i < subView.buttonArr.count; i++) {
+//        UIButton *bt = subView.buttonArr[i];
+//        if (bt.selected == YES) {
+//            NSString *index = [NSString stringWithFormat:@"%d",i + 1];
+//            [dic setObject:index forKey:@"sex"];
+//            break;
+//        }
+//    }
+    
+    if(self.type == 0)
+    {
+        NSString *index = [NSString stringWithFormat:@"1"];
+        [dic setObject:index forKey:@"sex"];
+
+    }else if (self.type == 1)
+    {
+        NSString *index = [NSString stringWithFormat:@"2"];
+        [dic setObject:index forKey:@"sex"];
+    }
+    
+    
+    //爱在哪里做
+    subView  = _subViews[0];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            NSString *index = [NSString stringWithFormat:@"%d",i + 1];
+            [dic setObject:index forKey:@"site"];
+            break;
+        }
+    }
+    //有无安全措施
+    subView  = _subViews[1];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            NSString *index = [NSString stringWithFormat:@"%d",i + 1];
+            [dic setObject:index forKey:@"precautions"];
+            break;
+        }
+    }
+    //爱爱前戏
+    subView  = _subViews[2];
+    NSMutableString *numStr = [[NSMutableString alloc]init];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            [numStr appendString:[NSString stringWithFormat:@"%d,",i+ 1]];
+        }
+    }
+    NSString *indexStr =  [numStr substringToIndex:([numStr length] - 1)];
+    [dic setObject:indexStr forKey:@"foreplay"];
+    //爱爱姿势
+    subView  = _subViews[3];
+    numStr = [[NSMutableString alloc]init];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            [numStr appendString:[NSString stringWithFormat:@"%d,",i+ 1]];
+        }
+    }
+    indexStr =  [numStr substringToIndex:([numStr length] - 1)];
+    [dic setObject:indexStr forKey:@"posture"];
+    //爱爱反应
+    subView  = _subViews[4];
+    numStr = [[NSMutableString alloc]init];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            [numStr appendString:[NSString stringWithFormat:@"%d,",i+ 1]];
+        }
+    }
+    indexStr =  [numStr substringToIndex:([numStr length] - 1)];
+    [dic setObject:indexStr forKey:@"response"];
+    //爱爱时间
+    subView  = _subViews[5];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            NSString *index = [NSString stringWithFormat:@"%d",i + 1];
+            [dic setObject:index forKey:@"time"];
+            break;
+        }
+    }
+    //爱后行为
+    subView  = _subViews[6];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            NSString *index = [NSString stringWithFormat:@"%d",i + 1];
+            [dic setObject:index forKey:@"behavior"];
+            break;
+        }
+    }
+    return dic;
+}
+//如当天记录过 跳到分析报告页
+- (void)getMonthDayWithDate:(NSString*)dateStr;
+{
+    NSMutableDictionary *dict = [NSMutableDictionary dictionary];
+    if (USERID) {
+        [dict setObject:USERID forKey:@"memberId"]; //todo USERID
+    }
+    [dict setObject:DEVICEUUID forKey:@"imie"];
+    [dict setObject:dateStr forKey:@"date"];
+    [ShareFunction showHUDWithText:@"请稍等..."];
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestSRDairyDetailWithDic:dict completionHandler:^(id responseObject) {
+        [ShareFunction hiddenHUD];
+        NSDictionary *responseDic = responseObject;
+        if (responseDic[@"success"] && responseDic[@"datasource"])
+        {
+            id reportModel = responseDic[@"datasource"];
+            if ([reportModel isKindOfClass:[NSNull class]] || [reportModel count] == 0) {
+                [ShareFunction hiddenHUD];
+                [ShareFunction showToast:@"请求失败,请重试..."];
+                return;
+            }
+            NSDictionary *reportDic = reportModel;
+            if (_type == ExternalTypeSexMan) {
+                [SRReportVC gotoMySelf:self withDict:reportDic withType:ReportTypeSexMan withForm:ExternalTypeRecord];
+            } else {
+                [SRReportVC gotoMySelf:self withDict:reportDic withType:ReportTypeSexWomen withForm:ExternalTypeRecord];
+            }
+        } else {
+            [ShareFunction hiddenHUD];
+            [ShareFunction showToast:@"请求失败,请重试..."];
+        }
+    } errorHandler:^(NSError *error) {
+        [ShareFunction hiddenHUD];
+        [ShareFunction showToast:@"请求失败,请重试..."];
+    }];
+    
+}
+
+-(void)saveRecordHistory
+{
+    //保存该天的日期 和该天使用用户的id
+    [[NSUserDefaults standardUserDefaults] setObject:[NSDate dateStringYMDFromDate:[NSDate new]] forKey:@"SRHadEvent"];
+    
+    
+    //保存今天用户纪录的信息
+    NSArray *array=[ClassifyFileObj readArrayWithPath:FILE_SexRecordDateAndUsers_path];
+    NSMutableArray *secRecordArray;
+    if (array) {
+        secRecordArray =[NSMutableArray arrayWithArray:array];
+        if ([secRecordArray containsObject:USERID]) {
+            NSLog(@"该用户已经纪录过了");
+        }else
+        {
+            NSLog(@"该用户今天第一次纪录");
+            [secRecordArray addObject:USERID];
+            
+            [ClassifyFileObj writeToFileWithArray:secRecordArray andFilePath:FILE_SexRecordDateAndUsers_path];
+        }
+    }else
+    {
+        secRecordArray =[NSMutableArray array];
+        
+        NSLog(@"该用户今天第一次纪录");
+        [secRecordArray addObject:USERID];
+        
+        [ClassifyFileObj writeToFileWithArray:secRecordArray andFilePath:FILE_SexRecordDateAndUsers_path];
+    }
+}
+
+#pragma mark ---action
+
+-(void)playOrStopMusic:(UIButton *)sender
+{
+    if ([m_appDelegate.av isPlaying]) {
+        [m_appDelegate stopMusic];
+        
+        sender.selected=YES;
+        
+        [UserDefaults setBool:YES  forKey:@"isStopMusic"];
+    }
+    else
+    {
+        [m_appDelegate playMusic];
+        sender.selected=NO;
+        
+        [UserDefaults removeObjectForKey:@"isStopMusic"];
+    }
+}
+
+- (void)bt_action_topEvent:(UIButton*)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+- (void)bt_action_event:(UIButton*)sender
+{
+    NSInteger index = sender.tag;
+    if (index == 0 || index == 1 || index == 2 || index == 3 || index == 4 || index == 5 || index == 6 || index == 7 || index == 8) {
+        [self buttonSingleSelectedWithArr:0 withIndex:index withNum:0];
+    } else if (index == 9 || index == 10) {
+        [self buttonSingleSelectedWithArr:1 withIndex:index withNum:9];
+    } else if (index == 11 || index == 12 || index == 13 || index == 14) {
+        [self buttonSelectedWithArr:2 withIndex:index withNum:11];
+    } else if (index == 15 || index == 16 || index == 17 || index == 18 || index == 19|| index == 20) {
+         [self buttonSelectedWithArr:3 withIndex:index withNum:15];
+    } else if (index == 21 || index == 22 || index == 23 || index == 24 || index == 25 || index == 26) {
+        [self buttonSelectedWithArr:4 withIndex:index withNum:21];
+    } else if (index == 27 || index == 28 || index == 29 || index == 30 || index == 31) {
+        [self buttonSingleSelectedWithArr:5 withIndex:index withNum:27];
+    } else if (index == 32 || index == 33 || index == 34 || index == 35 || index == 36) {
+        [self buttonSingleSelectedWithArr:6 withIndex:index withNum:32];
+    }
+}
+- (void)buttonSelectedWithArr:(NSInteger)tag withIndex:(NSInteger)index withNum:(NSInteger)num
+{
+    BOOL isSelected = [self isSelectedButton:tag];
+    PublicView *subView  = _subViews[tag];
+    LYButtonWithImage *bt = subView.buttonArr[index - num];
+    if (bt.selected == YES) {
+        bt.selected = NO;
+        [bt.waterWaveView resetWave];
+    } else {
+        if (!isSelected) {
+            [ShareFunction showToast:@"最多只能添加四个"];
+            return;
+        }
+        bt.selected = YES;
+        [bt.waterWaveView startWave];
+    }
+    [self isSelectedButton:tag];
+    if (selectedCount <= 0) {
+        [self initRightView:NO];
+    } else {
+        [self initRightView:YES];
+    }
+}
+- (BOOL)isSelectedButton:(NSInteger)tag
+{
+    selectedCount = 0;
+    PublicView *subView  = _subViews[tag];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            selectedCount += 1;
+        }
+    }
+    if (selectedCount < 4) {
+        return YES;
+    }
+    return NO;
+}
+- (void)buttonSingleSelectedWithArr:(NSInteger)tag withIndex:(NSInteger)index withNum:(NSInteger)num
+{
+    if (lastIndex == index) {
+        return;
+    }
+    lastIndex = index;
+    PublicView *subView  = _subViews[tag];
+    for (int i = 0; i < subView.buttonArr.count; i++) {
+        UIButton *bt = subView.buttonArr[i];
+        if (bt.selected == YES) {
+            return;
+        }
+    }
+    btnImage = subView.buttonArr[index - num];
+    if (tag == kTrackNumbers - 2) {
+        // 模拟下载进度
+        btnImage.selected = YES;
+        btnImage.imageBtn.hidden = NO;
+        progress = 0;
+        timer = [NSTimer scheduledTimerWithTimeInterval:0.05 target:self selector:@selector(progressSimulation) userInfo:self repeats:YES];
+        
+    } else {
+        btnImage.selected = YES;
+        [btnImage.waterWaveView startWave];
+    }
+    //
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (tag == kTrackNumbers - 1) {
+            //
+//            NSDictionary *testDict = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                      @"12",@"foreplayScore",
+//                                      @"12",@"postureScore",
+//                                      @"14",@"responseScore",
+//                                      @"20",@"timeScore",
+//                                      @"40",@"behaviorScore",
+//                                      @"23",@"foreplayAdvice",
+//                                      @"34",@"postureAdvice",
+//                                      @"44",@"responseAdvice",
+//                                      @"44",@"timeAdvice",
+//                                      @"55",@"behaviorAdvice",
+//                                      @"55",@"foreplayAnalyze",
+//                                      @"66",@"postureAnalyze",
+//                                      @"66",@"responseAnalyze",
+//                                      @"66",@"timeAnalyze",
+//                                      @"66",@"behaviorAnalyze",
+//                                      nil];
+//            if (_type == ExternalTypeSexMan) {
+//                [SRReportVC gotoMySelf:self withDict:testDict withType:ReportTypeSexMan withForm:ExternalTypeRecord];
+//            } else {
+//                [SRReportVC gotoMySelf:self withDict:testDict withType:ReportTypeSexWomen withForm:ExternalTypeRecord];
+//            }
+//
+//            return;  //todo
+            //
+            [self postData];
+        } else {
+            [UIView animateWithDuration:0.5 animations:^{
+                sc_track.contentOffset = CGPointMake(sc_track.contentOffset.x + SCREEN_WIDTH, 0);
+            }];
+        }
+    });
+}
+- (void)progressSimulation
+{
+    if (progress < 1.0) {
+        progress += 0.03;
+        btnImage.imageBtn.progress = progress;
+    } else {
+       [timer invalidate]; 
+    }
+}
+- (void)rightSimulation
+{
+    if (isShowRight) {
+        rightBt.alpha = 0.1f;
+        isShowRight = NO;
+    } else {
+        rightBt.alpha = 1.0f;
+        isShowRight = YES;
+    }
+    
+    
+}
+
+- (void)bt_action_rightEvent:(UIButton*)sender
+{
+    [UIView animateWithDuration:0.5 animations:^{
+        flag = NO;
+        sc_track.contentOffset = CGPointMake(sc_track.contentOffset.x + SCREEN_WIDTH, 0);
+        [rightTimer invalidate];
+    }];
+}
+
+-(void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    NSInteger index = scrollView.contentOffset.x/SCREEN_WIDTH;
+    NSInteger spaceRow = (SCREEN_SPACE(5) + kSlideWeight) * index;
+    img_track.left = SCREEN_SPACE(10) + spaceRow;
+    img_slide.left = SCREEN_SPACE(10) + spaceRow;
+    flag = NO;
+    rightBt.alpha = 0.0f;
+}
+
+#pragma mark ---didReceiveMemoryWarning---
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+#pragma mark ---gotoMyself---
++(void)gotoMySelf:(id)pvc withType:(ExternalTypeSex)type
+{
+    if (pvc == nil) {
+        return;
+    }
+    
+    SRRecordVC* vc = [[SRRecordVC alloc]init];
+    vc.hidesBottomBarWhenPushed = YES;
+    vc.type = type;
+    if ([pvc isKindOfClass:[UINavigationController class]]) {
+        [pvc pushViewController:vc animated:YES];
+    } else if ([pvc isKindOfClass:[UIViewController class]]) {
+        UIViewController *uvc = pvc;
+        [uvc.navigationController pushViewController:vc animated:YES];
+    }
+}
+@end

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="7706" systemVersion="14F27" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="gTV-IL-0wX" customClass="CalenderCell">
+            <rect key="frame" x="0.0" y="0.0" width="99" height="76"/>
+            <autoresizingMask key="autoresizingMask"/>
+            <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
+                <rect key="frame" x="0.0" y="0.0" width="99" height="76"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Gsb-qx-IH4">
+                        <rect key="frame" x="0.0" y="0.0" width="99" height="76"/>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QLx-cU-dlo">
+                        <rect key="frame" x="0.0" y="0.0" width="99" height="76"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            </view>
+            <constraints>
+                <constraint firstItem="Gsb-qx-IH4" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="6tR-A9-U7A"/>
+                <constraint firstAttribute="bottom" secondItem="QLx-cU-dlo" secondAttribute="bottom" id="8HL-jT-rmd"/>
+                <constraint firstItem="Gsb-qx-IH4" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="SUx-ku-VNg"/>
+                <constraint firstAttribute="trailing" secondItem="QLx-cU-dlo" secondAttribute="trailing" id="gZw-Uz-Z2x"/>
+                <constraint firstItem="QLx-cU-dlo" firstAttribute="leading" secondItem="gTV-IL-0wX" secondAttribute="leading" id="lyR-m5-264"/>
+                <constraint firstAttribute="bottom" secondItem="Gsb-qx-IH4" secondAttribute="bottom" id="yWI-B9-cWr"/>
+                <constraint firstItem="QLx-cU-dlo" firstAttribute="top" secondItem="gTV-IL-0wX" secondAttribute="top" id="zal-00-roi"/>
+                <constraint firstAttribute="trailing" secondItem="Gsb-qx-IH4" secondAttribute="trailing" id="zcT-mg-XIC"/>
+            </constraints>
+            <size key="customSize" width="99" height="76"/>
+            <connections>
+                <outlet property="bgImageView" destination="Gsb-qx-IH4" id="HqN-lf-13z"/>
+                <outlet property="dayStr" destination="QLx-cU-dlo" id="bsu-Zj-ryg"/>
+            </connections>
+            <point key="canvasLocation" x="364.5" y="283"/>
+        </collectionViewCell>
+    </objects>
+</document>

@@ -1,0 +1,364 @@
+//
+//  ActivityViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-11-27.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "ActivityViewController.h"
+#import "ActivityTableViewCell.h"
+
+@interface ActivityViewController ()
+
+@end
+
+@implementation ActivityViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+    
+    self.goodsArray = [NSMutableArray arrayWithCapacity:0];
+    
+    
+    currentPage = 1;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+    
+    [self requestGoodListWithDic:params];
+    
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+}
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"活动专区"];
+    
+}
+//返回
+-(void)toBackView
+{
+    if ([self.navigationController respondsToSelector:@selector(popViewControllerAnimated:)]) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+    
+}
+-(void)initGoodsTableView
+{
+    self.goodsTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y - OFFSET_Y)];
+    self.goodsTableView.dataSource = self;
+    self.goodsTableView.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.goodsTableView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.goodsTableView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.goodsTableView];
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0.5)];
+    line.backgroundColor = [UIColor lightGrayColor];
+    self.goodsTableView.tableFooterView = line;
+    
+    
+    
+    [self.goodsTableView addHeaderWithTarget:self action:@selector(headerRereshing)];
+    
+}
+
+-(void)headerRereshing
+{
+    currentPage = 1;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+    
+    [self requestGoodListWithDic:params];
+
+    
+    
+    [self performSelector:@selector(hearderRereshingEnd) withObject:nil afterDelay:3];
+}
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.goodsTableView headerEndRefreshing];
+}
+
+
+
+
+
+#pragma mark MKHttpRequestAction  GoodsList
+-(void)requestGoodListWithDic:(NSDictionary *)dic
+{
+    self.loadingView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    self.loadingView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.loadingView];
+    
+    self.noNetView.hidden = YES;
+    self.indicator.hidden = NO;
+    //    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [_indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    //    [self.loadingView addSubview:_indicator];
+    [self.indicator startAnimating];
+    
+    //    self.noNetView = [[UIView alloc] initWithFrame:CGRectMake(48, 92, 224, 254)];
+    //    [self.loadingView addSubview:self.noNetView];
+    self.noNetView.hidden = YES;
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestHomeGoodListWithWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1)
+        {
+            [self.goodsArray removeAllObjects];
+            
+            [self.goodsArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            if (!self.goodsTableView) {
+                [self initGoodsTableView];
+            }else
+                [self.goodsTableView reloadData];
+        }else
+        {
+            self.promptLab.text = [responseDic objectForKey:@"message"];
+            [self showPromptLab];
+            
+            
+            if (self.goodsTableView) {
+                [self.goodsTableView removeFromSuperview];
+            }
+            
+            
+        }
+        
+        
+        NSLog(@"arry-->%@",self.goodsArray);
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+        [self.indicator stopAnimating];
+        [self.loadingView removeFromSuperview];
+        self.loadingView = nil;
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        [self.indicator stopAnimating];
+        self.indicator.hidden = YES;
+        self.noNetView.hidden = NO;
+        
+    }];
+    
+}
+
+-(void)requestGoodListMoreWithDic:(NSDictionary *)dic
+{
+    //    NSString *pathStr = [NSString stringWithFormat:@"shopxx/shop/%@",classifyStr];
+    
+    [[MKHttpServiceEngine shareMyInstance] requestHomeGoodListWithWithDic:dic completionHandler:^(id responseObject) {
+        
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            if ([self.goodsArray containsObject:[[responseDic objectForKey:@"datasource"] firstObject]]) {
+                //            [goodsDataArray removeObjectsInArray:[responseDic objectForKey:@"datasource"]];
+                //            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }else
+            {
+                [self.goodsArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }
+            [self.goodsTableView reloadData];
+        }
+        
+        
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        
+        currentPage --;
+        
+    }];
+    
+}
+
+-(void)isDowmloadMore:(NSArray *)arry
+{
+    __weak typeof(self) weakSelf = self;
+    if ([arry count] > 9) {
+        //        self.goodsTableView.showsInfiniteScrolling=YES;
+        weakSelf.goodsTableView.infiniteScrollingView.enabled = YES;
+        
+        [self.goodsTableView addInfiniteScrollingWithActionHandler:^{
+            [weakSelf getMoreData];
+            [weakSelf.goodsTableView.infiniteScrollingView stopAnimating];
+        }];
+        
+    }else
+    {
+        if (self.goodsTableView.infiniteScrollingView != nil) {
+            //                [goodsTableView triggerInfiniteScrolling];
+            weakSelf.goodsTableView.infiniteScrollingView.enabled = NO;
+        }
+
+    }
+    
+}
+#pragma RefreshView  触底加载更多
+-(void)getMoreData
+{
+    currentPage ++;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+    
+    [self requestGoodListMoreWithDic:params];
+}
+//显示提示
+-(void)showPromptLab
+{
+    [self.view addSubview:self.promptLab];
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:0.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:^(BOOL finished) {
+        [self.promptLab removeFromSuperview];
+    }];
+    
+    
+}
+//重新加载按钮
+- (IBAction)refreshDataAgain:(id)sender {
+    
+    currentPage = 1;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+    
+    [self requestGoodListWithDic:params];
+}
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+    //    return 5;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.goodsArray.count;
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 393;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 45)];
+    
+    
+    
+    
+    
+    return view;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"ActivityTableViewCell";
+    ActivityTableViewCell *cell = (ActivityTableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ActivityTableViewCell" owner:self options:nil] lastObject];
+    }
+    cell.backgroundColor = [UIColor whiteColor];
+    
+    
+    [cell configCellWithArray:self.goodsArray indexRow:(int)indexPath.row];
+    
+    
+    
+    
+    
+    return cell;
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+    GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+    ctrVc.hidesBottomBarWhenPushed = YES;
+    ctrVc.goodsIdStr = [[self.goodsArray objectAtIndex:indexPath.row] objectForKey:@"id"];
+    ctrVc.classifyIdStr = [[self.goodsArray objectAtIndex:indexPath.row] objectForKey:@"goodsCategoryId"];
+    [self.navigationController pushViewController:ctrVc animated:YES];
+    
+}
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

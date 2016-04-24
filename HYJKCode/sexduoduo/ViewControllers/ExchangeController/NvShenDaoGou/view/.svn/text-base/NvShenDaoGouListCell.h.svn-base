@@ -1,0 +1,55 @@
+//
+//  NvShenDaoGouListCell.h
+//  sexduoduo
+//
+//  Created by dsz on 15-1-26.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@protocol NvShenDaoGouListCellProtocol <NSObject>
+
+-(void)didNotLogin;
+
+@end
+@interface NvShenDaoGouListCell : UITableViewCell
+{
+    NSMutableArray *dataArray;
+    NSInteger dataIndex;
+    NSMutableDictionary *dataDic;
+}
+
+@property (strong, nonatomic) IBOutlet UIImageView *headImageView;
+
+@property (strong, nonatomic) IBOutlet UILabel *nameLab;
+
+@property (strong, nonatomic) IBOutlet UILabel *detailNameLab;
+
+@property (strong, nonatomic) IBOutlet UILabel *titleLab;
+
+@property (strong, nonatomic) IBOutlet UILabel *detailTitleLab;
+
+
+
+
+@property (strong, nonatomic) IBOutlet UILabel *timeLab;
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *leftImageView;
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *zanImageView;//赞图标
+@property (strong, nonatomic) IBOutlet UILabel *zanLab;//赞的num
+@property (strong, nonatomic) IBOutlet UILabel *pinglunLab;//评论num
+@property (strong, nonatomic) IBOutlet UIButton *zanBtn;//赞btn
+
+@property (assign, nonatomic) id<NvShenDaoGouListCellProtocol>controlDelegate;
+
+
+
+-(void)configCellWithArray:(NSMutableArray *)arry indexRow:(int)row;
+
+
+
+
+@end

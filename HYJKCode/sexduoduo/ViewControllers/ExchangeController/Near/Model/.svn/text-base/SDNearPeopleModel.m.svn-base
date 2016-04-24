@@ -1,0 +1,35 @@
+//
+//  SDNearPeopleModel.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDNearPeopleModel.h"
+
+@implementation SDNearPeopleModel
+
+- (NSDictionary *)propertyMapDic {
+    return @{
+             @"avatar":@"avatar",
+             @"age":@"age",
+             @"comefrom":@"comefrom",
+             @"distance":@"distance",
+             @"groupId":@"groupId",
+             @"groupName":@"groupName",
+             @"groupPoint":@"groupPoint",
+             @"id":@"userID",
+             @"lastTime":@"lastTime",
+             @"lat":@"lat",
+             @"lng":@"lng",
+             @"nextgroupName":@"nextgroupName",
+             @"nickname":@"nickname",
+             @"point":@"point",
+             @"prestige":@"prestige",
+             @"sex":@"sex",
+             @"userName":@"userName"
+             };
+}
+
+@end

@@ -1,0 +1,307 @@
+//
+//  MoreBanKuaiViewController.m
+//  sexduoduo
+//
+//  Created by dsz on 15-1-21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "MoreBanKuaiViewController.h"
+#import "BBSHomeCell.h"
+@interface MoreBanKuaiViewController ()<BBSHomeCellDelegate>
+
+@end
+
+@implementation MoreBanKuaiViewController
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    
+    
+    //下载广告和板块数据
+//    [self requestADData];
+}
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+   
+    
+    [self setTopNavView];
+    
+    
+    [self fomartBBSHomeData];
+    [self initexchangeTableV];
+    
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"更多版块"];
+    
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+#pragma mark 设置 我的版块 泡吧推荐 数据
+-(void)fomartBBSHomeData
+{
+    //全部版块
+    if ([[AppSet shareInstance] BBSArray].count>0) {
+        self.bbsDataArray=[[AppSet shareInstance] BBSArray];
+      
+        
+    }else self.bbsDataArray=[[NSMutableArray alloc] init];
+    
+    
+    //我的版块
+    if ([[AppSet shareInstance] MyBBSArray].count>0) {
+        self.myBBSListArr=[[AppSet shareInstance] MyBBSArray];
+        
+    }else self.myBBSListArr=[[NSMutableArray alloc] init];
+    
+    
+    self.bbsDataFlagArr=[[NSMutableArray alloc]init];
+    
+    for (int i=0; i<self.bbsDataArray.count; i++) {
+        
+        BOOL isHave=NO;
+        for (int j=0; j<self.myBBSListArr.count; j++) {
+            if ([self.bbsDataArray[i][@"id"] integerValue] == [self.myBBSListArr[j][@"id"] integerValue]) {
+                isHave = YES;
+            }
+        }
+        if (isHave) {
+            [self.bbsDataFlagArr addObject:@"1"];
+        }else
+            [self.bbsDataFlagArr addObject:@"0"];
+        
+    }
+    
+    //可以用来推荐的版块
+    self.canTuiJianListArr = [[NSMutableArray alloc] initWithArray:self.bbsDataArray];
+    
+    for (int i=0; i<self.canTuiJianListArr.count; i++) {
+        NSDictionary *dic=self.canTuiJianListArr[i];
+        for (NSDictionary *myDic in self.myBBSListArr) {
+            if ([myDic[@"id"] intValue]== [dic[@"id"] intValue]) {
+                [self.canTuiJianListArr removeObject:dic];
+                i--;
+            }
+        }
+    }
+
+}
+
+
+-(void)initexchangeTableV
+{
+    self.exchangeTableV = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, SCREEN_HEIGHT - 64) style:0];
+    self.exchangeTableV.dataSource = self;
+    self.exchangeTableV.delegate = self;
+    
+    
+    if (IOS7_OR_LATER) {
+        [self.exchangeTableV setSeparatorInset:UIEdgeInsetsZero];
+        
+    }
+    self.exchangeTableV.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.exchangeTableV];
+    
+    UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    self.exchangeTableV.tableFooterView = footView;
+    
+    
+    
+}
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+   
+    return self.bbsDataArray.count;
+  
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+   
+    return 82;
+}
+
+
+
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+{
+
+    return NO;
+}
+- (NSString*)tableView:(UITableView*)tableView
+titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath*)indexpath {
+    return @"退出";
+}
+- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return UITableViewCellEditingStyleDelete;
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath{
+    
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"BBSHomeCell";
+    BBSHomeCell *cell = (BBSHomeCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"BBSHomeCell" owner:self options:nil] lastObject];
+        
+        UIImageView *imgHot =[[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_WIDTH-73/2., 0, 73/2., 70/2.)];
+        [imgHot setImage:[UIImage imageNamed:[NSString stringWithFormat:@"BBS_isHot"]]];
+        imgHot.tag=1001;
+        imgHot.hidden=YES;
+        [cell addSubview:imgHot];
+        
+    }
+    
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.contentView.backgroundColor=[UIColor whiteColor];
+    
+    NSMutableArray *array=nil;
+    
+    array=self.bbsDataArray;
+    
+        
+    [cell configCellWithArray:array indexRow:(int)indexPath.row];
+    cell.delegate=self;
+    if([self.bbsDataFlagArr[indexPath.row] integerValue]==1)
+    {
+        cell.minBtn.hidden=NO;
+        cell.addBtn.hidden=YES;
+        
+        cell.accessoryView=cell.minBtn;
+        
+    }else{
+        cell.minBtn.hidden=YES;
+        cell.addBtn.hidden=NO;
+        
+        cell.accessoryView=cell.addBtn;
+    }
+    
+    
+    
+    // 是否最热
+    UIImageView *imgHot=(UIImageView *)[cell viewWithTag:1001];
+    if (array[indexPath.row][@"isHot"]) {
+        if ([array[indexPath.row][@"isHot"] intValue]==1) {
+            imgHot.hidden=NO;
+        }
+    }
+    
+    return cell;
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+    BBSHomeCell *cell=(BBSHomeCell *)[tableView cellForRowAtIndexPath:indexPath];
+    
+    
+    NSMutableArray *array=nil;
+   
+        array=self.bbsDataArray;//推荐版块
+    if (indexPath.row<self.bbsDataArray.count) {
+        BBSListViewController *controller = [[BBSListViewController alloc] initWithNibName:@"BBSListViewController" bundle:[NSBundle mainBundle]];
+        
+        
+        controller.forumId=array[indexPath.row][@"id"];
+        controller.forumImage=[cell.headImageView image];
+        controller.nameString=[array objectAtIndex:indexPath.row][@"title"];
+        controller.detailString=[array objectAtIndex:indexPath.row][@"description"];
+        controller.hidesBottomBarWhenPushed = YES;
+        controller.titleStr = [array objectAtIndex:indexPath.row][@"title"];
+        [self.navigationController pushViewController: controller animated:YES];
+     
+        
+    }
+ 
+    
+}
+#pragma mark - 添加我的版块
+-(void)addBtnClickWithIndexRow:(NSInteger )indexRow
+{
+    
+    // 添加到我的版块
+    [self.myBBSListArr addObject:self.bbsDataArray[indexRow]];
+    [[AppSet shareInstance] setMyBBSArray:self.myBBSListArr];
+    [[AppSet shareInstance] saveMyBBSData];
+    
+    [self.bbsDataFlagArr replaceObjectAtIndex:indexRow withObject:@"1"];
+    
+
+    [self.exchangeTableV reloadData];
+    
+    [ShareFunction showToast:@"添加成功"];
+}
+
+-(void)minBtnClickWithIndexRow:(NSInteger )indexRow
+{
+  
+    
+    
+    // 添加到我的版块
+    for (int i=0; i<self.myBBSListArr.count; i++) {
+        if ([self.myBBSListArr[i][@"id"] intValue] == [self.bbsDataArray[indexRow][@"id"] intValue])
+        {
+            [self.myBBSListArr removeObjectAtIndex:i];
+            break;
+        }
+    }
+    [[AppSet shareInstance] setMyBBSArray:self.myBBSListArr];
+    [[AppSet shareInstance] saveMyBBSData];
+    
+    [self.bbsDataFlagArr replaceObjectAtIndex:indexRow withObject:@"0"];
+    
+    
+    [self.exchangeTableV reloadData];
+    
+    [ShareFunction showToast:@"删除成功"];
+    
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+@end

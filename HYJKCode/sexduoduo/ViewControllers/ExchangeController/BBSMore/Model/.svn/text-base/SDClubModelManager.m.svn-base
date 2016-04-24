@@ -1,0 +1,119 @@
+//
+//  SDClubModelManager.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/11.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDClubModelManager.h"
+
+#import "ClassifyFileObj.h"
+
+@implementation SDClubModelManager
++ (instancetype)shareInstance
+{
+    static SDClubModelManager * sington = nil;
+    static dispatch_once_t p;
+    dispatch_once(&p, ^{
+        sington = [[SDClubModelManager alloc] init];
+        
+        
+        NSArray *array=[ClassifyFileObj readArrayWithPath:FILE_ALLBBSDataArrayClassify_path];
+        
+        if (array) {
+            sington.dataArray = [NSMutableArray arrayWithArray:array];
+        }
+    });
+    
+    return sington;
+}
+
+
+-(void)cacheDataArray
+{
+    [ClassifyFileObj writeToFileWithArray:self.dataArray andFilePath:FILE_ALLBBSDataArrayClassify_path];
+
+}
+
+
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+    self = [super init];
+    if (self) {
+        self.dataArray = [coder decodeObjectForKey:@"dataArray"];
+        self.countUserForJudgeChange = [coder decodeIntegerForKey:@"countUserForJudgeChange"];
+    }
+    return self;
+}
+
+-(void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:self.dataArray forKey:@"dataArray"];
+    [aCoder encodeInteger:self.countUserForJudgeChange forKey:@"countUserForJudgeChange"];
+}
+
+
+-(void)getDataBlock:(void(^)(void))successBlock errorBlock:(void(^)(void)) errorBlock
+{
+    // 获取数据
+    NSDictionary *params ;
+    if (ISLOGIN) {
+        params = @{@"userId":LUNTANUSERID};
+    }
+    
+    [AFHTTPClient getJSONPath:SDINTERFACE_appCategoryForumLIst httpHost:BBS_IP params:params success:^(id json) {
+        NSDictionary *responseData = [NSJSONSerialization JSONObjectWithData:json options:NSJSONReadingAllowFragments error:nil];
+        
+        NSArray *dataSourse = responseData[@"datasource"];
+        self.dataArray = [NSMutableArray array];
+        for (int index = 0; index < dataSourse.count; index ++) {
+            NSDictionary *dict = [dataSourse objectAtIndex:index];
+            ClubingModel *model = [ClubingModel clubingModelWith:dict];
+            [self.dataArray addObject:model];
+        }
+        
+        //缓存下来
+        [self cacheDataArray];
+        successBlock();
+    } fail:^{
+        errorBlock();
+    }];
+
+}
+
+
+
++(void)addForumWithId:(NSString *)forumId success:(void(^)(void))successBlock errorBlock:(void(^)(void))errorBlock
+{
+    // 添加到我的板块
+    NSDictionary *dic=@{@"userId":LUNTANUSERID,@"forumId":forumId};
+    [AFHTTPClient getJSONPath:SDINTERFACE_AddAttentionForum httpHost:BBS_IP params:dic success:^(id json) {
+        
+        NSDictionary *resultDic=[AFHTTPClient jsonTurnToDictionary:json];
+        NSLog(@"%@---添加版块",resultDic);
+        
+        successBlock();
+    } fail:^{
+        errorBlock();
+    }];
+}
++(void)deleteForumWithId:(NSString *)forumId success:(void(^)(void))successBlock errorBlock:(void(^)(void))errorBlock
+{
+    // 添加到我的板块
+    NSDictionary *dic=@{@"userId":LUNTANUSERID,@"forumId":forumId};
+    [AFHTTPClient getJSONPath:SDINTERFACE_CancelAttentionForum httpHost:BBS_IP params:dic success:^(id json) {
+        
+        NSDictionary *resultDic=[AFHTTPClient jsonTurnToDictionary:json];
+        
+        NSLog(@"%@---添加版块",resultDic);
+        
+        successBlock();
+        
+    } fail:^{
+        errorBlock();
+    }];
+
+}
+
+@end

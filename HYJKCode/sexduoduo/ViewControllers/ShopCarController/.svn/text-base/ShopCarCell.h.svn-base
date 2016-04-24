@@ -1,0 +1,35 @@
+//
+//  ShopCarCell.h
+//  sexduoduo
+//
+//  Created by Showm on 14-6-27.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface ShopCarCell : UITableViewCell
+@property (weak, nonatomic) IBOutlet UIView *numEditView;
+
+@property (weak, nonatomic) IBOutlet UIButton *plusBtn;
+
+@property (weak, nonatomic) IBOutlet UIButton *minusBtn;
+@property (weak, nonatomic) IBOutlet UIImageView *activityImg;
+
+@property (weak, nonatomic) IBOutlet UITextField *goodsNumField;
+@property (weak, nonatomic) IBOutlet UILabel *goodsTitleLab;
+@property (weak, nonatomic) IBOutlet UILabel *goodsColorLab;
+@property (weak, nonatomic) IBOutlet UILabel *goodsPriceLab;
+@property (weak, nonatomic) IBOutlet UILabel *goodsNumLab;
+
+@property (weak, nonatomic) IBOutlet UIImageView *goodsImgView;
+
+@property (weak, nonatomic) IBOutlet UIButton *selectBtn;
+
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *iconOffLine;
+
+
+
+@end

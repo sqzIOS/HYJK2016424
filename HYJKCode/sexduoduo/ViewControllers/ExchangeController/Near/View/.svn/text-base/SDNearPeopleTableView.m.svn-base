@@ -1,0 +1,85 @@
+//
+//  SDNearPeopleTableView.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDNearPeopleTableView.h"
+#import "SDNearPeopleTableViewCell.h"
+#import "SDNearPostTableViewCell.h"
+#import "SDUserCenterVC.h"
+//#import "SDNearPostModel.h"
+
+@implementation SDNearPeopleTableView
+
+- (instancetype)initWithFrame:(CGRect)frame style:(UITableViewStyle)style Controller:(UIViewController *)vc Type:(SDNearTableView)type{
+    
+    if (self = [super initWithFrame:frame style:style]) {
+        self.backgroundColor = colorWith05;
+        self.type = type;
+        self.mainVC = vc;
+        self.delegate = self;
+        self.dataSource = self;
+        self.separatorStyle = UITableViewCellSeparatorStyleNone;
+    }
+    return self;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+    
+   return self.dataArr.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+    
+    if (self.type == NearPeople) {
+        static NSString *identify = @"SDNearPeopleTableViewCell";
+        SDNearPeopleTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identify];
+        if (cell == nil) {
+            cell = [[SDNearPeopleTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identify];
+        }
+        SDNearPeopleModel *model = _dataArr[indexPath.row];
+        [cell theDataWith:model];
+        return cell;
+    } else if (self.type == NearPost) {
+        static NSString *identify = @"SDNearPostTableViewCell";
+        SDNearPostTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identify];
+        if (cell == nil) {
+            cell = [[SDNearPostTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identify];
+        }
+        SDNearPostModel *model = _dataArr[indexPath.row];
+        [cell theDataWith:model];
+        return cell;
+    }
+    return nil;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (self.type == NearPeople) {
+        SDNearPeopleModel *model = _dataArr[indexPath.row];
+        SDUserCenterVC *vc = [[SDUserCenterVC alloc] initWithType:FromOther UserId:model.userID];
+        [self.mainVC.navigationController pushViewController:vc animated:YES];
+    }else {
+        SDNearPostModel *model = _dataArr[indexPath.row];
+        BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+        controller.forumId= model.forumId;
+        controller.topicId= model.topicId;
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.mainVC.navigationController pushViewController:controller animated:YES];
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (self.type == NearPeople) {
+        return QZMake(100);
+    }
+    UITableViewCell *cell = [self tableView:tableView cellForRowAtIndexPath:indexPath];
+    if (cell == nil) {
+        return 0;
+    }
+    return cell.height;
+}
+
+@end

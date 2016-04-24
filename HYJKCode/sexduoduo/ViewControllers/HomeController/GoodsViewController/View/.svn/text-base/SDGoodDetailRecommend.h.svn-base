@@ -1,0 +1,20 @@
+//
+//  SDGoodDetailRecommend.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/28.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  推荐商品 或者 套餐组合
+
+#import <UIKit/UIKit.h>
+#import "GoodsDetailTwoViewController.h"
+@interface SDGoodDetailRecommend : UIView
+
+@property (nonatomic, assign) BOOL isGroup;//是否是套餐组合
+@property (nonatomic, strong) NSMutableArray *recommendArray;
+@property (nonatomic, strong) UIScrollView *scView;
+@property (nonatomic, assign) GoodsDetailTwoViewController * mainVC;
+-(instancetype)initWithFrame:(CGRect)frame withArray:(NSMutableArray *)array isGroup:(BOOL)yesOrNo;
+
+@end
+

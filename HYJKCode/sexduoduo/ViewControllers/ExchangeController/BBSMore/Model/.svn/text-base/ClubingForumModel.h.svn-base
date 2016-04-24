@@ -1,0 +1,28 @@
+//
+//  ClubingForumModel.h
+//  
+//
+//  Created by apple on 15/12/10.
+//
+//
+
+#import <Foundation/Foundation.h>
+
+@interface ClubingForumModel : NSObject<NSCoding>
+
+@property (nonatomic,copy) NSString *ID;
+@property (nonatomic,copy) NSString *logo;
+@property (nonatomic,copy) NSString *postToday;
+@property (nonatomic,copy) NSString *title;
+@property (nonatomic) BOOL associated;
+@property (nonatomic,copy) NSString *des;
+@property (nonatomic) BOOL isHot;
+@property (nonatomic,copy) NSString *url;
+@property (nonatomic) BOOL isShow;
+
+
+
++ (instancetype)clubingForumModelWithDict:(NSDictionary *)dict;
+
+
+@end

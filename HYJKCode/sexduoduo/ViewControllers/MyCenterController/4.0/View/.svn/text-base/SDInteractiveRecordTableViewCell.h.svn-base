@@ -1,0 +1,38 @@
+//
+//  SDInteractiveRecordTableViewCell.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "SDInteractiveRecordModel.h"
+#import "SDMessageToMeModel.h"
+
+@interface SDInteractiveRecordTableViewCell : UITableViewCell
+
+@property (nonatomic, strong) UIImageView *headImageView;
+
+@property (nonatomic, strong) UIImageView *sexImageView;
+
+@property (nonatomic, strong) UILabel *nickLab;
+
+@property (nonatomic, strong) UILabel *addressLab;
+
+@property (nonatomic, strong) UIImageView *levelImageView;
+
+@property (nonatomic, strong) UILabel *levelNameLab;
+
+@property (nonatomic, strong) UILabel *messageTimeLab;
+
+@property (nonatomic, assign) int type;
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier Type:(int)type;
+
+- (void)addTheDtaWith:(SDInteractiveRecordModel *)model;
+
+//私信
+- (void)addTheDtaWithType:(SDMessageToMeModel *)model;
+
+@end

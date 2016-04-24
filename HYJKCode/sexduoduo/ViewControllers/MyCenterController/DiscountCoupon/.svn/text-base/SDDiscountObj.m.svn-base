@@ -1,0 +1,70 @@
+//
+//  SDDiscountObj.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/26.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  
+
+#import "SDDiscountObj.h"
+
+@implementation SDDiscountObj
++ (instancetype)consultingWithDict:(NSDictionary *)dict{
+    return [[self alloc] initWithDict:dict];
+}
+- (instancetype)initWithDict:(NSDictionary *)dict{
+    if ((self = [super init]) && dict) {
+        id value;
+        value = dict[@"type"];
+        if(value) _type = value;
+        
+        value = dict[@"amount"];
+        if(value) _amount = value;
+        
+        value = dict[@"conditions"];
+        if(value) _conditions = value;
+        
+        value = dict[@"startDate"];
+        if(value && ![value isKindOfClass:[NSNull class]]) _startDate = [value longLongValue];
+        
+        value = dict[@"endDate"];
+        if(value&& ![value isKindOfClass:[NSNull class]]) _endDate = [value longLongValue];
+        
+        value = dict[@"isUsed"];
+        if(value) _isUsed = value;
+        
+        value = dict[@"memberCouponsId"];
+        if(value) _memberCouponsId = value;
+    }
+    return self;
+}
+
+-(instancetype)initWithModel:(SDDiscountObj *)model
+{
+    if ((self = [super init]) && model)
+    {
+        
+        _type = model.type;
+        
+        _amount = model.amount;
+        
+        _conditions = model.conditions;
+        
+        _startDate = model.startDate;
+        
+        _endDate = model.endDate;
+        
+        _isUsed = model.isUsed;
+        
+        _memberCouponsId = model.memberCouponsId;
+    }else
+    {
+        //测试数据
+        
+    }
+    
+    return self;
+}
+
+
+@end

@@ -1,0 +1,78 @@
+//
+//  BBSLevelRuleViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-11-20.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSLevelRuleViewController.h"
+
+@interface BBSLevelRuleViewController ()
+
+@end
+
+@implementation BBSLevelRuleViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+//    self.contentImageView.image=UIImageByName(@"BBS_levelRule");
+    
+    
+    UIScrollView *scView=[[UIScrollView alloc]initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y)];
+    [self.view addSubview:scView];
+    
+    UIImage *image=UIImageByName(@"BBS_levelRule");
+    
+    UIImageView *imageView=[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, image.size.height*SCREEN_WIDTH/image.size.width)];
+    imageView.image=image;
+    [scView addSubview:imageView];
+    scView.contentSize=CGSizeMake(SCREEN_WIDTH, image.size.height*SCREEN_WIDTH/image.size.width);
+    
+}
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"论坛经验值及积分规则"];
+    
+
+    
+}
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

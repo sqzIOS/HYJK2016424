@@ -1,0 +1,29 @@
+//
+//  PackageCombinationCell.h
+//  
+//
+//  Created by apple on 15/12/14.
+//
+//
+
+#import <UIKit/UIKit.h>
+
+@class SDGoodRecommendObj,PackageCombinationCell;
+
+@protocol PackageCombinationCellDelegate <NSObject>
+
+- (void)PackageCombinationCellChooseBtnClick:(PackageCombinationCell *)cell ;
+
+@end
+
+@interface PackageCombinationCell : UITableViewCell
+
+
+@property (nonatomic,strong) SDGoodRecommendObj *model;
+@property (nonatomic,weak) id<PackageCombinationCellDelegate> delegate;
+
+
++ (instancetype)packageCombinationCellInTableView:(UITableView *)tableView;
+
+
+@end

@@ -1,0 +1,32 @@
+//
+//  ToCommentViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-9-3.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  去评论
+
+#import <UIKit/UIKit.h>
+#import "ToCommentCell.h"
+#import "RatingView.h"
+
+@interface ToCommentViewController : UIViewController<UITextViewDelegate,UITableViewDataSource,UITableViewDelegate,UITextFieldDelegate,UITextViewDelegate,ToCommentCellDelegate>
+
+@property (strong, nonatomic) NSMutableArray *orderArray;//传递的参数 订单商品
+
+
+@property (strong, nonatomic) UITextView *commentTextView;
+@property (strong, nonatomic) UILabel *promptLab;
+@property (strong, nonatomic) UITableView *commentTableView;
+
+@property (strong, nonatomic) NSMutableArray *commentTextArray;//评价
+@property (strong, nonatomic) NSMutableArray *quantityArray;//商品质量评分
+@property (strong, nonatomic) NSMutableArray *attitudeArray;//服务态度评分
+@property (strong, nonatomic) NSMutableArray *speedArray;//发货速度分评分
+
+
+@property (weak, nonatomic) IBOutlet UIButton *sureBtn;
+
+@property (assign) BOOL isCanComment;
+
+@end

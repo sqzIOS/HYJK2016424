@@ -1,0 +1,43 @@
+//
+//  BrandStreetView.h
+//  sexduoduo
+//
+//  Created by dsz on 15-2-5.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@protocol BrandStreetViewProtocol <NSObject>
+
+-(void)brandStreetViewProtocolActionWithBrandId:(NSString *)brandId andTitle:(NSString *)title;
+
+@end
+
+@interface BrandStreetView : UIView
+
+
+@property (strong, nonatomic)  UIButton *leftBtn;
+
+@property (strong, nonatomic)  UIButton *rightBtn;
+
+@property (strong, nonatomic)  UIImageView *leftLine;
+
+@property (strong, nonatomic)  UIImageView *rightLine;
+
+@property (strong, nonatomic)  UIImageView *downLine;
+
+@property (strong, nonatomic)  UIImageView *upLine;
+
+@property (strong, nonatomic)  UIImageView *centerLine;
+
+
+
+@property (strong, nonatomic) NSString *leftBrandId;
+@property (strong, nonatomic) NSString *rightBrandId;
+@property (strong, nonatomic) NSString *leftTitle;
+@property (strong, nonatomic) NSString *rightTitle;
+
+@property (strong, nonatomic) id<BrandStreetViewProtocol>delegate;
+
+@end

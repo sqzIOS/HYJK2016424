@@ -1,0 +1,44 @@
+//
+//  SHDoctorInfo.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/13.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  医师类基类 
+
+#import <Foundation/Foundation.h>
+
+@interface SHDoctorInfo : NSObject
+
+
+//---------------
+//该三个主要的子类 必须 实现且赋值 
+//---------------
+
+//医师 头像
+@property (nonatomic,strong) NSString *iconStr;
+//医师 名字
+@property (nonatomic,strong) NSString *nameStr;
+//医师 id
+@property (nonatomic,strong) NSString *idStr;
+//医师 username 手机号注册
+@property (nonatomic,strong) NSString *userName;
+
+//---------------
+//下面几个可能由于返回参数名称的变化 和 根据界面的不同而重新定义
+//心理咨询 和 医师列表 可以用该表
+//---------------
+//医师 职位
+@property (nonatomic,strong) NSString *postStr;
+//医师 地址 / 所在医院
+@property (nonatomic,strong) NSString *addressStr;
+//医师 简介
+@property (nonatomic,strong) NSString *contentStr;
+//医师 评分
+@property (nonatomic,strong) NSString *scoreStr;
+//距离
+@property (nonatomic, copy) NSString *distance;
+
+
+
+@end

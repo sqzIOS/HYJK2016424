@@ -1,0 +1,33 @@
+//
+//  ClasifyTwoVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+typedef enum
+{
+    FirstPage=0,
+    SecondPage,
+} ClasifyType;
+
+@interface ClasifyTwoVC : UIViewController
+{
+    UIView *toSearchBgView;
+}
+@property (strong, nonatomic) UIView *topSearchView;
+@property (strong, nonatomic) UITextField *searchField;
+
+@property (strong, nonatomic) UIScrollView *mainScView;
+
+
+@property (strong,nonatomic) NSMutableArray *firClassifyArry;
+@property (strong,nonatomic) NSMutableArray *shopDataArray;
+
+@property (strong,nonatomic) NSDictionary *adDic;
+@property (strong,nonatomic) NSMutableArray *flagArray;//热门标签
+@property (nonatomic, assign) ClasifyType type;
+
+@end

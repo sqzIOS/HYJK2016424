@@ -1,0 +1,21 @@
+//
+//  AddrListViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-8-22.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  地址列表 订单-选择地址
+
+#import <UIKit/UIKit.h>
+#import "AddrManageController.h"
+#import "AddrCell.h"
+
+@interface AddrListViewController : UIViewController<UITableViewDataSource,UITableViewDelegate>
+{
+    int currentPage;
+}
+
+@property (strong, nonatomic) NSMutableArray *addrArray;
+@property (strong, nonatomic) UITableView *addrTableView;
+
+@end

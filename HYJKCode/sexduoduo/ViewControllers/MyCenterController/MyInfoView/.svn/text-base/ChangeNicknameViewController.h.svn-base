@@ -1,0 +1,20 @@
+//
+//  ChangeNicknameViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-9-18.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface ChangeNicknameViewController : UIViewController
+@property (strong, nonatomic) IBOutlet UIView *changeNicknameView;
+@property (strong, nonatomic) UIActivityIndicatorView *indicator;
+@property (strong, nonatomic) UILabel *promptLab;
+@property (strong, nonatomic) IBOutlet UILabel *nicknameLab;
+@property (strong, nonatomic) IBOutlet UITextField *nicknameTextField;
+@property (strong, nonatomic) IBOutlet UIButton *changeNicknameBtn;
+
+
+@end

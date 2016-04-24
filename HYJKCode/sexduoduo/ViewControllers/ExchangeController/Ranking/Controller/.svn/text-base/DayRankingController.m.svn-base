@@ -1,0 +1,103 @@
+//
+//  RankingController.m
+//  
+//
+//  Created by sqz on 15/12/1.
+//
+//
+
+#import "DayRankingController.h"
+#import "ShareFunction.h"
+#import "RankingTopView.h"
+#import "RankingCell.h"
+#import "RankingModel.h"
+#import "RankingTopView.h"
+#import "MJRefresh.h"
+#import "UIView+Extend.h"
+#import "UIImageView+WebCache.h"
+
+
+
+@interface DayRankingController ()
+
+
+@property (nonatomic,weak) DayRankingTopView *topView;
+
+@end
+
+@implementation DayRankingController
+
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    // 请求参数
+    self.params = [NSMutableDictionary dictionaryWithDictionary:@{@"pageSize":@"10",
+                                                                  @"standingsType":@"day",
+                                                                  }];
+    
+    // 发送请求
+    [self.tableView headerBeginRefreshing];
+    
+       self.tableView.tableFooterView.alpha = 0;
+}
+
+- (void)setTop
+{
+    DayRankingTopView *topView = [DayRankingTopView alloc];
+    topView.bgImage = self.bgImage;
+    topView.titleImage = self.titleImage;
+    self.topView = topView;
+    self.tableView.tableHeaderView = [self.topView init];
+    self.topView.hidden = YES;
+    [self.tableView reloadData];
+}
+
+- (void)setInfo
+{
+    if (self.dataArry.count > 1) {
+        RankingModel *model = self.dataArry[0];
+        [self.topView setInfoWithModel:model byRanking:1];
+    }
+    
+    if (self.dataArry.count > 2) {
+        RankingModel *model = self.dataArry[1];
+        [self.topView setInfoWithModel:model byRanking:2];
+    }
+    
+    if (self.dataArry.count > 3) {
+        RankingModel *model = self.dataArry[2];
+        [self.topView setInfoWithModel:model byRanking:3];
+    }
+}
+
+#pragma mark - tableViewDateSourse
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    if (self.reload) {
+        [self setInfo];
+    }
+    return 1;
+}
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.dataArry.count - 3;
+    
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    self.tipLabel.hidden = YES;
+    self.topView.hidden = NO;
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleSingleLine;
+    RankingModel *model = self.dataArry[indexPath.row + 3];
+    RankingCell *cell = [RankingCell rankingCellWithModel:model inTableView:tableView];
+    return cell;
+}
+
+
+
+@end

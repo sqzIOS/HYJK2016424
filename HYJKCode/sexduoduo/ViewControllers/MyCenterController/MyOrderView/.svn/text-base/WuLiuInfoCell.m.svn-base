@@ -1,0 +1,45 @@
+//
+//  WuLiuInfoCell.m
+//  sexduoduo
+//
+//  Created by sqz on 14-12-15.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "WuLiuInfoCell.h"
+
+@implementation WuLiuInfoCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row
+{
+    
+    self.detailTextLab.text=arry[row][@"context"];
+    NSString *timeStr=arry[row][@"time"];
+    NSArray *timeArr=[timeStr componentsSeparatedByString:@" "];
+    if ([timeArr isKindOfClass:[NSArray class]] && timeArr.count>1) {
+       self.timeLab1.text=timeArr[0];
+       self.timeLab2.text=[timeArr[1] substringToIndex:5];
+    }
+    
+    if (row==0) {
+        self.upImage.hidden=YES;
+    }else if (row==arry.count-1)
+    {
+        self.downImage.hidden=YES;
+    }
+}
+
+
+@end

@@ -1,0 +1,47 @@
+//
+//  SDGoodsModel.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface SDGoodsModel : NSObject
+
+@property (nonatomic, copy) NSString *goodsName;    //商品名称
+
+@property (nonatomic, copy) NSString *goodsId;      //商品id
+
+@property (nonatomic, copy) NSString *goodsCategoryId;  //商品分类id
+
+@property (nonatomic, copy) NSString *goodsSn;      //商品序列号
+
+@property (nonatomic, copy) NSString *goods_price;  //商品价格
+
+@property (nonatomic, copy) NSString *goodtype_id;  //商品类别id
+
+@property (nonatomic, copy) NSString *limitNum;     //限时抢购数量
+
+@property (nonatomic, copy) NSString *marketPrice;  //市场价
+
+@property (nonatomic, copy) NSString *metaDescription;  //商品描述
+
+@property (nonatomic, copy) NSString *bigGoodsImagePath;     //大图
+
+@property (nonatomic, copy) NSString *smallGoodsImagePath;   //小图
+
+@property (nonatomic, copy) NSString *sourceImagePath;
+
+@property (nonatomic, copy) NSString *thumbnailGoodsImagePath;
+
+@property (nonatomic, copy) NSString *salesVolume;      //销售总量
+
+@property (nonatomic, copy) NSString *sellNum;          //售出数量
+
+@property (nonatomic, copy) NSString *currentStr;       //当前抢购时段  "即将开场"/"抢购进行中"
+
+- (instancetype)initWithDict:(NSDictionary  *)dict;
+
+@end

@@ -1,0 +1,35 @@
+//
+//  SRReportVC.h
+//  sexduoduo
+//
+//  Created by ly1992 on 15/6/3.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "MyBBSListViewController.h"
+
+typedef enum{
+    ReportTypeSexMan  = 0,  //男
+    ReportTypeSexWomen     //女
+}ReportTypeSex;
+
+//外部入口
+typedef enum{
+    ExternalTypeRecord  = 0,  //纪录入口
+    ExternalTypeDairy         //日记入口
+}ExternalFromType;
+
+@interface SRReportVC : UIViewController<UITableViewDelegate,UITableViewDataSource>
+{
+    UIButton *musicBtn;
+}
+@property (weak, nonatomic) IBOutlet UITableView *tableView;
+
+@property (strong,nonatomic) NSDictionary *dict;
+
+@property (assign,nonatomic) ReportTypeSex type;
+@property (assign,nonatomic) ExternalFromType fromType;
++(void)gotoMySelf:(id)pvc withDict:(NSDictionary*)dict withType:(ReportTypeSex)type withForm:(ExternalFromType)fromType;
+
+@end

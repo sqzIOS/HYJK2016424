@@ -1,0 +1,25 @@
+//
+//  SystemMessageModel.h
+//  
+//
+//  Created by apple on 15/12/7.
+//
+//
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+
+@interface SystemMessageModel : NSObject
+
+@property (nonatomic,copy) NSString *content;
+@property (nonatomic,copy) NSString *ID;
+@property (nonatomic,copy) NSString *title;
+@property (nonatomic,copy) NSArray *abstracts;
+@property (nonatomic,copy) NSString *toUser;
+@property (nonatomic,copy) NSString *scene;
+@property (nonatomic) long releaseTime;
+@property (nonatomic,copy) NSString *type;
+@property (nonatomic) BOOL isRead;
+
++ (instancetype)systemMessageModelWithDict:(NSDictionary *)dict;
+
+@end

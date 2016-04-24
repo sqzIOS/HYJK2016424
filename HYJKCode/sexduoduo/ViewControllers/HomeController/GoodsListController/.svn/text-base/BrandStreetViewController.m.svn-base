@@ -1,0 +1,248 @@
+//
+//  BrandStreetViewController.m
+//  sexduoduo
+//
+//  Created by dsz on 15-1-27.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "BrandStreetViewController.h"
+#import "BrandStreetView.h"
+
+@interface BrandStreetViewController ()<BrandStreetViewProtocol>
+
+@end
+
+@implementation BrandStreetViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    // 导航栏
+    [self setTopNavView];
+    
+    [self initScView];
+    
+    
+    // noNetworkView 1
+    self.noNetworkView =(NoNetworkView *)[[[NSBundle mainBundle] loadNibNamed:@"NoNetworkView" owner:self options:nil] lastObject];
+    self.noNetworkView.delegate=self;
+    self.noNetworkView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH,SCREEN_HEIGHT);
+    [self.view addSubview:self.noNetworkView];
+    
+    
+    
+    self.dataArray =[[NSMutableArray alloc]init];
+    [self requestBrandStreetData ];
+}
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"品牌街"];
+
+    
+    
+}
+//返回
+-(void)toBackView
+{
+    if ([self.navigationController respondsToSelector:@selector(popViewControllerAnimated:)]) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+    
+}
+
+-(void)formatScView
+{
+    self.scView.contentSize=CGSizeMake(SCREEN_WIDTH, MAKEOF5(1618));
+    
+    CGFloat scViewContentHeight= MAKEOF5(20);
+    
+    
+    
+    NSArray *allBrandArr=[[self.dataArray firstObject] allValues];
+    
+    //所有类型
+    for (int i=0; i<allBrandArr.count; i++) {
+        
+        NSArray *subBrandArray=allBrandArr[i];
+        
+        //标题头
+        UIImageView *imageView=FastCreatImageView(CGRectMake(MAKEOF5(10), scViewContentHeight, SCREEN_WIDTH-MAKEOF5(20),MAKEOF5(62)), nil);
+        [self.scView addSubview:imageView];
+        
+        if (judgeUrlIsHave([subBrandArray lastObject], @"newLogoPath")) {
+            [imageView sd_setImageWithURL:[NSURL URLWithString:[[subBrandArray lastObject]  objectForKey:@"newLogoPath"]] placeholderImage:UIImageByName(@"brandStreetTop")];
+        }else
+        {
+            [imageView sd_setImageWithURL:[PublicMethod imgWithUrl:[[subBrandArray lastObject]  objectForKey:@"logoPath"]] placeholderImage:UIImageByName(@"brandStreetTop")];
+        }
+        
+        
+        NSInteger indexCount=0;
+        scViewContentHeight +=MAKEOF5(62);
+        // 各分类
+        NSInteger numCount=subBrandArray.count-1;//最后一个图片是 区的 top
+        while (indexCount<numCount) {
+            
+            if (indexCount%2==0) {
+                
+
+                BrandStreetView *view=[[BrandStreetView alloc] initWithFrame:CGRectMake(0, scViewContentHeight, SCREEN_WIDTH,MAKEOF5(110))];
+
+                [self.scView addSubview:view];
+                view.delegate=self;
+                
+                if (indexCount!=0) {
+                    view.upLine.hidden = YES;
+                }
+                
+                if (judgeUrlIsHave(subBrandArray[indexCount], @"newLogoPath")) {
+                      [view.leftBtn sd_setBackgroundImageWithURL:[NSURL URLWithString:subBrandArray[indexCount][@"newLogoPath"]] forState:0 placeholderImage:UIImageByName(@"bg.png")];
+                }else
+                {
+                      [view.leftBtn sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:subBrandArray[indexCount][@"logoPath"]] forState:0 placeholderImage:UIImageByName(@"bg.png")];
+                }
+              
+                
+                
+                view.leftBrandId=[NSString stringWithFormat:@"%@",subBrandArray[indexCount][@"brandId"]];
+                view.leftBtn.hidden=NO;
+                view.leftTitle=subBrandArray[indexCount][@"name"];
+                
+                if (indexCount+1<numCount) {
+                    
+                    if (judgeUrlIsHave(subBrandArray[indexCount+1], @"newLogoPath")) {
+                          [view.rightBtn sd_setBackgroundImageWithURL:[NSURL URLWithString:subBrandArray[indexCount+1][@"newLogoPath"]] forState:0 placeholderImage:UIImageByName(@"bg.png")];
+                    }else
+                    {
+                          [view.rightBtn sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:subBrandArray[indexCount+1][@"logoPath"]] forState:0 placeholderImage:UIImageByName(@"bg.png")];
+                    }
+                    
+                  
+                    view.rightBrandId=[NSString stringWithFormat:@"%@",subBrandArray[indexCount+1][@"brandId"]];
+                    view.rightBtn.hidden=NO;
+                    view.rightTitle=subBrandArray[indexCount+1][@"name"];
+                    
+                }
+                scViewContentHeight+=MAKEOF5(110);
+                self.scView.contentSize=CGSizeMake(SCREEN_WIDTH, scViewContentHeight);
+            }
+            indexCount++;
+        }
+            
+        scViewContentHeight +=MAKEOF5(20);
+    }
+    
+    scViewContentHeight+=MAKEOF5(20);
+    self.scView.contentSize=CGSizeMake(SCREEN_WIDTH, scViewContentHeight);
+    
+    
+   
+}
+
+-(void)initScView
+{
+    
+    
+    [self.view addSubview:self.scView];
+    
+    self.scView.frame=CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y);
+    
+}
+
+
+-(void)brandStreetViewProtocolActionWithBrandId:(NSString *)brandId andTitle:(NSString *)title
+{
+    NSLog(@"点击 id=%@",brandId);
+    
+    GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+    ctrVc.hidesBottomBarWhenPushed = YES;
+    ctrVc.disPlayOne=YES;
+    ctrVc.classifyStr = brandId;
+    ctrVc.titleStr = title;
+    ctrVc.requestType = brandStreet;
+    [self.navigationController pushViewController:ctrVc animated:YES];
+}
+
+
+-(void)requestBrandStreetData
+{
+    // 分类
+    NSDictionary *params = [[NSDictionary alloc]init];
+    params = @{@"showAdress":@"8"};
+    
+    // noNetworkView 2.1
+    self.noNetworkView.noNetView.hidden = YES;
+    self.noNetworkView.indicator.hidden = NO;
+    [self.noNetworkView.indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    [self.noNetworkView.indicator startAnimating];
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestBrandStreetWithDic:params completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray品牌街分类及商品-->%@",responseDic);
+        NSLog(@"responseArray品牌街分类及商品");
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            [self.dataArray removeAllObjects];
+            [self.dataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            [self formatScView];
+//
+//            [self setGoodsViewData:self.homeGoodsArray];
+        }
+        
+        // noNetworkView 2.2
+        [self.noNetworkView.indicator stopAnimating];
+        [self.noNetworkView removeFromSuperview];
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        //        self.homeNewDataArray = [NSMutableArray arrayWithArray:[[AppSet shareInstance ] homeNewDataArray]];
+        //
+        //        [self setGoodsViewData:self.homeNewDataArray andType:1];
+        // noNetworkView 2.3
+        [self.noNetworkView.indicator stopAnimating];
+        self.noNetworkView.indicator.hidden = YES;
+        self.noNetworkView.noNetView.hidden = NO;
+    }];
+    
+}
+
+#pragma mark 重新加载 
+// noNetworkView 3
+-(void)noNetworkViewRefreshBtnClick
+{
+    [self requestBrandStreetData];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

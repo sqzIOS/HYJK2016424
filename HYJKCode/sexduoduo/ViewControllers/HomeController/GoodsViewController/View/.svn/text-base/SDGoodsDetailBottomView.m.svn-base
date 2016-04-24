@@ -1,0 +1,91 @@
+//
+//  SDGoodsDetailBottomView.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDGoodsDetailBottomView.h"
+
+@implementation SDGoodsDetailBottomView
+
+
+-(instancetype)initWithFrame:(CGRect)frame
+{
+    if (self =[super initWithFrame:frame]) {
+        
+        
+        UIImageView *bg=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, self.height)];
+        bg.backgroundColor = WHITE_COLOR;
+        bg.userInteractionEnabled = YES;
+        [self addSubview:bg];
+        
+        
+        
+        UIImageView *phoneImage=[[UIImageView alloc] initWithFrame:CGRectMake(MAKEOF5(18), MAKEOF5(-13), MAKEOF5(66), MAKEOF5(66))];
+        phoneImage.image = UIImageByName(@"goodDetailTel.png");
+        [bg addSubview:phoneImage];
+        
+        UILabel *nameLab = FastCreatLabel(CGRectMake(MAKEOF5(19), MAKEOF5(28), MAKEOF5(65), MAKEOF5(21)), BLACK_COLOR, fontWithSize(11), CLEAR_COLOR, NSTextAlignmentCenter);
+        nameLab.text = @"联系客服";
+        [bg addSubview:nameLab];
+        
+        UIButton *btn0 = FastCreatButton(CGRectMake(0 , 0 , MAKEOF5(106), bg.height), @"", CLEAR_COLOR, CLEAR_COLOR, nil, nil);
+        [btn0 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        btn0.tag = 1000;
+        [self addSubview:btn0];
+        
+        UIButton *btn1 = FastCreatButton(CGRectMake(MAKEOF5(108), 0 , MAKEOF5(106),  bg.height), @"加入购物车",NAV_MoreBg_COLOR , WHITE_COLOR, nil, nil);
+        [btn1.titleLabel setFont:fontWithSize(14)];
+        btn1.tag = 1001;
+        [btn1 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+
+        [self addSubview:btn1];
+        
+        UIButton *btn2 = FastCreatButton(CGRectMake(MAKEOF5(214), 0 , MAKEOF5(106), bg.height), @"立即购买", NAV_RED_COLOR, WHITE_COLOR, nil, nil);
+        [btn2 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [btn2.titleLabel setFont:fontWithSize(14)];
+        btn2.tag = 1002;
+        [self addSubview:btn2];
+        
+        
+        
+    }
+    
+    return self;
+}
+
+-(void)btnClick:(UIButton *)sender
+{
+    switch (sender.tag) {
+        case 1000:
+        {
+            [self.mainVC toContactAction:nil];
+        }
+            break;
+        case 1001:
+        {
+            [self.mainVC toBuy:nil];
+        }
+            break;
+        case 1002:
+        {
+            [self.mainVC toBuyNowAction:nil];
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

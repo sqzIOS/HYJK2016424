@@ -1,0 +1,40 @@
+//
+//  JiFenShopCell.h
+//  sexduoduo
+//
+//  Created by sqz on 14-12-2.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+@protocol JiFenShopCellDelegate
+
+- (void)goodsBtnClick:(NSUInteger)row;
+
+
+@end
+
+@interface JiFenShopCell : UITableViewCell
+@property (weak, nonatomic) IBOutlet UIButton *leftBtn;
+@property (weak, nonatomic) IBOutlet UIButton *rightBtn;
+
+@property (weak, nonatomic) IBOutlet UIImageView *leftImg;
+@property (weak, nonatomic) IBOutlet UIImageView *rightImg;
+@property (weak, nonatomic) IBOutlet UILabel *leftPrice;
+@property (weak, nonatomic) IBOutlet UILabel *rightPrice;
+@property (weak, nonatomic) IBOutlet UILabel *titleLeft;
+@property (weak, nonatomic) IBOutlet UILabel *titleRight;
+@property (weak, nonatomic) IBOutlet UILabel *salesNumLeft;
+@property (weak, nonatomic) IBOutlet UILabel *salesNumRight;
+
+@property (strong, nonatomic) IBOutlet UIImageView *leftDuoBi;
+
+@property (strong, nonatomic) IBOutlet UIImageView *rightDuoBi;
+
+
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row;
+
+@property (nonatomic, assign) id <JiFenShopCellDelegate> delegate;
+
+@end

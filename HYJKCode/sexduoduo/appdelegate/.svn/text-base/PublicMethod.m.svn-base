@@ -1,0 +1,867 @@
+//
+//  PublicMethod.m
+//  sexduoduo
+//
+//  Created by Showm on 14-7-21.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "PublicMethod.h"
+#import "TFHpple.h"
+#import "RegexKitLite.h"
+#import <CoreText/CoreText.h>
+
+@implementation PublicMethod
+
+//如果换7牛 该方法要换
++(NSURL*)imgWithUrl:(NSString *)urlStr
+{
+    
+    NSString *str =nil;
+    
+    if (![urlStr isKindOfClass:[NSNull class]] && [urlStr hasPrefix:@"http"]) {
+        str = urlStr;
+    }else
+    {
+        if (shopPicUseIp) {
+            str = [NSString stringWithFormat:@"http://%@/shopxx%@",SHOPIP1,urlStr];
+        } else
+            str = [NSString stringWithFormat:@"http://%@/shopxx%@",SHOPIP,urlStr];
+
+    }
+    
+    return [NSURL URLWithString:str];
+}
+
++(NSString*)imgStrWithUrl:(NSString *)urlStr
+{
+    
+    if (![urlStr isKindOfClass:[NSNull class]] && [urlStr hasPrefix:@"http"]) {
+        return urlStr;
+    }
+    
+    NSString *str =nil;
+    if (shopPicUseIp) {
+        str = [NSString stringWithFormat:@"http://%@/shopxx%@",SHOPIP1,urlStr];
+    } else
+        str = [NSString stringWithFormat:@"http://%@/shopxx%@",SHOPIP,urlStr];
+    
+    
+    
+    return str;
+}
+
+//如果换7牛 该方法要换
++(NSURL*)imgWithShopXXUrl:(NSString *)urlStr
+{
+    
+    NSString *str =nil;
+    
+    if (![urlStr isKindOfClass:[NSNull class]] && [urlStr hasPrefix:@"http"]) {
+        str = urlStr;
+    }else
+    {
+        if (shopPicUseIp) {
+            str = [NSString stringWithFormat:@"http://%@/%@",SHOPIP1,urlStr];
+        } else
+            str = [NSString stringWithFormat:@"http://%@/%@",SHOPIP,urlStr];
+    }
+    
+    
+    
+    return [NSURL URLWithString:str];
+}
+
++(NSString*)imgStrWithShopXXUrl:(NSString *)urlStr
+{
+    if (![urlStr isKindOfClass:[NSNull class]] && [urlStr hasPrefix:@"http"]) {
+        return urlStr;
+    }
+    
+    NSString *str =nil;
+    if (shopPicUseIp) {
+        str = [NSString stringWithFormat:@"http://%@/%@",SHOPIP1,urlStr];
+    } else
+        str = [NSString stringWithFormat:@"http://%@/%@",SHOPIP,urlStr];
+    
+    
+    return str;
+}
+
+// 判断是否含有换成7牛的 全拼参数路径
++(BOOL)judgeDic:(NSDictionary *)dic withImageUrlStr:(NSString *)str
+{
+    if (dic[str] &&  ![dic[str] isKindOfClass:[NSNull class]] && [dic[str] length]>6) {
+        return YES;
+    }else return NO;
+}
+//论坛相关 由html字符串获得img的src 数组
++(NSMutableArray *)getImgArrFromHtmlStr:(NSString *)string
+{
+    //抓取图片地址
+    TFHpple *xpathparser=[[TFHpple alloc]initWithHTMLData:[string dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    NSArray *array1 = [xpathparser
+                       searchWithXPathQuery:@"//img"];
+    
+    NSMutableArray *imageArr=[[NSMutableArray alloc]init];
+    for (TFHppleElement *element in array1) {
+        NSDictionary *attributesDic=[element attributes];
+        NSString *url=[attributesDic objectForKey:@"src"];
+        if (url) {
+            [imageArr addObject:url];
+        }
+        
+    }
+    
+    return imageArr;
+}
+//清除html标签
++ (NSString *)clearHtmlTag:(NSString *)text
+{
+    NSString *str = [NSString stringWithFormat:@"%@", text];
+    NSString *regEx = @"<([^>]*)>";
+    str = [str stringByReplacingOccurrencesOfString:@"<br>" withString:@"\n"];
+    str = [str stringByReplacingOccurrencesOfString:@"<br/>" withString:@"\n"];
+    str = [str stringByReplacingOccurrencesOfRegex:regEx withString:@""];
+    str = [str stringByReplacingOccurrencesOfString:@"&nbsp;" withString:@" "];//网页的空格占位符
+    str = [str stringByReplacingOccurrencesOfString:@"&quot;" withString:@"\""];//"
+    return str;
+}
+
+// 距离凌晨24点的时间
++(int )timeDistance24
+{
+    int timeDictance=24*60*60;
+    
+    NSDateFormatter*date=[[NSDateFormatter alloc] init];
+    [date setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
+    NSString *dateStr=[date  stringFromDate:dat];
+    
+    NSArray*array = [dateStr componentsSeparatedByString:@" "];
+    
+    NSArray * array2=[array[1] componentsSeparatedByString:@":"];
+    NSLog(@"时间=%@ %@ %@ ",array2[0],array2[1],array2[2]);
+
+    timeDictance = 24*60*60- [array2[0] intValue]*60*60 - [array2[1] intValue]*60 -[array2[2] intValue];
+    return timeDictance;
+}
+// 化简时间  参数格式 yyyy-MM-dd HH:mm:ss
++ (NSString*)intervalSinceNow: (NSString*) theDate
+{
+    
+    NSDateFormatter*date=[[NSDateFormatter alloc] init];
+    [date setDateFormat:@"yyyy-MM-dd HH:mm:ss"];
+    NSDate*d=[date dateFromString:theDate];
+    NSTimeInterval late=[d timeIntervalSince1970]*1;
+    NSDate* dat = [NSDate dateWithTimeIntervalSinceNow:0];
+    NSTimeInterval now=[dat timeIntervalSince1970]*1;
+    NSString*timeString=@"";
+    NSTimeInterval cha=now-late;
+    //发表在一小时之内
+    if(cha/3600<1) {
+        if(cha/60<1) {
+            timeString = @"1";
+        }
+        else
+        {
+            timeString = [NSString stringWithFormat:@"%f", cha/60];
+            timeString = [timeString substringToIndex:timeString.length-7];
+        }
+        
+        timeString=[NSString stringWithFormat:@"%@分钟前", timeString];
+    }
+    //在一小时以上24小以内
+    else if(cha/3600>1&&cha/86400<1) {
+        timeString = [NSString stringWithFormat:@"%f", cha/3600];
+        timeString = [timeString substringToIndex:timeString.length-7];
+        timeString=[NSString stringWithFormat:@"%@小时前", timeString];
+    }
+    //发表在24以上10天以内
+    else if(cha/86400>1&&cha/864000<1)
+    {
+        timeString = [NSString stringWithFormat:@"%f", cha/86400];
+        timeString = [timeString substringToIndex:timeString.length-7];
+        timeString=[NSString stringWithFormat:@"%@天前", timeString];
+    }
+    //发表时间大于10天 显示几月-几号 eg：11-11
+    else
+    {
+        //        timeString = [NSString stringWithFormat:@"%d-%"]
+        NSArray*array = [theDate componentsSeparatedByString:@" "];
+        //        return [array objectAtIndex:0];
+        timeString = [array objectAtIndex:0];//年月日
+//        timeString = [timeString substringWithRange:NSMakeRange(5, [timeString length]-5)];//月日
+    }
+    return timeString;
+}
+
+
+//论坛帖子的图片 路径
++(NSURL *)bbsImgURlWithStr:(NSString *)urlStr
+{
+    NSString *str =nil;
+    if (lunTanPicUseIp) {
+        str = LUNTANIP1;
+    } else
+        str = LUNTANIP;
+    
+    
+    NSString *url = [NSString stringWithFormat:@"http://%@%@",str,urlStr];
+    return [NSURL URLWithString:url];
+}
++(NSURL *)bbsImgURlAndroidWithStr:(NSString *)urlStr
+{
+    NSString *str =nil;
+    if (lunTanPicUseIp) {
+        str = LUNTANIP1;
+    } else
+        str = LUNTANIP;
+    
+    NSString *url = [NSString stringWithFormat:@"http://%@/%@/%@",str,BBS,urlStr];
+    return [NSURL URLWithString:url];
+}
+    
+//论坛列表 处理下载的数据for 安卓接口（html 标签后台已经解析好的接口）
++(void)formatRequestDataForAndroid:(NSArray *)dataSource toArray:(NSMutableArray *)toArray
+{
+    for (NSDictionary *tempDic in dataSource) {
+        NSMutableDictionary *dic=[[NSMutableDictionary alloc]init];
+        //用户
+        NSString *user=[NSString stringWithFormat:@"%@",tempDic[@"username"]];
+        [dic setObject:user forKey:@"username"];
+        
+        if (tempDic[@"nickname"] && ![tempDic[@"nickname"] isKindOfClass:[NSNull class]]) {
+            NSString *nickname=[NSString stringWithFormat:@"%@",tempDic[@"nickname"]];
+            [dic setObject:nickname forKey:@"nickname"];
+        }
+        
+        // 是否匿名 1匿名
+        if (tempDic[@"isShowName"] && ![tempDic[@"isShowName"] isKindOfClass:[NSNull class]])
+        {
+            NSString *nickname=[NSString stringWithFormat:@"%@",tempDic[@"isShowName"]];
+            [dic setObject:nickname forKey:@"isShowName"];
+        }
+        
+        // 审核状态
+        if (tempDic[@"status"] && ![tempDic[@"status"] isKindOfClass:[NSNull class]])
+        {
+            NSString *status=[NSString stringWithFormat:@"%@",tempDic[@"status"]];
+            [dic setObject:status forKey:@"status"];
+        }
+        
+        // 经验级别
+        if (tempDic[@"groupId"] && ![tempDic[@"groupId"] isKindOfClass:[NSNull class]]) {
+            NSString *groupId=[NSString stringWithFormat:@"%@",tempDic[@"groupId"]];
+            [dic setObject:groupId forKey:@"groupId"];
+        }
+        
+        // 级别名称
+        if (tempDic[@"groupName"] && ![tempDic[@"groupName"] isKindOfClass:[NSNull class]]) {
+            NSString *groupName=[NSString stringWithFormat:@"%@",tempDic[@"groupName"]];
+            [dic setObject:groupName forKey:@"groupName"];
+        }
+        // 是否有版主回复
+        if (tempDic[@"moderatorReply"] && ![tempDic[@"moderatorReply"] isKindOfClass:[NSNull class]]) {
+            NSString *moderatorReply=[NSString stringWithFormat:@"%@",tempDic[@"moderatorReply"]];
+            [dic setObject:moderatorReply forKey:@"moderatorReply"];
+        }
+        
+        // 是否有版主回复
+        if (tempDic[@"indexCount"] && ![tempDic[@"indexCount"] isKindOfClass:[NSNull class]]) {
+            NSString *indexCount=[NSString stringWithFormat:@"%@",tempDic[@"indexCount"]];
+            [dic setObject:indexCount forKey:@"indexCount"];
+        }
+        
+        
+        //头像2
+        NSString *headUrl2=[NSString stringWithFormat:@"%@",tempDic[@"avatarUrl"]];
+        [dic setObject:headUrl2 forKey:@"headImage"];
+        
+        NSString *createTime=[NSString stringWithFormat:@"%@",tempDic[@"createTime"]];
+        [dic setObject:createTime forKey:@"createTime"];
+        
+        if (tempDic[@"lastTime"]) {
+            NSString *lastTime=[NSString stringWithFormat:@"%@",tempDic[@"lastTime"]];
+            [dic setObject:lastTime forKey:@"lastTime"];
+        }
+        
+        NSString *title=[NSString stringWithFormat:@"%@",tempDic[@"title"]];
+        [dic setObject:title forKey:@"title"];
+        
+        NSString *content=[NSString stringWithFormat:@"%@",tempDic[@"content"]];
+        [dic setObject:content forKey:@"content"];
+        
+        NSString *replyCount=[NSString stringWithFormat:@"%@",tempDic[@"replyCount"]];
+        [dic setObject:replyCount forKey:@"replyCount"];
+        
+        NSString *postTypeId=[NSString stringWithFormat:@"%@",tempDic[@"postTypeId"]];
+        [dic setObject:postTypeId forKey:@"postTypeId"];
+        
+        // 是否是精华帖
+        if(tempDic[@"primeLevel"]){
+            NSString *primeLevel=[NSString stringWithFormat:@"%@",tempDic[@"primeLevel"]];
+            [dic setObject:primeLevel forKey:@"primeLevel"];
+        }
+        
+        if(tempDic[@"jinghua"]){
+            NSString *jinghua=[NSString stringWithFormat:@"%@",tempDic[@"jinghua"]];
+            [dic setObject:jinghua forKey:@"jinghua"];
+        }
+        
+        if (tempDic[@"styleColor"]) {
+            NSString *styleColor=[NSString stringWithFormat:@"%@",tempDic[@"styleColor"]];
+            [dic setObject:styleColor forKey:@"styleColor"];
+        }
+        
+        NSString *id=[NSString stringWithFormat:@"%@",tempDic[@"id"]];
+        [dic setObject:id forKey:@"id"];
+        
+        // 图片数组
+        if (tempDic[@"imgList"]) {
+            NSMutableArray *imageSrcArr = [PublicMethod getImgArrFromImageList:tempDic[@"imgList"] andKey:@"imgurl"];
+            [dic setObject:imageSrcArr forKey:@"contentHtml"];
+        }
+        
+        // 评论人头像图片数组
+        if (tempDic[@"commentUsers"]) {
+            NSMutableArray *imageSrcArr = [PublicMethod getImgArrFromImageList:tempDic[@"commentUsers"] andKey:@"headimg"];
+            [dic setObject:imageSrcArr forKey:@"commentUsers"];
+        }
+        
+        
+        
+        NSString *sex=[NSString stringWithFormat:@"%@",tempDic[@"sex"]];
+        [dic setObject:sex forKey:@"sex"];
+        
+        if (tempDic[@"forumId"]) {
+            NSString *forumId=[NSString stringWithFormat:@"%@",tempDic[@"forumId"]];
+            [dic setObject:forumId forKey:@"forumId"];
+        }
+        
+        // 该条回复中的二级回复的个数
+        if (tempDic[@"secondaryCount"]) {
+            NSString *secondaryCount=[NSString stringWithFormat:@"%@",tempDic[@"secondaryCount"]];
+            [dic setObject:secondaryCount forKey:@"secondaryCount"];
+        }
+        // 列出的两条二级回复
+        if (tempDic[@"secondary"]) {
+            NSMutableArray *secondaryArr = [PublicMethod getSecondArrFromImageList:tempDic[@"secondary"]];
+            [dic setObject:secondaryArr forKey:@"secondary"];
+        }
+        
+        
+        // 女神导购列表
+        //praise(是否点赞),praiseCount(点赞数量),guideText(引导语),guideImg(引导图)
+        if (tempDic[@"praise"]) {
+            NSString *praise=[NSString stringWithFormat:@"%@",tempDic[@"praise"]];
+            [dic setObject:praise forKey:@"praise"];
+        }
+        //praiseCount(点赞数量)
+        if (tempDic[@"praiseCount"]) {
+            NSString *praiseCount=[NSString stringWithFormat:@"%@",tempDic[@"praiseCount"]];
+            [dic setObject:praiseCount forKey:@"praiseCount"];
+        }
+        //guideText(引导语)
+        if (tempDic[@"guideText"]) {
+            NSString *guideText=[NSString stringWithFormat:@"%@",tempDic[@"guideText"]];
+            [dic setObject:guideText forKey:@"guideText"];
+        }
+        //guideImg(引导图)
+        if (tempDic[@"guideImg"]) {
+            NSString *guideImg=[NSString stringWithFormat:@"%@",tempDic[@"guideImg"]];
+            [dic setObject:guideImg forKey:@"guideImg"];
+        }
+        
+        
+        // 女神导购详情
+        
+        //帖子id
+        if (tempDic[@"postId"]) {
+            NSString *postId=[NSString stringWithFormat:@"%@",tempDic[@"postId"]];
+            [dic setObject:postId forKey:@"postId"];
+        }
+        
+        
+        
+        [toArray addObject:dic];
+    }
+    
+}
+
+
++(NSMutableDictionary *)formartDic:(NSDictionary *)tempDic
+{
+    NSMutableDictionary *dic=[NSMutableDictionary dictionary];
+    
+    //用户
+    NSString *user=[NSString stringWithFormat:@"%@",tempDic[@"username"]];
+    [dic setObject:user forKey:@"username"];
+    
+    if (tempDic[@"nickname"] && ![tempDic[@"nickname"] isKindOfClass:[NSNull class]]) {
+        NSString *nickname=[NSString stringWithFormat:@"%@",tempDic[@"nickname"]];
+        [dic setObject:nickname forKey:@"nickname"];
+    }
+    
+    // 楼主id
+    if (tempDic[@"createrId"] && ![tempDic[@"createrId"] isKindOfClass:[NSNull class]])
+    {
+        NSString *nickname=[NSString stringWithFormat:@"%@",tempDic[@"createrId"]];
+        [dic setObject:nickname forKey:@"createrId"];
+    }
+    
+    // 是否已经点赞 或者点踩
+    if (tempDic[@"isAsscoiated"] && ![tempDic[@"isAsscoiated"] isKindOfClass:[NSNull class]])
+    {
+        NSString *isAsscoiated=[NSString stringWithFormat:@"%@",tempDic[@"isAsscoiated"]];
+        [dic setObject:isAsscoiated forKey:@"isAsscoiated"];
+    }
+    
+    // 赏多币 或者吐槽
+    if (tempDic[@"isComment"] && ![tempDic[@"isComment"] isKindOfClass:[NSNull class]])
+    {
+        NSString *isComment=[NSString stringWithFormat:@"%@",tempDic[@"isComment"]];
+        [dic setObject:isComment forKey:@"isComment"];
+    }
+    
+    
+    // 是否匿名 1匿名
+    if (tempDic[@"isShowName"] && ![tempDic[@"isShowName"] isKindOfClass:[NSNull class]])
+    {
+        NSString *nickname=[NSString stringWithFormat:@"%@",tempDic[@"isShowName"]];
+        [dic setObject:nickname forKey:@"isShowName"];
+    }
+    
+    
+    // 审核状态
+    if (tempDic[@"status"] && ![tempDic[@"status"] isKindOfClass:[NSNull class]])
+    {
+        NSString *status=[NSString stringWithFormat:@"%@",tempDic[@"status"]];
+        [dic setObject:status forKey:@"status"];
+    }
+    
+    // 经验级别
+    if (tempDic[@"groupId"] && ![tempDic[@"groupId"] isKindOfClass:[NSNull class]]) {
+        NSString *groupId=[NSString stringWithFormat:@"%@",tempDic[@"groupId"]];
+        [dic setObject:groupId forKey:@"groupId"];
+    }
+    
+    // 级别名称
+    if (tempDic[@"groupName"] && ![tempDic[@"groupName"] isKindOfClass:[NSNull class]]) {
+        NSString *groupName=[NSString stringWithFormat:@"%@",tempDic[@"groupName"]];
+        [dic setObject:groupName forKey:@"groupName"];
+    }
+    // 是否有版主回复
+    if (tempDic[@"moderatorReply"] && ![tempDic[@"moderatorReply"] isKindOfClass:[NSNull class]]) {
+        NSString *moderatorReply=[NSString stringWithFormat:@"%@",tempDic[@"moderatorReply"]];
+        [dic setObject:moderatorReply forKey:@"moderatorReply"];
+    }
+    
+    // 是否有版主回复
+    if (tempDic[@"indexCount"] && ![tempDic[@"indexCount"] isKindOfClass:[NSNull class]]) {
+        NSString *indexCount=[NSString stringWithFormat:@"%@",tempDic[@"indexCount"]];
+        [dic setObject:indexCount forKey:@"indexCount"];
+    }
+    
+    //头像
+    //        NSString *headUrl=[NSString stringWithFormat:@"%@",tempDic[@"avatar"]];
+    //        [dic setObject:[PublicMethod formatBBSHeadeImageWithImageStr:headUrl] forKey:@"headImage"];
+    
+    //头像2
+    NSString *headUrl2=[NSString stringWithFormat:@"%@",tempDic[@"avatarUrl"]];
+    [dic setObject:headUrl2 forKey:@"headImage"];
+    
+    
+    NSString *createTime=[NSString stringWithFormat:@"%@",tempDic[@"createTime"]];
+    [dic setObject:createTime forKey:@"createTime"];
+    
+    if (tempDic[@"lastTime"]) {
+        NSString *lastTime=[NSString stringWithFormat:@"%@",tempDic[@"lastTime"]];
+        [dic setObject:lastTime forKey:@"lastTime"];
+    }
+    
+    NSString *title=[NSString stringWithFormat:@"%@",tempDic[@"title"]];
+    [dic setObject:title forKey:@"title"];
+    
+    NSString *content=[NSString stringWithFormat:@"%@",tempDic[@"content"]];
+    [dic setObject:content forKey:@"content"];
+    
+    //图文混排的数组
+    NSMutableArray *contentArr=tempDic[@"content"];
+    if (contentArr) {
+        [dic setObject:contentArr forKey:@"contentArr"];
+    }
+    
+    
+    NSString *replyCount=[NSString stringWithFormat:@"%@",tempDic[@"replyCount"]];
+    [dic setObject:replyCount forKey:@"replyCount"];
+    
+    NSString *postTypeId=[NSString stringWithFormat:@"%@",tempDic[@"postTypeId"]];
+    [dic setObject:postTypeId forKey:@"postTypeId"];
+    
+    // 是否是精华帖
+    if(tempDic[@"primeLevel"]){
+        NSString *primeLevel=[NSString stringWithFormat:@"%@",tempDic[@"primeLevel"]];
+        [dic setObject:primeLevel forKey:@"primeLevel"];
+    }
+    
+    if(tempDic[@"jinghua"]){
+        NSString *jinghua=[NSString stringWithFormat:@"%@",tempDic[@"jinghua"]];
+        [dic setObject:jinghua forKey:@"jinghua"];
+    }
+    
+    if (tempDic[@"styleColor"]) {
+        NSString *styleColor=[NSString stringWithFormat:@"%@",tempDic[@"styleColor"]];
+        [dic setObject:styleColor forKey:@"styleColor"];
+    }
+    
+    NSString *id=[NSString stringWithFormat:@"%@",tempDic[@"id"]];
+    [dic setObject:id forKey:@"id"];
+    
+    // 图片数组
+    if (tempDic[@"imgList"]) {
+        NSMutableArray *imageSrcArr = [PublicMethod getImgArrFromImageList:tempDic[@"imgList"] andKey:@"imgurl"];
+        [dic setObject:imageSrcArr forKey:@"contentHtml"];
+    }
+    
+    // 评论人头像图片数组
+    if (tempDic[@"commentUsers"]) {
+        NSMutableArray *imageSrcArr = [PublicMethod getImgArrFromImageList:tempDic[@"commentUsers"] andKey:@"headimg"];
+        [dic setObject:imageSrcArr forKey:@"commentUsers"];
+    }
+    
+    
+    NSString *sex=[NSString stringWithFormat:@"%@",tempDic[@"sex"]];
+    [dic setObject:sex forKey:@"sex"];
+    
+    if (tempDic[@"forumId"]) {
+        NSString *forumId=[NSString stringWithFormat:@"%@",tempDic[@"forumId"]];
+        [dic setObject:forumId forKey:@"forumId"];
+    }
+    
+    // 该条回复中的二级回复的个数
+    if (tempDic[@"secondaryCount"]) {
+        NSString *secondaryCount=[NSString stringWithFormat:@"%@",tempDic[@"secondaryCount"]];
+        [dic setObject:secondaryCount forKey:@"secondaryCount"];
+    }
+    // 列出的两条二级回复
+    if (tempDic[@"secondary"]) {
+        NSMutableArray *secondaryArr = [PublicMethod getSecondArrFromImageList:tempDic[@"secondary"]];
+        [dic setObject:secondaryArr forKey:@"secondary"];
+    }
+    
+    
+    // 女神导购列表
+    //praise(是否点赞),praiseCount(点赞数量),guideText(引导语),guideImg(引导图)
+    if (tempDic[@"praise"]) {
+        NSString *praise=[NSString stringWithFormat:@"%@",tempDic[@"praise"]];
+        [dic setObject:praise forKey:@"praise"];
+    }
+    //praiseCount(点赞数量)
+    if (tempDic[@"praiseCount"]) {
+        NSString *praiseCount=[NSString stringWithFormat:@"%@",tempDic[@"praiseCount"]];
+        [dic setObject:praiseCount forKey:@"praiseCount"];
+    }
+    //guideText(引导语)
+    if (tempDic[@"guideText"]) {
+        NSString *guideText=[NSString stringWithFormat:@"%@",tempDic[@"guideText"]];
+        [dic setObject:guideText forKey:@"guideText"];
+    }
+    //guideImg(引导图)
+    if (tempDic[@"guideImg"]) {
+        NSString *guideImg=[NSString stringWithFormat:@"%@",tempDic[@"guideImg"]];
+        [dic setObject:guideImg forKey:@"guideImg"];
+    }
+    
+    
+    // 女神导购详情
+    
+    if (tempDic[@"goodsId"]) {
+        NSString *goodsId=[NSString stringWithFormat:@"%@",tempDic[@"goodsId"]];
+        [dic setObject:goodsId forKey:@"goodsId"];
+    }
+    if (tempDic[@"goodsName"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"goodsName"]];
+        [dic setObject:str forKey:@"goodsName"];
+    }
+    if (tempDic[@"goodsPrice"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"goodsPrice"]];
+        [dic setObject:str forKey:@"goodsPrice"];
+    }
+    if (tempDic[@"salesVolume"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"salesVolume"]];
+        [dic setObject:str forKey:@"salesVolume"];
+    }
+    if (tempDic[@"goodsPath"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"goodsPath"]];
+        [dic setObject:str forKey:@"goodsPath"];
+    }
+    if (tempDic[@"recommended"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"recommended"]];
+        [dic setObject:str forKey:@"recommended"];
+    }
+    if (tempDic[@"measurements"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"measurements"]];
+        [dic setObject:str forKey:@"measurements"];
+    }
+    if (tempDic[@"height"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"height"]];
+        [dic setObject:str forKey:@"height"];
+    }
+    if (tempDic[@"weight"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"weight"]];
+        [dic setObject:str forKey:@"weight"];
+    }
+    
+    if (tempDic[@"isCollect"]) {
+        NSString *str=[NSString stringWithFormat:@"%@",tempDic[@"isCollect"]];
+        [dic setObject:str forKey:@"isCollect"];
+    }
+    
+
+    return dic;
+}
+
+//女神导购 和 图文混排的论坛详情
++(void)formatRequestDataForAndroidForNvShenDaoGou:(NSArray *)dataSource toArray:(NSMutableArray *)toArray
+{
+    for (NSDictionary *tempDic in dataSource) {
+        NSMutableDictionary *dic=nil;
+        
+        dic=[PublicMethod formartDic:tempDic];
+        [toArray addObject:dic];
+    }
+    
+}
+
+
+//论坛相关 帖子详情中 的二级回复字段
++(NSMutableArray *)getSecondArrFromImageList:(NSArray *)arrList
+{
+     NSMutableArray *secondArr=[[NSMutableArray alloc]init];
+    if ([arrList  isKindOfClass:[NSNull class]]) {
+        return secondArr;
+    }
+//    for (NSDictionary *dic in imageList) {
+//
+//        NSString *url=[dic objectForKey:@"imgurl"];
+//        if (url) {
+//            [imageArr addObject:url];
+//        }
+//    }
+    /*
+     secondaryContent = 111;
+     secondaryName = ceshi;
+     secondaryTime = "2015-01-06 15:29:27";
+     */
+    [secondArr addObjectsFromArray:arrList];
+    return secondArr;
+}
+
+//论坛相关 由imgList数组 返回图片地址的数组
++(NSMutableArray *)getImgArrFromImageList:(NSArray *)imageList andKey:(NSString *)keyStr
+{
+    
+    NSMutableArray *imageArr=[[NSMutableArray alloc]init];
+    
+    if ([imageList  isKindOfClass:[NSNull class]]) {
+        return imageArr;
+    }
+    
+    for (NSDictionary *dic in imageList) {
+        
+        NSString *url=[dic objectForKey:keyStr];
+        if (url) {
+            [imageArr addObject:url];
+        }
+    }
+    return imageArr;
+}
+
+
+
+
++(NSString *)formatBBSHeadeImageWithImageStr:(NSString *)imageStr
+{
+    NSString *str=nil;
+    str=[NSString stringWithFormat:@"%@%@",HeadImageIP,imageStr];
+    return str;
+}
+
+// 获得 头像 调用前userSex 和 本地头像要有更新
++(UIImage *)getHeaderImage
+{
+    UIImage *img=nil;
+    if (!ISLOGIN) {//性多多首页
+        img=UIImageByName(@"myCenter_userImg2.png");
+    }else
+    {
+        NSData *data = [NSData dataWithContentsOfFile:UserHeadImageFileName];
+        
+        if (data) {
+             img = [[UIImage alloc] initWithData:data];
+        }else
+        {
+            
+            if ([USERSEX isEqualToString:@"女"]) {
+                img = UIImageByName(@"morentouxiangWoman.png");
+            }else
+            {
+                img = UIImageByName(@"morentouxiangMan.png");
+            }
+        }
+        
+    }
+    
+    return img;
+}
+
+//保存图片到本地
++ (void)saveImage:(UIImage *)tempImage WithName:(NSString *)imageName
+{
+    NSData* imageData = UIImagePNGRepresentation(tempImage);
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString* documentsDirectory = [paths objectAtIndex:0];
+    // Now we get the full path to the file
+    NSString* fullPathToFile = [documentsDirectory stringByAppendingPathComponent:imageName];// and then we write it out
+    [imageData writeToFile:fullPathToFile atomically:NO];
+    
+}
+
+
+
+//下载图片
++(UIImage *)downloadImageWithURL:(NSString *)urlStr
+{
+    UIImage *image=nil;
+    
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:urlStr]];
+    NSData *response = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+    if (response) {
+       
+        image =[UIImage imageWithData:response];
+        //标题栏网络连接图标的显示和取消
+//        [UIApplication sharedApplication].networkActivityIndicatorVisible=![UIApplication sharedApplication].networkActivityIndicatorVisible;
+       
+        return image;
+    }else{
+        return nil;
+    }
+}
+
++(int)getAttributedStringHeightWidthValue:(int)width  andAttributedString:(NSMutableAttributedString *)attributedString
+{
+    //    [self initAttributedString];
+    
+    int total_height = 0;
+    
+    CTFramesetterRef framesetter = CTFramesetterCreateWithAttributedString((CFAttributedStringRef)attributedString);    //string 为要计算高度的NSAttributedString
+    CGRect drawingRect = CGRectMake(0, 0, width, 100000);  //这里的高要设置足够大
+    CGMutablePathRef path = CGPathCreateMutable();
+    CGPathAddRect(path, NULL, drawingRect);
+    CTFrameRef textFrame = CTFramesetterCreateFrame(framesetter,CFRangeMake(0,0), path, NULL);
+    CGPathRelease(path);
+    CFRelease(framesetter);
+    
+    NSArray *linesArray = (NSArray *) CTFrameGetLines(textFrame);
+    
+    CGPoint origins[[linesArray count]];
+    CTFrameGetLineOrigins(textFrame, CFRangeMake(0, 0), origins);
+    
+    int line_y = (int) origins[[linesArray count] -1].y;  //最后一行line的原点y坐标
+    
+    CGFloat ascent;
+    CGFloat descent;
+    CGFloat leading;
+    
+    CTLineRef line = (__bridge CTLineRef)[linesArray objectAtIndex:[linesArray count]-1];
+    CTLineGetTypographicBounds(line, &ascent, &descent, &leading);
+    
+    total_height = 100000 - line_y + (int) descent +1;//+1为了纠正descent转换成int小数点后舍去的值
+    
+    CFRelease(textFrame);
+    
+    return total_height;
+    
+}
+
+
+// 跳转登录
++(void)gotoLoginWithVC:(UIViewController *)vc
+{
+    LoginViewController *ctr = [[LoginViewController alloc] initWithNibName:@"LoginViewController" bundle:[NSBundle mainBundle]];
+    ctr.hidesBottomBarWhenPushed = YES;
+    [vc.navigationController pushViewController:ctr animated:YES];
+}
+
+// 活动页面跳转商品 或者 分类页面
++(void)themeGotoSubViewWithThisVC:(UIViewController *)vc andDic:(NSDictionary *)dic
+{
+    if ([dic[@"gdCategory"] intValue]==1) {  // 商品
+        GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.goodsIdStr = [NSString stringWithFormat:@"%@",[dic objectForKey:@"homeId"]];
+        //        ctrVc.classifyIdStr = [NSString stringWithFormat:@"%@",[[taotaoArray objectAtIndex:0] objectForKey:@"goodsCategoryId"]];
+        [vc.navigationController pushViewController:ctrVc animated:YES];
+        
+        
+    }else if([dic[@"gdCategory"] intValue]==2){//分类
+        
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        
+        if (1) {
+            ctrVc.isHiddenSort=YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.classifyId = dic[@"homeId"];
+            ctrVc.titleStr = dic[@"name"];
+            ctrVc.requestType = classifyType;
+            
+        }else{
+            ctrVc.disPlayOne = YES;
+            ctrVc.classifyStr = dic[@"homeId"];
+            ctrVc.titleStr = dic[@"name"];
+            ctrVc.requestType = homeViewType;
+            
+        }
+        [vc.navigationController pushViewController:ctrVc animated:YES];
+        
+    }else if([dic[@"gdCategory"] intValue]==3)//论坛帖子
+    {
+        
+        BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+        //论坛主题id
+        controller.forumId = dic[@"introduction"];
+        controller.topicId = dic[@"homeId"];
+        controller.hidesBottomBarWhenPushed = YES;
+        [vc.navigationController pushViewController:controller animated:YES];
+        
+    }else if([dic[@"gdCategory"] intValue]==4)//专区活动
+    {
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.disPlayOne = YES;
+        ctrVc.classifyStr = dic[@"homeId"];
+        ctrVc.titleStr = dic[@"name"];
+        ctrVc.requestType = homeViewType;
+        [vc.navigationController pushViewController:ctrVc animated:YES];
+        
+    }
+    
+    //        else if([self.homeGoodsArray[sender.tag-10001][@"gdCategory"] intValue]==5)//论坛板块
+    //        {
+    //            BBSListViewController *controller = [[BBSListViewController alloc] initWithNibName:@"BBSListViewController" bundle:[NSBundle mainBundle]];
+    //            controller.forumId=self.homeGoodsArray[sender.tag-10001][@"introduction"];
+    //            controller.forumImage=sender.imageView.image;
+    //            controller.nameString=self.homeGoodsArray[sender.tag-10001][@"name"];
+    //            controller.detailString=self.homeGoodsArray[sender.tag-10001][@"homeId"];
+    //            controller.hidesBottomBarWhenPushed = YES;
+    //            controller.titleStr = self.homeGoodsArray[sender.tag-10001][@"name"];
+    //            [vc.navigationController pushViewController: controller animated:YES];
+    //        }
+    
+
+}
+
+@end

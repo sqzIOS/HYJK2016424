@@ -1,0 +1,105 @@
+//
+//  AppDelegate.h
+//  sexduoduo
+//
+//  Created by showm on 14-5-14.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "LeveyTabBarController.h"
+#import "PAPasscodeViewController.h"
+
+
+
+
+#import "BeginView.h"
+#import "OrderRemindController.h"
+#import "GoodsDetailTwoViewController.h"
+
+#import "HomeViewThreeVC.h"
+#import "ClassifyViewController.h"
+#import "ClasifyTwoVC.h"
+
+
+#import "ExchangeTwoViewController.h"
+#import "MyCenterVC.h"
+#import "ShopCarViewController.h"
+#import "MyCenterVC.h"
+
+#import "SHHealthVC.h" //todo
+#import "SHDiagnoseVC.h"
+#import "SHCopeVC.h"
+#import "SHMIneViewController.h"
+
+#import "WXApi.h"//微信支付
+
+//#import <BaiduMapAPI/BMapKit.h>
+
+#import "SDChatManager.h"
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate,UINavigationControllerDelegate,PAPasscodeViewControllerDelegate,UIAlertViewDelegate,AVAudioPlayerDelegate,WXApiDelegate>
+//,BMKGeneralDelegate>
+{
+    HomeViewThreeVC *homeVC;//第三版首页
+    ClassifyViewController *classifyVC;//第一版 分类
+    ClasifyTwoVC *classifyVC2; //现在版本 分类
+    ExchangeTwoViewController *exchangeVC;//论坛
+    ShopCarViewController *shopCarVC;// 购物车
+    MyCenterVC *myCenterVC;//现在版本 我的
+    
+    //性健康的四个界面
+    SHHealthVC *SHVC1;
+    SHDiagnoseVC *SHVC2;
+    SHCopeVC *SHVC3;
+    SHMIneViewController *SHVC4;
+    
+    
+    UINavigationController *firNc ;
+    UINavigationController *secNc;
+    UINavigationController *thirdNc;
+    UINavigationController *fourthNc;
+    UINavigationController *fifNc ;
+    
+    
+    
+//    BMKMapManager* _mapManager;//1地图管理
+    
+    
+    //环信
+//    EMConnectionState _connectionState;
+    
+    
+}
+@property (strong, nonatomic) UIWindow *window;
+//@property (strong, nonatomic) BMKMapView *mapView;//2地图view
+
+
+@property (strong, nonatomic) LeveyTabBarController *tabController;
+@property (nonatomic,strong)NSTimer *pingLunTimer;//去评论的定时器
+@property (nonatomic,strong)UIAlertView *alertPingLun;//去评论的弹框
+
+@property (nonatomic,strong)UIImageView *homeImg;
+
+@property(retain,nonatomic)AVAudioPlayer *av;//声音播放器
+
+
+//环信
+@property (nonatomic, strong)SDChatManager *chatManager;
+
+- (void)setUpCustomTab;
+
+- (void)checkMessageNum;
+
+
+-(void)playMusic;
+
+-(void)stopMusic;
+
+- (void)sendPay;//微信支付
+- (void)sendPayWithOrderId:(NSString *)orderId;//微信支付
+
+
+
+
+@end

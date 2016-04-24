@@ -1,0 +1,32 @@
+//
+//  SDDiscountCell.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/20.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  优惠券的单元格
+
+#import <UIKit/UIKit.h>
+
+@interface SDDiscountCell : UITableViewCell
+@property (weak, nonatomic) IBOutlet UIView *customContentView;
+
+@property (weak, nonatomic) IBOutlet UIImageView *customBgView;
+
+
+@property (weak, nonatomic) IBOutlet UILabel *priceUnitLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *priceLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *discountnameLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *discountContentLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *discountTimeLab;
+
+
++(CGFloat)getCellHeight;
+-(void)loadWithDic:(id)dic;
+
+-(void)loadWithModel:(id)obj;
+@end

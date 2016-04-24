@@ -1,0 +1,26 @@
+//
+//  RankingBaseViewController.h
+//  
+//
+//  Created by apple on 15/12/4.
+//
+//
+
+#import <UIKit/UIKit.h>
+#import "AFNetworking.h"
+
+@interface RankingBaseViewController : UITableViewController
+
+@property (nonatomic,strong) NSMutableArray *dataArry;
+@property (nonatomic,strong) NSString *path;
+@property (nonatomic,strong) NSMutableDictionary *params;
+@property (nonatomic,getter=isreload) BOOL reload;
+@property (nonatomic,weak) UILabel *tipLabel;
+
+
+// 获取网络数据
+- (void)loadDate;
+
+- (void)setTop;
+
+@end

@@ -1,0 +1,26 @@
+//
+//  CouponsModel.m
+//  
+//
+//  Created by apple on 15/12/15.
+//
+//
+
+#import "CouponsModel.h"
+
+@implementation CouponsModel
+
++ (instancetype)couponsModelWithDict:(NSDictionary *)dict
+{
+    CouponsModel *model = [[CouponsModel alloc] init];
+    
+    model.ID = dict[@"id"];
+    model.conditions = dict[@"conditions"];
+    model.amount = dict[@"amount"];
+    model.startDate = [NSString stringWithFormat:@"%@",dict[@"startDate"]];
+    model.endDate = [NSString stringWithFormat:@"%@",dict[@"endDate"]];    
+    
+    return model;
+}
+
+@end

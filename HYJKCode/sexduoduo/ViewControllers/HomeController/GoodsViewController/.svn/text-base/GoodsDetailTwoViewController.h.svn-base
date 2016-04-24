@@ -1,0 +1,120 @@
+//
+//  GoodsDetailTwoViewController.h
+//  sexduoduo
+//
+//  Created by dsz on 15-4-17.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  商品详情页面
+
+#import <UIKit/UIKit.h>
+
+#import "MMGridView.h"
+#import "MMGridViewCell.h"
+#import "MMGridViewDefaultCell.h"
+#import "AppDelegate.h"
+#import "ShopCarController.h"
+#import "LoginViewController.h"
+#import "SDOrderVC.h"
+
+#import "DDPageControl.h"
+
+#import "CustomGoodsDetailSegment.h"
+#import "CRatingView.h"
+#import "CommentCell.h"
+#import "SDGoodDetailHeadView.h"
+#import "SDGoodsDetailChooseColorView.h"
+
+@interface GoodsDetailTwoViewController : UIViewController<UIScrollViewDelegate,UITextFieldDelegate,UIWebViewDelegate,ColorChooseProtocol>
+{
+    
+    UIButton *collectBtn;//收藏btn
+    
+    NSMutableDictionary *productDic;
+    
+    int topViewH; //计算 标题view的高度
+    
+    BOOL isSpecification;
+    
+    
+    //headView
+    UIView *headView;//用来装headView
+    
+    
+    BOOL isLoadingFinished;
+    
+    int segmentIndex;//商品详情 和 评价 和 精品推荐选中了哪个
+    int currentPage;//评价的页码
+    BOOL isHaveNextPage;//评价是否有下一页
+    
+    
+    MKNetworkOperation *opration;
+
+    MKNetworkOperation *oprationTuWen;//图文详情的请求
+    MKNetworkOperation *oprationTuiJian;//推荐商品的请求
+    MKNetworkOperation *oprationPingLun;//评论的请求
+    
+}
+
+@property (strong, nonatomic) UIScrollView *detailScrollView;//详情 总scView
+@property (nonatomic, strong) SDGoodDetailHeadView *topPicScView;//顶部商品 scView
+
+@property (strong, nonatomic) UIView *bottomView;           // 底部承载推荐view
+
+@property (strong, nonatomic) DDPageControl *pageControl;  // 顶部对应
+@property (strong, nonatomic) NSMutableArray *imagesArray; // 顶部对应图片
+
+
+@property (weak, nonatomic) IBOutlet UIView *primaryView;   //承载所有的内容
+@property (weak, nonatomic) IBOutlet UIView *primaryShadeView; // 用于实现弹出视图背景半透明阴影效果
+
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
+
+@property (nonatomic, strong) SDGoodsDetailChooseColorView *goodColorChooseView;
+
+
+
+@property (strong, nonatomic) UILabel *promptLab;       //提示lab
+
+@property (strong, nonatomic) UIButton *shopCarBtn;
+@property (strong, nonatomic) UILabel *numLabel;  //购物车商品数量
+
+
+@property (strong, nonatomic) NSMutableArray *colorArray;
+//@property (nonatomic, retain) MMGridView * gridView;
+@property (assign, nonatomic) int numIndexColor;  // 购买商品的规格  100为没选择规格
+
+
+
+@property (strong, nonatomic) NSMutableDictionary *goodsDetailDic;  //从上级页面 传递过来的商品信息
+
+@property (strong, nonatomic) NSString *goodsIdStr;  //商品id
+@property (strong, nonatomic) NSString *classifyIdStr;//分类id
+
+@property (assign, nonatomic) BOOL goBuyNow;
+
+@property (strong, nonatomic) NSMutableArray *recommendArray;//推荐商品的数组
+
+@property (strong, nonatomic) UIView *productDetailView;//图文详情view
+
+@property (strong, nonatomic)NSMutableArray *detailImageStrArray;//详情图片路径array
+
+@property (strong, nonatomic)NSMutableArray *commentArray;//评论array
+
+
+
+- (void)toContactAction:(id)sender ;
+
+-(void)toBuy:(id)sender;
+
+- (void)toBuyNowAction:(id)sender ;
+
+
+
+
+//- (void)sureBuyAction:(NSInteger )numIndex;
+//- (void)cancelBuyAction:(id)sender ;//取消购买
+
+//- (void)plusGoodsNumAction:(id)sender;
+//- (void)minusGoodsNumAction:(id)sender;
+@end
+

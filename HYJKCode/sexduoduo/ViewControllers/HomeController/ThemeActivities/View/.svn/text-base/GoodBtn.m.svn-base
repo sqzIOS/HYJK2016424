@@ -1,0 +1,27 @@
+//
+//  GoodBtn.m
+//  
+//
+//  Created by apple on 15/12/29.
+//
+//
+
+#import "GoodBtn.h"
+
+@implementation GoodBtn
+
+- (void)setInfoWithModel:(GoodsModel *)model
+{
+    self.theNewLogoPath = model.theNewLogoPath;
+    self.guardPath = model.guardPath;
+    self.name = model.name;
+    self.showAddress = model.showAddress;
+    self.gdCategory = model.gdCategory;
+    self.logoPath = model.logoPath;
+    self.orderList = model.orderList;
+    self.homeId = model.homeId;
+    self.introduction = model.introduction;
+    self.theNewGuardPath = model.theNewGuardPath;
+}
+
+@end

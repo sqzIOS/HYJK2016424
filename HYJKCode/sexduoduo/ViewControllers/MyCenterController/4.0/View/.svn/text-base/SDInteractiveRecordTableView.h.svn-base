@@ -1,0 +1,21 @@
+//
+//  SDInteractiveRecordTableView.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  打赏 喜欢 tableview 
+
+#import <UIKit/UIKit.h>
+
+@interface SDInteractiveRecordTableView : UITableView<UITableViewDataSource,UITableViewDelegate>
+
+@property (nonatomic, strong) NSArray *dataArr;
+
+@property (nonatomic, strong) UIViewController *mainVC;
+
+@property (nonatomic, assign) int type;
+
+- (instancetype)initWithFrame:(CGRect)frame style:(UITableViewStyle)style Array:(NSArray *)array Controller:(UIViewController *)vc Type:(int)type;
+
+@end

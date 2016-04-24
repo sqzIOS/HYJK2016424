@@ -1,0 +1,31 @@
+//
+//  SDGoodDetailHeadView.h
+//  sexduoduo
+//
+//  Created by showm on 16/1/4.
+//  Copyright (c) 2016年 dbCode. All rights reserved.
+//  商品详情的顶部滚动图品scView
+
+#import <UIKit/UIKit.h>
+#import "XLCycleScrollView.h"
+
+@interface SDGoodDetailHeadView : UIView<XLCycleScrollViewDelegate,XLCycleScrollViewDatasource>
+//顶部滚动 UIScrollView
+@property(strong, nonatomic) XLCycleScrollView *scrollView;
+//父视图
+@property(weak,nonatomic)UIViewController* parentVC;
+/**
+ * 初始化 SDHomeHeaderView
+ */
+- (id)initWithFrameAndType:(CGRect)frame pvc:(id)pvc;
+
+
+-(void)setUpImageUrlList:(NSArray *)imageUrlList;
+
+
+///**
+// * 远程获取数据用来显示View
+// */
+//-(void)requestData;
+
+@end

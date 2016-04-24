@@ -1,0 +1,33 @@
+//
+//  homeThreeView.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+
+#import "ActivityViewController.h"
+#import "HomeViewThreeVC.h"
+
+
+@interface HomeThreeView : UIView
+{
+    NSMutableArray *_dataArray;
+}
+@property (assign ,nonatomic) int indexNum;
+@property (assign ,nonatomic) int btnNum; //该view的btn个数
+@property (strong,nonatomic)NSMutableArray *dataArray;
+
+
+@property (assign,nonatomic)HomeViewThreeVC *viewController;
+
+-(void)judgeJumpToSubControllerWithDic:(NSDictionary *)dic;
+
+-(void)reset;
+-(void)resetFrame;
+-(CGFloat)getViewHeight;
+
+@end

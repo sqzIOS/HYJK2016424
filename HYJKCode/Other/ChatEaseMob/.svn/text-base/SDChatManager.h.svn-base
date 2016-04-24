@@ -1,0 +1,45 @@
+//
+//  SDChatManager.h
+//  sexduoduo
+//
+//  Created by showm on 15/11/20.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "EMNetworkMonitorDefs.h"
+
+typedef enum
+{
+    //用户向医生发送透传消息（vip咨询）
+    cmd_ACTION_USER_VIP = 0,
+    //用户向医生发送头传消息
+    cmd_ACTION_USER_PHONE ,
+    //医生向用户发送透传消息(vip评价)
+    cmd_ACTION_DOCTOR_VIP ,
+    //医生向用户发送透传消息(电话评价)未使用
+    cmd_ACTION_DOCTOR_PHONE ,
+} chatCmdType;
+
+@interface SDChatManager : NSObject
+
++(instancetype)shareInstance;
+-(void)configeManager;
+
+- (void)jumpToChatListWithInfo:(NSDictionary *)senderInfo;
+- (void)setupUntreatedApplyCount;
+//- (void)networkChanged:(EMConnectionState)connectionState;
+- (void)didReceiveLocalNotification:(UILocalNotification *)notification;
+
+
++(NSMutableDictionary *)formartSendExtDic:(NSMutableDictionary *)ext andCaseId:(NSString *)caseId;
+
+//透传消息
+// 用户向医生发送透传消息 （vip 或 电话咨询已支付）
++(void)UserSendDoctor:(NSString *)receiverName withAciton:(chatCmdType)action andQuestionId:(NSString *)questionId ;
+// 医生向用户发送透传消息 （已完成 去评价吧）
++(void)doctorSendToUser:(NSString *)receiverName withAciton:(chatCmdType)action andQuestionId:(NSString *)questionId andDoctorId:(NSString *)doctorId;
+
+
+
+@end

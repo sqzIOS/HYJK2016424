@@ -1,0 +1,57 @@
+//
+//  SDUnLoginHeadView.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/11.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface SDUnLoginHeadView : UIView
+
+@property (nonatomic, strong) UIImageView *bgImageView;
+
+@property (nonatomic, strong) UIView *bgView; //透明图层
+
+@property (nonatomic, strong) UIView *bgView2;
+
+@property (nonatomic, strong) UIButton *headBtn;
+
+@property (nonatomic, strong) UIImageView *sexImageView;
+
+@property (nonatomic, strong) UIView *view1;
+
+@property (nonatomic, strong) UIView *view2;
+
+@property (nonatomic, strong) UIView *view3;
+
+@property (nonatomic, strong) UIImageView *iconImgV;
+
+@property (nonatomic, strong) UILabel *titleLab;
+
+@property (nonatomic, strong) UILabel *line;
+
+@property (nonatomic, strong) UIViewController *mainVC;
+
+@property (nonatomic, strong) UIGestureRecognizer *tap;
+
+@property (nonatomic, strong) UILabel *textLab;
+
+//登录状态
+
+@property (nonatomic, strong) UIImageView *moneyImageView;
+
+@property (nonatomic, strong) UILabel *moneyLab;
+
+@property (nonatomic, strong) UIImageView *levelImageView;
+
+@property (nonatomic, strong) UILabel *levelNameLab;
+
+@property (nonatomic, strong) UILabel *nickNameLab;
+
+- (instancetype)initWithFrame:(CGRect)frame Controller:(UIViewController *)vc;
+
+- (void)theData;
+
+@end

@@ -1,0 +1,480 @@
+//
+//  BBSCell.m
+//  sexduoduo
+//
+//  Created by Showm on 14-7-30.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSCell.h"
+#import "MJPhotoBrowser.h"
+#import "MJPhoto.h"
+@implementation BBSCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+}
+
+-(void)configCellWithArray:(NSMutableArray *)arry indexRow:(int)row{
+    
+    dataArray=arry;
+    dataIndex=row;
+    
+    self.contentView.backgroundColor=[UIColor whiteColor];//ios6 cell的背景色要修改 contentview的才有效
+    //测试数据
+    int biJiao=(int)arry.count-1;
+    if (row <=biJiao && arry ) {
+        
+        NSMutableDictionary *dic=arry[row];
+        
+        dataDic=dic;
+        
+        // 用户头像
+        self.headImageView.layer.cornerRadius=5;
+        self.headImageView.layer.masksToBounds = YES;
+        self.headImageView.userInteractionEnabled=YES;
+        [self.headImageView addGestureRecognizer:[[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(headViewTap:)]];
+        
+        
+        
+        // 用户名
+        NSString *nameStr=@"***";
+        if (dic[@"nickname"] && ![dic[@"nickname"] isKindOfClass:[NSNull class]] ) {
+            nameStr=dic[@"nickname"];
+        }
+        if ([dic[@"isShowName"] isEqualToString:@"1"]) {
+            nameStr = @"匿名";
+        }
+        self.userNameLab.text=nameStr;
+        
+        // 性别图标 以及调整位置
+        
+        UIImage *headImage=nil;
+        if (![dic[@"sex"] isKindOfClass:[NSNull class]]) {
+            
+            if ([dic[@"sex"] isEqualToString:@"0"]) {
+                self.userSexImageView.image=UIImageByName(@"BBSList_Woman.png");
+                headImage=UIImageByName(@"morentouxiangWoman.png");
+            }else{
+                self.userSexImageView.image=UIImageByName(@"BBSList_Man.png");
+                headImage=UIImageByName(@"morentouxiangMan.png");
+
+            }
+        }else headImage=UIImageByName(@"morentouxiangMan.png");
+        
+        self.headImageView.image=headImage;
+        //链接地址 的头像
+        [self.headImageView sd_setImageWithURL:[NSURL URLWithString:dic[@"headImage"]] placeholderImage:headImage];
+        
+        
+        // 时间
+        self.timeLab.text=[PublicMethod intervalSinceNow:dic[@"lastTime"]];
+        
+        
+        if (dic[@"status"] && [dic[@"status"] isEqualToString:@"-1"]) {
+            self.statusLab.text=@"审核中";
+            self.statusLab.textColor=NAV_RED_COLOR;
+        }else if (dic[@"status"] && [dic[@"status"] isEqualToString:@"0"])
+        {
+            self.statusLab.text=@"审核通过";
+            self.statusLab.textColor=NAV_RED_COLOR;
+        }
+        
+        
+        // 主题
+        self.titleLab.font=[UIFont systemFontOfSize:15];
+        self.titleLab.textColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.9];
+        self.titleLab.text=dic[@"title"];
+        
+        
+        //判断是否是精华
+        if (dic[@"jinghua"] && [dic[@"jinghua"] intValue]>0) {
+            self.jingHuaBtn.hidden=NO;
+            self.titleLab.frame = CGRectMake(self.headImageView.left, self.titleLab.top, SCREEN_WIDTH-self.headImageView.left*2, 21);
+        }else
+        {
+            self.jingHuaBtn.hidden=YES;
+            self.titleLab.frame=CGRectMake(17, 65, SCREEN_WIDTH-17 - self.headImageView.left, 21);
+        }
+        
+        //是否版主
+        if(dic[@"moderatorReply"] && [dic[@"moderatorReply"] intValue] ==1 )
+        {
+            self.BanzhuLogo.hidden=NO;
+        }else self.BanzhuLogo.hidden=YES;
+        
+        //是否推荐
+        if(dic[@"styleColor"] && [dic[@"styleColor"] length] ==6 && [dic[@"styleColor"] isEqualToString:@"FF0000"])
+        {
+            self.tuijianBtn.hidden=NO;
+        }else self.tuijianBtn.hidden=YES;
+        
+        // 描述
+        NSString *detailStr=[dic[@"content"] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]]; //去除掉首尾的空白字符和换行字符
+        detailStr = [detailStr stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+        self.detailLab.text=detailStr;
+        self.detailLab.width = SCREEN_WIDTH - self.headImageView.left *2;
+        
+        //评论数
+        self.commentNumLab.text=dic[@"replyCount"];
+        self.commentNumLab.textColor=NAV_RED_COLOR;
+        
+        if (dic[@"praiseCount"]) {
+           self.zanNumLab.text=dic[@"praiseCount"];
+        }
+        self.zanNumLab.textColor=NAV_RED_COLOR;
+        
+        if (dic[@"praise"] && [dic[@"praise"] intValue]==1) {
+            self.zanImage.image=UIImageByName(@"BBSList_zanSelect");
+            self.zanBtn.selected=YES;
+            
+        }else{
+            self.zanImage.image=UIImageByName(@"BBSList_zan");
+            self.zanBtn.selected=NO;
+        }
+        
+        //图片
+        if ([dic[@"contentHtml"] count] == 0) {
+            self.imageView1.hidden=YES;
+            self.imageView2.hidden=YES;
+            self.imageView3.hidden=YES;
+            self.frame=CGRectMake(0, 0, SCREEN_WIDTH, 140);
+            self.ImageNumLab.hidden=YES;
+        }else{
+            
+            self.ImageNumLab.text=[NSString stringWithFormat:@"共%d张",(int)[dic[@"contentHtml"] count]];
+            
+            switch ([dic[@"contentHtml"] count]) {
+                case 1:
+                {
+                    self.imageView2.hidden=YES;
+                    self.imageView3.hidden=YES;
+                    self.ImageNumLab.hidden=YES;
+                    
+                    [self.imageView1 sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:dic[@"contentHtml"][0]] placeholderImage:UIImageByName(@"bbslistdefaultImage.png")];
+                    
+                }
+                    break;
+                case 2:
+                {
+                    self.imageView3.hidden=YES;
+                    self.ImageNumLab.hidden=YES;
+
+                    [self.imageView1 sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:dic[@"contentHtml"][0]] placeholderImage:UIImageByName(@"bbslistdefaultImage.png")];
+                    [self.imageView2 sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:dic[@"contentHtml"][1]] placeholderImage:UIImageByName(@"bbslistdefaultImage.png")];
+                }
+                    break;
+                default:
+                {
+                    [self.imageView1 sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:dic[@"contentHtml"][0]] placeholderImage:UIImageByName(@"bbslistdefaultImage.png")];
+                    [self.imageView2 sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:dic[@"contentHtml"][1]] placeholderImage:UIImageByName(@"bbslistdefaultImage.png")];
+                    [self.imageView3 sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:dic[@"contentHtml"][2]] placeholderImage:UIImageByName(@"bbslistdefaultImage.png")];
+                }
+                    break;
+            }
+            
+            
+            
+            
+           
+            
+            
+        }
+        
+        
+        
+        
+        if([dic[@"commentUsers"] count] == 0)
+        {
+            self.usersHead1.hidden = YES;
+            self.usersHead2.hidden = YES;
+            self.usersHead3.hidden = YES;
+            
+            self.moreUserHead.hidden = YES;
+        }else
+        {
+            switch ([dic[@"commentUsers"] count])
+            {
+                case 1:
+                {
+                    self.usersHead1.hidden = NO;
+                    self.usersHead2.hidden = YES;
+                    self.usersHead3.hidden = YES;
+                    self.moreUserHead.hidden = NO;
+                    
+                    NSString *str =[NSString stringWithFormat:@"%@",dic[@"commentUsers"][0]];
+                    [self.usersHead1 sd_setImageWithURL:[NSURL URLWithString:str] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                    
+                }
+                    break;
+                case 2:
+                {
+                    self.usersHead1.hidden = NO;
+                    self.usersHead2.hidden = NO;
+                    self.usersHead3.hidden = YES;
+                    self.moreUserHead.hidden = NO;
+                    NSString *str =[NSString stringWithFormat:@"%@",dic[@"commentUsers"][0]];
+                    [self.usersHead1 sd_setImageWithURL:[NSURL URLWithString:str] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                    
+                    str =[NSString stringWithFormat:@"%@",dic[@"commentUsers"][1]];
+                    [self.usersHead2 sd_setImageWithURL:[NSURL URLWithString:str] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                }
+                    break;
+                case 3:
+                {
+                    self.usersHead1.hidden = NO;
+                    self.usersHead2.hidden = NO;
+                    self.usersHead3.hidden = NO;
+                    self.moreUserHead.hidden = NO;
+                    
+                    NSString *str =[NSString stringWithFormat:@"%@",dic[@"commentUsers"][0]];
+                    [self.usersHead1 sd_setImageWithURL:[NSURL URLWithString:str] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                    
+                    str =[NSString stringWithFormat:@"%@",dic[@"commentUsers"][1]];
+                    [self.usersHead2 sd_setImageWithURL:[NSURL URLWithString:str] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                    
+                    str =[NSString stringWithFormat:@"%@",dic[@"commentUsers"][2]];
+                    [self.usersHead3 sd_setImageWithURL:[NSURL URLWithString:str] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                    
+                }
+                    break;
+                default:
+                {
+                    self.usersHead1.hidden = NO;
+                    self.usersHead2.hidden = NO;
+                    self.usersHead3.hidden = NO;
+                    self.moreUserHead.hidden = NO;
+                    
+                    [self.usersHead1 sd_setImageWithURL:[NSURL URLWithString:dic[@"commentUsers"][0]] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                    [self.usersHead2 sd_setImageWithURL:[NSURL URLWithString:dic[@"commentUsers"][1]] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                    [self.usersHead3 sd_setImageWithURL:[NSURL URLWithString:dic[@"commentUsers"][2]] placeholderImage:UIImageByName(@"morentouxiangMan.png")];
+                }
+                    break;
+            }
+        }
+        
+        
+        
+        
+        UIImageView *lineSpace=[[UIImageView alloc]initWithFrame:CGRectMake(0, self.frame.size.height-12, SCREEN_WIDTH, 12)];
+        if ([dic[@"contentHtml"] count]>0)
+            lineSpace.frame=CGRectMake(0, self.frame.size.height-12, SCREEN_WIDTH, 12);
+        else lineSpace.frame=CGRectMake(0, self.frame.size.height, SCREEN_WIDTH, 12);
+        lineSpace.backgroundColor=[UIColor colorWithRed:236/255. green:236/255. blue:236/255. alpha:1.0];;
+        [self addSubview:lineSpace];
+    }
+ 
+    
+    
+    
+    
+    // 三个图片
+    
+    self.imageView1.contentMode=UIViewContentModeScaleAspectFill;
+    self.imageView1.clipsToBounds=YES;
+    self.imageView2.contentMode=UIViewContentModeScaleAspectFill;
+    self.imageView2.clipsToBounds=YES;
+    self.imageView3.contentMode=UIViewContentModeScaleAspectFill;
+    self.imageView3.clipsToBounds=YES;
+    
+    CGFloat imageDistance=QZMake(8);
+    CGFloat imageWidth = (SCREEN_WIDTH -self.headImageView.left*2 -imageDistance *2)/3.;
+    
+    self.imageView1.width = imageWidth;
+    self.imageView2.left = self.imageView1.right + imageDistance;
+    self.imageView2.width = imageWidth;
+    self.imageView3.left = self.imageView2.right +imageDistance;
+    self.imageView3.width = imageWidth;
+    
+    self.ImageNumLab.right = self.imageView3.right;
+    
+    self.backgroundColor = [UIColor whiteColor];
+    self.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    
+    [self.usersHead1 qzSetCornerRadius:self.usersHead1.width/2.];
+    [self.usersHead2 qzSetCornerRadius:self.usersHead1.width/2.];
+    [self.usersHead3 qzSetCornerRadius:self.usersHead1.width/2.];
+
+ 
+    
+    
+    
+    
+   
+}
+#pragma mark 放大头像
+-(void)headViewTap:(UITapGestureRecognizer *)tap
+{
+    if (IS_ShowBigHead) {
+        // 1.封装图片数据
+        NSMutableArray *photos = [NSMutableArray arrayWithCapacity:0];
+        
+        MJPhoto *photo = [[MJPhoto alloc] init];
+        photo.srcImageView =(UIImageView *) tap.view; // 来源于哪个UIImageView
+        [photos addObject:photo];
+        
+        
+        // 2.显示相册
+        MJPhotoBrowser *browser = [[MJPhotoBrowser alloc] init];
+        browser.currentPhotoIndex = 0; // 弹出相册时显示的第一张图片是？
+        browser.photos = photos; // 设置所有的图片
+        [browser show];
+    }
+  
+}
+
+- (IBAction)zanBtnClick:(id)sender {
+    
+    NSLog(@"点赞 index=%d",(int)dataIndex);
+    if(!ISLOGIN)
+    {
+        
+        if ([self.controlDelegate  respondsToSelector:@selector(didNotLogin)]) {
+            [self.controlDelegate didNotLogin];
+        }
+        
+        //去登陆
+        return;
+    }
+    
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:dataDic[@"postId"] forKey:@"postId"];
+    [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    
+    UIButton *button=sender;
+    
+    /*
+     /app/new/appUserPraise.jhtml
+     传入参数：postId、userId
+     未点赞的时候访问时点赞成功，已点赞的时候访问是取消点赞
+     返回参数message=praise时是点赞成功，message=cancel时是取消点赞
+     帖子列表接口加入返回参数：praise（是否点赞），praiseCount（点赞数量）
+     帖子列表接口加入传入参数：userId（可不传）
+     */
+    
+    [[MKHttpExchangeDemo shareMyInstance] requestExchangeAppUserPraiseWithDic:tempDic completionHandler:^(id responseObject)
+     {
+         NSDictionary *responseDic = responseObject;
+         NSLog(@"--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+         
+         //贴子回复内容 加入数组
+         NSArray *datasource=[responseDic objectForKey:@"datasource"];
+         if (datasource) {
+            
+             
+         }
+         
+         
+         if (!button.selected) {
+             
+             //        button.backgroundColor=[UIColor colorWithRed:62/255.0 green:159/255.0 blue:232/255.0 alpha:1.0];
+             dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                 //加入耗时操作
+                 //......
+                 dispatch_async(dispatch_get_main_queue(), ^{
+                     __block UILabel *addlabel=[[UILabel alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
+                     addlabel.center=CGPointMake(button.frame.size.width/2., button.frame.size.height/2.);
+                     addlabel.backgroundColor=[UIColor clearColor];
+                     addlabel.textColor=[UIColor redColor];
+                     addlabel.text=@"+1";
+                     [button addSubview:addlabel];
+                     
+                     UILabel *lab2=self.zanNumLab;
+                     lab2.text=[NSString stringWithFormat:@"%d",[lab2.text intValue]+1];
+                     
+                     //选中的pic
+                     UIImageView *zanSelect=(UIImageView*)[button viewWithTag:101];
+                     //                if (button.tag<1000) {//第二类有选中按钮
+                     zanSelect.hidden=NO;
+                     //                }
+                     
+                     
+                     
+                     [UIView animateWithDuration:1.25 animations:^{
+                         CGPoint t=addlabel.center;
+                         t.y=t.y-24;
+                         addlabel.center=t;
+                         addlabel.alpha=0;
+                     } completion:^(BOOL finished){
+                         [addlabel removeFromSuperview];
+                         addlabel=nil;
+                     }];
+                     //更新UI操作
+                     //.....
+                     
+                     self.zanImage.image=UIImageByName(@"BBSList_zanSelect");
+                     button.selected=YES;
+                     [dataDic setObject:@"1" forKey:@"praise"];
+                     [dataDic setObject:lab2.text forKey:@"praiseCount"];
+                 });
+                 
+                 
+                 
+                 
+             });
+         }else{
+             button.backgroundColor=[UIColor clearColor];
+             dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                 //加入耗时操作
+                 //......
+                 dispatch_async(dispatch_get_main_queue(), ^{
+                     __block UILabel *addlabel=[[UILabel alloc] initWithFrame:CGRectMake(0, button.frame.origin.y+0, 24, 24)];
+                     addlabel.center=CGPointMake(button.frame.size.width/2., button.frame.size.height/2.);
+                     addlabel.backgroundColor=[UIColor clearColor];
+                     addlabel.textColor=[UIColor redColor];
+                     addlabel.text=@"-1";
+                     [button addSubview:addlabel];
+                     
+                     UILabel *lab2=self.zanNumLab;
+                     lab2.text=[NSString stringWithFormat:@"%d",[lab2.text intValue]-1];
+                     
+                     //赞的选中pic去掉
+                     UIImageView *zanSelect=(UIImageView*)[button viewWithTag:101];
+                     zanSelect.hidden=YES;
+                     
+                     [UIView animateWithDuration:1.25 animations:^{
+                         CGPoint t=addlabel.center;
+                         t.y=t.y-24;
+                         addlabel.center=t;
+                         addlabel.alpha=0;
+                     } completion:^(BOOL finished){
+                         [addlabel removeFromSuperview];
+                         addlabel=nil;
+                     }];
+                     //更新UI操作
+                     //.....
+                     self.zanImage.image=UIImageByName(@"BBSList_zan");
+                     button.selected=NO;
+                     [dataDic setObject:@"0" forKey:@"praise"];
+                     [dataDic setObject:lab2.text forKey:@"praiseCount"];
+                 });
+                
+                 
+                 
+             });
+             
+         }
+         
+         
+         
+     } errorHandler:^(NSError *error) {
+         
+     }];
+
+    
+    
+}
+
+
+
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

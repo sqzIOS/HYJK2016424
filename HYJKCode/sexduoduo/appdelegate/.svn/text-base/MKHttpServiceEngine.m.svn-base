@@ -1,0 +1,961 @@
+//
+//  MKHttpServiceEngine.m
+//  sexduoduo
+//
+//  Created by showm on 14-5-28.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "MKHttpServiceEngine.h"
+
+@implementation MKHttpServiceEngine
+
++(id)shareMyInstance
+{
+    static MKHttpServiceEngine *sharedClient=nil;
+    static dispatch_once_t   p;
+    dispatch_once(&p,^{
+        
+        if ([UserDefaults objectForKey:@"useShopIp"] && [[UserDefaults objectForKey:@"useShopIp"] isEqualToString:@"1"]) {
+            useShopIp=YES;
+            
+        }else if([UserDefaults objectForKey:@"useShopIp"] && [[UserDefaults objectForKey:@"useShopIp"]isEqualToString:@"0"] )
+        {
+            useShopIp=NO;
+        }
+        
+        
+        NSString *str= useShopIp ? SHOPIP1 :SHOPIP;
+        
+        NSLog(@"商城id或域名=%@",str);
+        
+        sharedClient = [[MKHttpServiceEngine alloc]initWithHostName:str];
+//        [sharedClient useCache];
+        
+    });
+    
+    
+//    MKHttpServiceEngine *sharedClient=nil;
+//    NSString *str= useShopIp ? SHOPIP1 :SHOPIP;
+//    NSLog(@"商城id或域名=%@",str);
+//    
+//    sharedClient = [[MKHttpServiceEngine alloc]initWithHostName:str];
+    
+    
+    
+    return sharedClient;
+}
+
+
+//首页分类获取商品列表
+-(MKNetworkOperation*) requestHomeGoodListWithWithDic:(NSDictionary*) dic
+                         completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                  errorHandler:(MKNKErrorBlock) errorBlock {
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getGoodsAppByIt.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    return op;
+}
+
+
+-(MKNetworkOperation*) requestUserRegisterWithDic:(NSDictionary*) dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!Registara.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    return op;
+}
+
+//用户登录
+-(MKNetworkOperation*) requestUserLoginWithDic:(NSDictionary*) dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!LonginVer.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    return op;
+}
+
+//收藏商品
+-(MKNetworkOperation*) requestAddCollectWithDic:(NSDictionary*) dic
+                           completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!addFavoriteApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    return op;
+}
+
+
+//取消收藏商品
+-(MKNetworkOperation*) requestCancelCollectWithDic:(NSDictionary*) dic
+                           completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!deleteFavoriteApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    return op;
+}
+
+//修改密码
+-(MKNetworkOperation*) requestChangePWWithDic:(NSDictionary*) dic
+                            completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                 errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!updateUser.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    return op;
+}
+
+
+//搜索商品
+-(MKNetworkOperation*) requestSearchGoodsWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getSerachGoodsApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    return op;
+}
+
+//分类接口
+-(MKNetworkOperation*) requestClassifyWithDic:(NSDictionary*) dic
+                            completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                 errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getGoodsCategoryApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+ 
+    return op;
+}
+//分类列表
+-(MKNetworkOperation*) requestClassifyGoodsListWithDic:(NSDictionary*) dic
+                                     completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                          errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getGoodsByCategoryApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+//商品详情
+-(MKNetworkOperation*) requestGoodsDetailWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getSerachGoodsDetail.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//收藏列表
+-(MKNetworkOperation*) requestCollectListWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!listFavoriteApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//评论列表
+-(MKNetworkOperation*) requestCommentListWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/comment!ListCommentApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+
+//添加商品到购物车
+-(MKNetworkOperation*) requestAddGoodsToShopCarWithDic:(NSDictionary*) dic
+                                     completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                          errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!saveCartItem.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//购物车列表
+-(MKNetworkOperation*) requestShopCarListWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!showCartItem.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+
+
+//移除商品
+-(MKNetworkOperation*) requestDeleteGoodsFromShopCartWithDic:(NSDictionary*) dic
+                                           completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                                errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!deleteCareItem.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//商品排序列表
+-(MKNetworkOperation*) requestSortGoodsListWithDic:(NSDictionary*) dic withSortPath:(NSString *)sortStr
+                                          completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                               errorHandler:(MKNKErrorBlock) errorBlock
+{
+    NSString *str = [NSString stringWithFormat:@"/shopxx/shop/%@",sortStr];
+    MKNetworkOperation *op = [self operationWithPath:str
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+
+//修改购物车商品数量
+-(MKNetworkOperation*) requestChangeShopCartWithDic:(NSDictionary*) dic
+                                  completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                       errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!updateCartItem.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//收货地址列表
+-(MKNetworkOperation*) requestAddressListCartWithDic:(NSDictionary*) dic
+                                   completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                        errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!MemberRecive.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+//订单生成
+-(MKNetworkOperation*) requestSubmitOrderWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!orderseAppsave.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//积分商城 的 订单生成
+-(MKNetworkOperation*) requestJiFenShopSubmitOrderWithDic:(NSDictionary*) dic
+                                        completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                             errorHandler:(MKNKErrorBlock) errorBlock
+{
+   
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!IntegralExchange.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+
+//增加地址
+-(MKNetworkOperation*) requestAddAddressWithDic:(NSDictionary*) dic
+                              completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                   errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!addMemberRecive.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//删除地址
+-(MKNetworkOperation*) requestDeleteAddressWithDic:(NSDictionary*) dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!deleteMemberRecive.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//修改地址
+-(MKNetworkOperation*) requestUpdateAddressWithDic:(NSDictionary*) dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!UpdateMemberRecive.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+//我的订单列表
+-(MKNetworkOperation*) requestMyOrderListWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!OrderListApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+    return op;
+}
+
+//订单详情
+-(MKNetworkOperation*) requestMyOrderDetailWithDic:(NSDictionary*) dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!OrderListDetail.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//删除订单
+-(MKNetworkOperation*) requestDeleteMyOrderWithDic:(NSDictionary*) dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!DeleteOrderAppList.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//获取首页广告
+-(MKNetworkOperation*) requestHomeAdsListWithWithDic:(NSDictionary*) dic
+                                   completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                        errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getGoodsAppByIt.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//评论
+-(MKNetworkOperation*) requestToCommentWithDic:(NSDictionary*) dic
+                             completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                  errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/comment!SaveReview.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+
+//支付宝
+-(MKNetworkOperation*) requestPayOrderWithDic:(NSDictionary*) dic
+                            completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                 errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!payOrderStatus.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+    
+}
+
+//支付宝成功返回
+-(MKNetworkOperation*) requestPaySuccessBackWithDic:(NSDictionary*) dic
+                                  completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                       errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!payorderApp.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+    
+}
+//微信支付
+-(MKNetworkOperation*) requestWeXinPayOrderWithDic:(NSDictionary*) dic
+                            completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                 errorHandler:(MKNKErrorBlock) errorBlock
+{
+    //http://www.xingduoduo.com/shopxx/app/payment!wxPayment.action
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/app/payment!wxPayment.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+    
+}
+
+//微信支付成功返回
+-(MKNetworkOperation*) requestWeXinPaySuccessBackWithDic:(NSDictionary*) dic
+                                       completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                            errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/app/payment!payOrderStatusWX.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+
+
+
+//确认收货
+-(MKNetworkOperation*) requestReceiveOrderWithDic:(NSDictionary*) dic
+                                completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                     errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!ConfirmReceipt.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+    
+}
+
+//取消订单
+-(MKNetworkOperation*) requestCancelOrderWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!CancelOrder.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+    
+}
+
+
+
+//修改个人信息
+-(MKNetworkOperation*) changeUserInfo:(NSDictionary*) dic
+                    completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                         errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!updateProfile.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//获得个人信息
+-(MKNetworkOperation*) requestUserInfocompletionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                           errorHandler:(MKNKErrorBlock) errorBlock
+{
+    
+    
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc]initWithCapacity:0];
+    if (USERNAME) {
+        [dic setObject:USERNAME forKey:@"usernameapp"];
+    }
+    
+    
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!UserList.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//首页
+-(MKNetworkOperation*) requestHomeDataWithDic:(NSDictionary*) dic
+                            completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                 errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getGoodsIsTop.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//app推荐
+-(MKNetworkOperation*) requestAppRecommendWithDic:(NSDictionary*) dic
+                                completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                     errorHandler:(MKNKErrorBlock) errorBlock
+{
+   
+    
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/comment!androidIosAppRecommend.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//首页广告
+-(MKNetworkOperation*) requestHomeAdsWithDic:(NSDictionary*) dic
+                           completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getHomeAd.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//获取关键字
+-(MKNetworkOperation*) requestGetKeyWordWithDic:(NSDictionary*) dic
+                              completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                   errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/goods!getSearchKey.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+//我的积分订单列表
+-(MKNetworkOperation*) requestMyJiFenOrderListWithDic:(NSDictionary*) dic
+                                    completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!IntegralRecord.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+//获取物流快递单
+-(MKNetworkOperation*) requestGetOrderArticleNoWithDic:(NSDictionary*) dic
+                                     completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                          errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:@"/shopxx/shop/member!getOrderArticleNo.action"
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+
+    
+    
+    return op;
+}
+
+
+//获取新首页
+-(MKNetworkOperation*) requestNewHomeWithDic:(NSDictionary*) dic
+                           completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/shop/goods!getIndexUi.action"]
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    
+    return op;
+}
+
+//获取活动
+//showAddress=8
+-(MKNetworkOperation*) requestThemeActivityWithDic:(NSDictionary*) dic
+                           completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/shop/goods!getIndexUi.action"]
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    
+    return op;
+}
+
+//品牌街
+-(MKNetworkOperation*) requestBrandStreetWithDic:(NSDictionary*) dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/shop/goods!getAppBrand.action"]
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    
+    return op;
+}
+//品牌街详情
+-(MKNetworkOperation*) requestBrandStreetDetailWithDic:(NSDictionary*) dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/shop/goods!getAppGoodsByBrand.action"]
+                                              params:dic
+                                          httpMethod:@"POST"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    
+    return op;
+}
+//商品详情 /shopxx/shop/goods!introductionimg.action?goodId=8a04bc8b4867be5f014868e877dd006e
+-(MKNetworkOperation*) requestIntroductionimgWithDic:(NSDictionary*) dic
+                                   completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                        errorHandler:(MKNKErrorBlock) errorBlock
+{
+//    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/shop/goods!introductionimg.action"]
+//                                              params:dic
+//                                          httpMethod:@"POST"];
+    
+    //新的 7牛的商品详情
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/shop/goods!newIntroductionimg.action"]
+                                              params:dic
+                                          httpMethod:@"POST"];
+    
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    
+    return op;
+}
+
+#pragma mark - 爱记录
+
+-(MKNetworkOperation *)requestSRRecordWithDic:(NSDictionary *)dic
+                            completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                 errorHandler:(MKNKErrorBlock) errorBlock
+{
+    NSLog(@"参数=%@",dic);
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/record!saveRecord.action"]
+                                              params:dic
+                                          httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    
+    return op;
+}
+
+-(MKNetworkOperation *)requestSRDairyWithDic:(NSDictionary *)dic
+                           completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/record!getRecordList.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+}
+
+-(MKNetworkOperation *)requestSRDairyDetailWithDic:(NSDictionary *)dic
+                                 completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                      errorHandler:(MKNKErrorBlock) errorBlock
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/record!getReportDetails.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+    
+}
+
+
+/*
+ 获得验证码
+ http://192.168.16.160:8080/shopxx/app/interface!getValiCode.action?appusername=123456
+ */
+-(MKNetworkOperation *)requestGetValiCodeWithDic:(NSDictionary *)dic
+                               completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                    errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/member!getValiCode.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+}
+
+
+/*
+ 忘记密码重置
+ http://192.168.16.160:8080/shopxx/app/interface!retrievePassword.action?appusername=123456&newpassw=123456&sessionId=BC18013CF038D7FD17BB0D32E543B515&vcode=123456
+ */
+
+-(MKNetworkOperation *)requestRetrievePasswordWithDic:(NSDictionary *)dic
+                                    completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/member!retrievePassword.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+}
+
+/*
+ 带验证码 的注册接口
+ http://192.168.16.160:8080/shopxx/app/interface!Registara.action
+ 原注册参数 + vcode 验证码
+ 
+ */
+
+-(MKNetworkOperation *)requestRegistaraVcodeWithDic:(NSDictionary *)dic
+                                  completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                       errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/member!Registara.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+}
+
+
+/*
+ 4.0版 之后的分类接口 6分类+1广告+8标签
+ http://192.168.16.16:8080/shopxx/app/interface!getGoodsCategoryApp.action
+ */
+
+-(MKNetworkOperation *)requestGoodsCategoryAppWithDic:(NSDictionary *)dic
+                                    completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                         errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/goods!getGoodsCategoryApp.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+    
+}
+/*
+ 标签
+ http://192.168.16.16:8080/shopxx/app/interface!getGoodsAppByIt.action?labelId=297e4ec84e8bf652014e8bf6d7c90000
+ */
+
+-(MKNetworkOperation *)requestGetGoodAppByItWithDic:(NSDictionary *)dic
+                                  completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                       errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/goods!getGoodsAppByIt.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+}
+
+
+/*
+ 优惠券
+ */
+-(MKNetworkOperation *)requestGetMyCouponsWithDic:(NSDictionary *)dic
+                                completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                     errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/shopxx/app/coupons!getMyCoupons.action"] params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+}
+
+#pragma mark - 合成一个请求方法
+
+-(MKNetworkOperation *) requestPostWithURL:(NSString *)urlStr andParamDic:(NSDictionary *)dic  completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                              errorHandler:(MKNKErrorBlock) errorBlock;
+{
+    MKNetworkOperation *op = [self operationWithPath:urlStr params:dic httpMethod:@"POST"];
+    
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    return op;
+}
+
+#pragma mark - 下载完成和出错的处理
+-(void)completionWithNetWorkOperation:(MKNetworkOperation*)op completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                         errorHandler:(MKNKErrorBlock) errorBlock
+{
+    [op addCompletionHandler:^(MKNetworkOperation* completedOperation) {
+        
+        //        DLog(@"字符数据%@", [completedOperation responseString]);
+        if([completedOperation isCachedResponse]) {
+            
+            DLog(@"Data from cache");
+            [completedOperation responseJSONWithCompletionHandler:^(id jsonObject) {
+                completionBlock(jsonObject);
+            }];
+            
+        }else {
+            
+            DLog(@"Data from server");
+            [completedOperation responseJSONWithCompletionHandler:^(id jsonObject) {
+                completionBlock(jsonObject);
+            }];
+            
+        }
+        
+        
+    }
+                errorHandler:^(MKNetworkOperation *errorOp, NSError* error) {
+                    
+                    errorBlock(error);
+                }];
+    [self enqueueOperation:op];
+    
+}
+
+
+
+@end

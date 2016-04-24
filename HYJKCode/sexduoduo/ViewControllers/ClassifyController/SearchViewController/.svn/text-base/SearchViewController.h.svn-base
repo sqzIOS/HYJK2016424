@@ -1,0 +1,23 @@
+//
+//  SearchViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-8-22.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "GoodsViewController.h"
+
+@interface SearchViewController : UIViewController<UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate>
+{
+     BOOL isHistory;
+}
+
+
+@property (strong, nonatomic) UITableView *searchTableView;
+@property (strong, nonatomic) NSMutableArray *searchArry;
+@property (strong, nonatomic) UIView *topSearchView;
+@property (strong, nonatomic) UITextField *searchField;
+
+@end

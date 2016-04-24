@@ -1,0 +1,55 @@
+//
+//  CustomSeverCell.m
+//  sexduoduo
+//
+//  Created by sqz on 14-12-1.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "CustomSeverCell.h"
+
+@implementation CustomSeverCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+
+-(void)configCellWithNameArray:(NSArray *)nameArray andQQArray:(NSArray *)qqArray  andIsOnlineArray:(NSArray *)qqIsOnlineArray   indexRow:(int)row
+{
+
+    
+    // 头像可以下载140 和 40 的
+    [self.headImageView sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"http://q4.qlogo.cn/g?b=qq&nk=%@&s=140",qqArray[row]]] placeholderImage:UIImageByName(@"qqImage") completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+        
+        //当为不在线时 图片变灰
+        if (qqIsOnlineArray.count>row  && [qqIsOnlineArray[row] intValue]==0) {
+            UIImage *changeImage=[ShareFunction grayscaleImageForImage:image];
+            self.headImageView.image=changeImage;
+        }
+        
+    }];
+    [self.headImageView.layer setCornerRadius:CGRectGetHeight([self.headImageView bounds]) / 2];
+    self.headImageView.layer.masksToBounds = YES;
+    self.headImageView.layer.borderWidth = 1.0;
+    self.headImageView.layer.borderColor = [[UIColor whiteColor] CGColor];
+    
+    
+    self.nameLab.text = [nameArray objectAtIndex:row];
+    
+    if (qqIsOnlineArray.count>row  && [qqIsOnlineArray[row] intValue]==0) {
+       self.nameLab.textColor = [UIColor colorWithRed:135/255.f green:135/255.f blue:135/255.f alpha:1.0];
+    }else self.nameLab.textColor = [UIColor colorWithRed:15/255.f green:15/255.f blue:15/255.f alpha:1.0];
+    
+    self.nameLab.font = [UIFont systemFontOfSize:16.0];
+}
+
+@end

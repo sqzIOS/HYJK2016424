@@ -1,0 +1,24 @@
+//
+//  WuLiuInfoViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-12-10.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface WuLiuInfoViewController : UIViewController
+
+@property(strong,nonatomic)NSArray *listArray;
+@property (strong, nonatomic) UITableView *tbView ;
+
+@property (strong, nonatomic) NSString *orderId;
+@property (strong, nonatomic) IBOutlet UIView *headView;
+
+@property (strong, nonatomic) IBOutlet UILabel *wuliuLab;
+@property (strong, nonatomic) IBOutlet UILabel *bianhaoLab;
+
+@property (strong, nonatomic) IBOutlet UIImageView *whiteBgView;
+
+@end

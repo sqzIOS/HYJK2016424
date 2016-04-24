@@ -1,0 +1,29 @@
+//
+//  TopLeftAlertView.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/17.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface TopLeftAlertView : UIView
+
+@property (nonatomic, strong) UIImageView *bgImageView;
+
+@property (nonatomic, strong) UIButton *nearPeopleBtn;
+
+@property (nonatomic, strong) UIButton *nearPostBtn;
+
+@property (nonatomic, strong) UILabel *line;
+
+@property (nonatomic, strong) UIImageView *neaPeopleImageView;
+
+@property (nonatomic, strong) UIImageView *nearPostImageView;
+
+@property (nonatomic, strong) UIViewController *mainVC;
+
+- (instancetype)initWithFrame:(CGRect)frame Controller:(UIViewController *)vc;
+
+@end

@@ -1,0 +1,50 @@
+//
+//  ClubingModel.m
+//  
+//
+//  Created by apple on 15/12/10.
+//
+//
+
+#import "ClubingModel.h"
+
+@implementation ClubingModel
+
+
+
++ (instancetype)clubingModelWith:(NSDictionary *)dict
+{
+    ClubingModel *model = [[self alloc] init];
+    model.ID = [dict[@"id"] intValue];
+    model.name = dict[@"name"];
+    NSArray *dataArry = dict[@"forum"];
+    model.forumArry = [NSMutableArray array];
+    for (int index = 0; index < dataArry.count ; index++) {
+        NSDictionary *dict = dataArry[index];
+        ClubingForumModel *clubingForumModel = [ClubingForumModel clubingForumModelWithDict:dict];
+        [model.forumArry addObject:clubingForumModel];
+    }
+    return model;
+}
+
+
+-(id)initWithCoder:(NSCoder *)aDecoder
+{
+    if (self = [super init]) {
+        self.forumArry = [aDecoder decodeObjectForKey:@"forumArry"];
+        self.ID = [aDecoder decodeIntegerForKey:@"ID"];
+        self.name = [aDecoder decodeObjectForKey:@"name"];
+    }
+    
+    return self;
+}
+
+-(void)encodeWithCoder:(NSCoder *)aCoder
+{
+    [aCoder encodeObject:self.forumArry forKey:@"forumArry"];
+    [aCoder encodeInteger:self.ID forKey:@"ID"];
+    [aCoder encodeObject:self.name forKey:@"name"];
+}
+
+
+@end

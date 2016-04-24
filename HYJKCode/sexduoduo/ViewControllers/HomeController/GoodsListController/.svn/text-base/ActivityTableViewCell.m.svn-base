@@ -1,0 +1,76 @@
+//
+//  ActivityTableViewCell.m
+//  sexduoduo
+//
+//  Created by sqz on 14-11-27.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "ActivityTableViewCell.h"
+
+@implementation ActivityTableViewCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+-(void)configCellWithArray:(NSArray *)array indexRow:(int)row
+{
+    NSDictionary *dic = [array objectAtIndex:row];
+    
+    if (judgeUrlIsHave(dic, @"newBigGoodsImagePath"))
+    {
+        // 商品图片
+        [self.goodImageView sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",[dic objectForKey:@"newBigGoodsImagePath"]]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    }else
+    {
+        // 商品图片
+        [self.goodImageView sd_setImageWithURL:[PublicMethod imgWithUrl:[NSString stringWithFormat:@"%@",[dic objectForKey:@"bigGoodsImagePath"]]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    }
+
+    
+    // 名称
+    self.nameLab.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"name"]];
+    
+    
+//    CGSize nameSize = [[dic objectForKey:@"name" ] sizeWithFont:self.nameLab.font
+//                                              constrainedToSize:CGSizeMake(self.nameLab.frame.size.width, 25)
+//                                                  lineBreakMode:NSLineBreakByWordWrapping];
+//    CGRect nameLabFrame=self.nameLab.frame;
+//    nameLabFrame.size.height=nameSize.height+2;
+//    self.nameLab.frame =nameLabFrame;
+   
+    
+   
+    
+    
+    
+    // 原价格
+    self.oldPriceLab.text=[NSString stringWithFormat:@" ￥%.2f",[[dic objectForKey:@"marketPrice"] floatValue]];
+    CGSize originalPriceLabSize = [[NSString stringWithFormat:@" ￥%.2f",[[dic objectForKey:@"marketPrice"] floatValue] ] sizeWithFont:self.oldPriceLab.font
+                                                                                                                         constrainedToSize:CGSizeMake(150, 20)
+                                                                                                                             lineBreakMode:NSLineBreakByWordWrapping];
+    
+    CGRect oldPriceFrame=self.oldPriceLab.frame;
+    oldPriceFrame.size.width=originalPriceLabSize.width+2;
+    self.oldPriceLab.frame=oldPriceFrame;
+    self.oldPriceLab.textColor=NAV_RED_COLOR;
+    
+    oldPriceFrame.origin.y +=12.5;
+    oldPriceFrame.size.height=1;
+    UIView *priceLine = [[UIView alloc] initWithFrame:oldPriceFrame];
+    priceLine.backgroundColor = NAV_RED_COLOR;
+    [self.bottomView addSubview:priceLine];
+    
+    
+    
+    
+}
+@end

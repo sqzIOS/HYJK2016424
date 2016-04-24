@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="5056" systemVersion="13E28" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <deployment defaultVersion="1536" identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="JiFenShopViewController">
+            <connections>
+                <outlet property="indicator" destination="1PB-eO-xmH" id="Kdr-Jf-FA9"/>
+                <outlet property="jiFenHeadView" destination="CPn-Hs-qJd" id="hKI-Uk-aN3"/>
+                <outlet property="loadingView" destination="o7G-Z4-pTu" id="3eR-JP-IOa"/>
+                <outlet property="noNetView" destination="qhM-QV-DAJ" id="KUe-Cm-jg3"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <simulatedStatusBarMetrics key="simulatedStatusBarMetrics"/>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+        </view>
+        <view contentMode="scaleToFill" id="o7G-Z4-pTu">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qhM-QV-DAJ">
+                    <rect key="frame" x="0.0" y="39" width="320" height="281"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DfO-ur-N9w">
+                            <rect key="frame" x="106" y="237" width="95" height="44"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                            <color key="backgroundColor" red="0.95686274510000002" green="0.1764705882" blue="0.3921568627" alpha="1" colorSpace="calibratedRGB"/>
+                            <state key="normal" title="重新加载"/>
+                        </button>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="noNet.png" translatesAutoresizingMaskIntoConstraints="NO" id="ZvE-8L-Qsf">
+                            <rect key="frame" x="0.0" y="0.0" width="320" height="221"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        </imageView>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                </view>
+                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="1PB-eO-xmH">
+                    <rect key="frame" x="150" y="189" width="20" height="20"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES"/>
+                </activityIndicatorView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina4"/>
+        </view>
+        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="jiFenShop.png" id="CPn-Hs-qJd">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="136"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+        </imageView>
+    </objects>
+    <resources>
+        <image name="jiFenShop.png" width="320" height="136"/>
+        <image name="noNet.png" width="320" height="222"/>
+    </resources>
+</document>

@@ -1,0 +1,116 @@
+//
+//  GoodListMainController.m
+//  
+//
+//  Created by apple on 15/12/29.
+//
+//
+
+
+
+#import "GoodListMainController.h"
+#import "GoodListtTTController.h"
+
+@interface GoodListMainController ()
+
+@end
+
+@implementation GoodListMainController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    self.homeId = @"18";
+    [self createScrollView];
+    [self loadData];
+}
+
++ (instancetype)goodListMainControllerWithTitle:(NSString *)title
+{
+    GoodListMainController *controller = [[GoodListMainController alloc] init];
+    controller.name = title;
+    return controller;
+}
+
+#pragma mark - 创建scrollview
+- (void)createScrollView
+{
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    [self.view addSubview:scrollView];
+    scrollView.bounces = YES;
+    scrollView.showsVerticalScrollIndicator = NO;
+    scrollView.frame = CGRectMake(0,self.topView.bottom, SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.height);
+    
+    // 背景
+    CGFloat Y = 0;
+    CGRect bgimageViewFrame1 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(351.5));
+    [self createBgimageViewWithFrame:bgimageViewFrame1 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame1.size.height;
+    CGRect bgimageViewFrame2 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(166));
+    [self createBgimageViewWithFrame:bgimageViewFrame2 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame2.size.height;
+    CGRect xsqgFrame = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(130));
+    GoodBtn *xsqgBtn = [[GoodBtn alloc] initWithFrame:xsqgFrame];
+    [scrollView addSubview:xsqgBtn];
+    [xsqgBtn addTarget:self action:@selector(xsqgBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    [self.goodBtns addObject:xsqgBtn];
+    
+    Y += xsqgFrame.size.height;
+    CGRect bgimageViewFrame3 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(124.5));
+    [self createBgimageViewWithFrame:bgimageViewFrame3 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame3.size.height;
+    CGRect bgimageViewFrame4 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(383.5));
+    [self createBgimageViewWithFrame:bgimageViewFrame4 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame4.size.height;
+    CGRect bgimageViewFrame5 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(138));
+    [self createBgimageViewWithFrame:bgimageViewFrame5 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame5.size.height;
+    CGRect bgimageViewFrame6 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(272));
+    [self createBgimageViewWithFrame:bgimageViewFrame6 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame6.size.height;
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, Y);
+    
+    // 优惠券按钮
+    UIImageView *imageView1 = [self.bgimageViews objectAtIndex:1];
+    UIButton *couponBtn = [[UIButton alloc] init];
+    [couponBtn addTarget:self action:@selector(couponBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    couponBtn.frame = CGRectMake(QZMake(15), QZMake(80), SCREEN_WIDTH  - QZMake(30), QZMake(60));
+    [imageView1 addSubview:couponBtn];
+    
+    // 商品列表按钮
+    UIImageView *imageView3 = [self.bgimageViews objectAtIndex:3];
+    for (int i = 0; i < 6; i++) {
+        CGFloat btnX = (SCREEN_WIDTH - QZMake(304)) / 4;
+        if (i%2 != 0) {
+            btnX = QZMake(152) + 3 * btnX;
+        }
+        CGFloat btnY = i / 2 * QZMake(130);
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        [self.goodBtns addObject:btn];
+        btn.frame = CGRectMake(btnX, btnY,QZMake(152),QZMake(117.5));
+        [imageView3 addSubview:btn];
+    }
+    
+    // 分类按钮
+    UIImageView *imageView5 = [self.bgimageViews objectAtIndex:5];
+    for (int i = 0; i < 6; i++) {
+        CGFloat btnX = QZMake(45) + i % 3 * QZMake(110);
+        CGFloat btnY = i / 3 * QZMake(85);
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        [self.goodBtns addObject:btn];
+        btn.frame = CGRectMake(btnX, btnY,QZMake(65),QZMake(75));
+        [imageView5 addSubview:btn];
+    }
+}
+
+
+
+
+
+@end

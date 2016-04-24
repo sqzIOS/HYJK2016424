@@ -1,0 +1,577 @@
+//
+//  BBSListViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-7-30.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSListViewController.h"
+#import "BBSListJingHuaView.h"
+#import "LoginViewController.h"
+@interface BBSListViewController ()<UIAlertViewDelegate>
+{
+    NSMutableArray *dataArray;
+    NSMutableArray *jingHuaArray;
+    
+    BBSListJingHuaView *jinghuaView;
+    
+    UISegmentedControl *segmentedControl;
+}
+@end
+
+@implementation BBSListViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        
+    }
+    return self;
+}
+-(void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+}
+-(void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    
+    [opration cancel];
+    [oprationTop cancel];
+    
+    opration=nil;
+    oprationTop=nil;
+}
+
+-(void)dealloc
+{
+    // 结束统计时间
+    [MobClick endEvent:[NSString stringWithFormat:@"BBS_%@",self.forumId]];
+    
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    // 开始统计事件
+    [MobClick beginEvent:[NSString stringWithFormat:@"BBS_%@",self.forumId]];
+
+    //登录成功刷新
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshRequestData) name:NOTIFICATION_ISLOGIN object:nil];
+    
+    [self setTopNavView];
+    
+    pageIndex=1;
+    
+    [self initBBSTableView];
+    
+    
+    
+    self.noNetworkView =(NoNetworkView *)[[[NSBundle mainBundle] loadNibNamed:@"NoNetworkView" owner:self options:nil] lastObject];
+    self.noNetworkView.delegate=self;
+    self.noNetworkView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH,SCREEN_HEIGHT);
+    [self.view addSubview:self.noNetworkView];
+    
+    
+    
+    
+    //获得数据
+    dataArray=[[NSMutableArray alloc] init];
+    jingHuaArray=[[NSMutableArray alloc]init];
+    
+    [self requestData];
+    
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    //设置segment的title的选中的属性 相应的也可以设置其他状态的属性
+    NSDictionary *textAttibutesSelected = [NSDictionary dictionaryWithObjectsAndKeys:
+                                           [UIFont fontWithName:k_Font size:16],UITextAttributeFont,
+                                           NAV_COLOR,UITextAttributeTextColor,
+                                           NAV_MoreBg_COLOR,UITextAttributeTextShadowColor,
+                                           [NSValue valueWithCGSize:CGSizeMake(0, 0)],UITextAttributeTextShadowOffset,nil];
+    [[UISegmentedControl appearance] setTitleTextAttributes:textAttibutesSelected
+                                                   forState:UIControlStateSelected];
+    
+//    [self requestData];//每次页面新出现时 重新加载下数据
+    
+}
+
+
+    
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+
+    UIButton *rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightBtn.frame = CGRectMake(SCREEN_WIDTH-64, 25 , 64, 57);
+
+    [rightBtn setImage:[UIImage imageNamed:@"BBS_MyBBS"] forState:UIControlStateNormal];
+    [rightBtn addTarget:self action:@selector(postBBSAction) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:rightBtn];
+    
+    
+    
+    segmentedControl=[[UISegmentedControl alloc] initWithItems:@[@"最新",@"精华"]];
+    segmentedControl.frame=CGRectMake(SCREEN_WIDTH/2.-80, 25.5, 160., 30);
+    segmentedControl.tintColor=NAV_MoreBg_COLOR;
+    segmentedControl.selectedSegmentIndex=0;
+    [segmentedControl setSegmentedControlStyle:UISegmentedControlStyleBordered];
+    
+    [segmentedControl addTarget:self action:@selector(segmentedControlChanged:) forControlEvents:UIControlEventValueChanged];
+    [navView addSubview:segmentedControl];
+
+    
+    
+}
+
+-(void)segmentedControlChanged:(UISegmentedControl *)sender
+{
+    [self refreshRequestData];
+}
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+-(void)didNotLogin{
+    UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"提示" message:@"您尚未登录,是否去登录" delegate:self cancelButtonTitle:@"否" otherButtonTitles:@"是", nil];
+    alert.tag=111;
+    [alert show];
+}
+
+//发布帖子
+-(void)postBBSAction
+{
+    if (ISLOGIN) {
+        PostMsgViewController *ctrVC = [[PostMsgViewController alloc] initWithNibName:@"PostMsgViewController" bundle:[NSBundle mainBundle]];
+        ctrVC.forumId=self.forumId;
+        [self presentViewController:ctrVC animated:YES completion:^{
+            
+        }];
+    }else
+    {
+        UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"提示" message:@"您尚未登录,是否去登录" delegate:self cancelButtonTitle:@"否" otherButtonTitles:@"是", nil];
+        alert.tag=111;
+        [alert show];
+    }
+
+
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag==111) {
+        if (buttonIndex==1) {
+            [PublicMethod gotoLoginWithVC:self];
+
+        }
+    }
+}
+
+-(void)initBBSTableView
+{
+    self.bbsTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y)];
+    self.bbsTableView.dataSource = self;
+    self.bbsTableView.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.bbsTableView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.bbsTableView.separatorColor=[UIColor clearColor];
+    self.bbsTableView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.bbsTableView];
+    
+    //精华帖
+    jinghuaView=[[BBSListJingHuaView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 162+20)];
+    jinghuaView.forumId=self.forumId;
+    if (self.forumImage) {
+        jinghuaView.forumImage=self.forumImage;
+    }
+    jinghuaView.nameString=self.nameString;
+    jinghuaView.detailString=self.detailString;
+    jinghuaView.delegate=self;
+    [jinghuaView configeView];
+    self.bbsTableView.tableHeaderView=jinghuaView;
+    
+    
+    UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    self.bbsTableView.tableFooterView = footView;
+    
+  
+    // 1.下拉刷新
+    [self.bbsTableView addHeaderWithTarget:self action:@selector(headerRereshing)];
+    
+    //返回顶端的按钮 1
+    
+    goTopView=[[GoTopView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH-60, SCREEN_HEIGHT, 44, 44)];
+    goTopView.targetScrollView = self.bbsTableView;
+    [self.view addSubview:goTopView];
+    
+}
+
+-(void)headerRereshing
+{
+    
+    [self refreshRequestData];
+    
+}
+
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.bbsTableView headerEndRefreshing];
+}
+
+-(void)getMoreBBSData
+{
+    pageIndex++;
+    
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:@"10" forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:self.forumId forKey:@"forumId"];
+    if (ISLOGIN) {
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    
+    if(segmentedControl.selectedSegmentIndex==0)
+    {
+        NSLog(@"分类%@",tempDic);
+        //请求列表
+       opration = [[MKHttpExchangeDemo shareMyInstance] requestExchangePostListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"--<>>%@-分类%@列表请求-%@",responseDic,self.forumId,[responseDic objectForKey:@"message"]);
+            
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+          
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:dataArray];
+                
+                
+                [self.bbsTableView reloadData];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+            }
+            
+            
+        } errorHandler:^(NSError *error) {
+            
+        }];
+    }else
+    {
+        //请求精华
+      oprationTop =[[MKHttpExchangeDemo shareMyInstance] requestTopForumJingListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"--<>>%@-分类精华%@列表请求-%@",responseDic,self.forumId,[responseDic objectForKey:@"message"]);
+            
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:dataArray];
+                
+                
+                [self.bbsTableView reloadData];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+            }
+            
+            
+        } errorHandler:^(NSError *error) {
+            
+        }];
+    }
+ 
+}
+
+-(void)refreshRequestData
+{
+    pageIndex=1;
+    
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:@"10" forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:self.forumId forKey:@"forumId"];
+    if (ISLOGIN) {
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    
+    if(segmentedControl.selectedSegmentIndex==0)
+    {
+        NSLog(@"分类%@",tempDic);
+        //请求列表
+       opration = [[MKHttpExchangeDemo shareMyInstance] requestExchangePostListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"--<>>%@-分类%@列表请求-%@",responseDic,self.forumId,[responseDic objectForKey:@"message"]);
+            
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                 [dataArray removeAllObjects];//帖子列表内容清空
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:dataArray];
+                
+                
+                [self.bbsTableView reloadData];
+                [self.bbsTableView scrollRectToVisible:CGRectMake(0, 0, 1, 1) animated:YES];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+            }
+            
+           [self hearderRereshingEnd];
+
+        } errorHandler:^(NSError *error) {
+            
+            [self hearderRereshingEnd];
+        }];
+    }else
+    {
+        //请求精华
+       oprationTop = [[MKHttpExchangeDemo shareMyInstance] requestTopForumJingListWithDic:tempDic completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            NSLog(@"--<>>%@-分类精华%@列表请求-%@",responseDic,self.forumId,[responseDic objectForKey:@"message"]);
+            
+            if (responseDic[@"success"] && responseDic[@"datasource"]) {
+                 [dataArray removeAllObjects];//帖子列表内容清空
+                
+                [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:dataArray];
+                
+                
+                [self.bbsTableView reloadData];
+                [self.bbsTableView scrollRectToVisible:CGRectMake(0, 0, 1, 1) animated:YES];
+                [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+            }
+            
+           [self hearderRereshingEnd];
+
+        } errorHandler:^(NSError *error) {
+            [self hearderRereshingEnd];
+
+        }];
+    }
+
+}
+
+#pragma mark 重新加载
+-(void)noNetworkViewRefreshBtnClick
+{
+    [self requestData];
+}
+
+
+#pragma mark - 请求网络数据
+-(void)requestData
+{
+    
+    self.noNetworkView.noNetView.hidden = YES;
+    self.noNetworkView.indicator.hidden = NO;
+    [self.noNetworkView.indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    [self.noNetworkView.indicator startAnimating];
+    
+    
+    pageIndex=1;
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:@"10" forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:self.forumId forKey:@"forumId"];
+    if (ISLOGIN) {
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    
+    //请求列表
+    opration =[[MKHttpExchangeDemo shareMyInstance] requestExchangePostListWithDic:tempDic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"--<>>%@-分类%@列表请求-%@",responseDic,self.forumId,[responseDic objectForKey:@"message"]);
+        
+        if (responseDic[@"success"] && responseDic[@"datasource"]) {
+            [dataArray removeAllObjects];//帖子列表内容清空
+            
+            [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:dataArray];
+            
+            
+            [self.bbsTableView reloadData];
+            [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+        }
+        
+        [self.noNetworkView.indicator stopAnimating];
+        [self.noNetworkView removeFromSuperview];
+    } errorHandler:^(NSError *error) {
+        
+        [self.noNetworkView.indicator stopAnimating];
+        self.noNetworkView.indicator.hidden = YES;
+        self.noNetworkView.noNetView.hidden = NO;
+    }];
+    
+    
+    
+    
+    //请求广告
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc]init];
+    [dic setObject:self.forumId forKey:@"forumId"];
+    [dic setObject:@"1" forKey:@"pageNo"];
+    [dic setObject:@"10" forKey:@"pageSize"];
+    
+    oprationTop=[[MKHttpExchangeDemo shareMyInstance] requestADListWithDic:dic completionHandler:^(id responseObject) {
+
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"置顶帖--<>>%@-分类%@的置顶帖请求-%@",responseDic,self.forumId,[responseDic objectForKey:@"message"]);
+        
+        if (responseDic[@"success"] && responseDic[@"datasource"]) {
+            [jingHuaArray removeAllObjects];//帖子列表内容清空
+            
+            [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:jingHuaArray];
+            
+            jinghuaView.dataArray=jingHuaArray;
+            NSLog(@"jinghuaView.frame=%@",NSStringFromCGRect(jinghuaView.frame));
+            self.bbsTableView.tableHeaderView=jinghuaView;
+
+        }
+        
+        [self hearderRereshingEnd];
+
+    } errorHandler:^(NSError *error) {
+        
+        [self hearderRereshingEnd];
+
+    }];
+    
+    
+    
+    
+}
+//添加触底刷新
+-(void)JudgePageNumAndToalPage:(NSArray *)dataSource
+{
+    
+    
+    __weak typeof(self) weakSelf = self;
+    if ([dataSource count] > 9) {
+        weakSelf.bbsTableView.infiniteScrollingView.enabled = YES;
+
+        [self.bbsTableView addInfiniteScrollingWithActionHandler:^{
+            [weakSelf getMoreBBSData];
+            [weakSelf.bbsTableView.infiniteScrollingView stopAnimating];
+        }];
+        
+    }else
+    {
+        if (self.bbsTableView.infiniteScrollingView != nil) {
+            weakSelf.bbsTableView.infiniteScrollingView.enabled = NO;
+        }
+        
+    }
+}
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return dataArray.count;
+
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+
+    if (dataArray.count>0) {
+        if ([dataArray[indexPath.row][@"contentHtml"] count]>0) {
+            return  238+12;
+        }else return 140+12;
+    }else return 238;
+    
+    
+}
+
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"BBSCell";
+    
+    BBSCell *cell = (BBSCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+
+    
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"BBSCell" owner:self options:nil] lastObject];
+        
+    }
+    cell.controlDelegate=self;
+    [cell configCellWithArray:dataArray indexRow:(int)indexPath.row];
+    return cell;
+ 
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    NSString *topicId=@"0";
+    if (dataArray.count>indexPath.row) {
+         topicId=dataArray[indexPath.row][@"id"];
+    }
+  
+    
+    BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+    controller.forumId=self.forumId;
+    controller.topicId=topicId;
+    controller.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController: controller animated:YES];
+
+    
+}
+
+
+
+#pragma mark -
+#pragma mark UIScrollViewDelegate Methods
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+	
+    
+    
+    //返回顶端的按钮 3
+    [goTopView scrollViewDidScroll:scrollView];
+    
+    
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark ---gotoMyself
++(void)gotoMyself:(id)pvc withType:(BBSListType)type
+{
+    if (pvc == nil) {
+        return;
+    }
+    
+    BBSListViewController* vc = [[BBSListViewController alloc]init];
+    vc.hidesBottomBarWhenPushed = YES;
+    vc.type = type;
+    if ([pvc isKindOfClass:[UINavigationController class]]) {
+        [pvc pushViewController:vc animated:YES];
+    } else if ([pvc isKindOfClass:[UIViewController class]]) {
+        UIViewController *uvc = pvc;
+        [uvc.navigationController pushViewController:vc animated:YES];
+    }
+
+}
+
+@end

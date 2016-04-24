@@ -1,0 +1,26 @@
+//
+//  BBSListJingHuaView.h
+//  sexduoduo
+//
+//  Created by sqz on 14-9-5.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "BBSListViewController.h"
+@interface BBSListJingHuaView : UIView<UITableViewDataSource,UITableViewDelegate>
+{
+    UITableView *tbView;
+    UIImageView *bottomView;
+}
+@property (strong, nonatomic) NSString *forumId;
+@property (strong, nonatomic) UIImage *forumImage;
+@property (strong, nonatomic) NSString *nameString;
+@property (strong, nonatomic) NSString *detailString;
+
+
+@property (nonatomic,strong)NSMutableArray *dataArray;
+@property (nonatomic,weak)BBSListViewController *delegate;
+-(void)configeView;
+
+@end

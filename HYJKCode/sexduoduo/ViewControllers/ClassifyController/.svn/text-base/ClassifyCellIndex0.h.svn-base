@@ -1,0 +1,28 @@
+//
+//  ClassifyCellIndex0.h
+//  sexduoduo
+//
+//  Created by dsz on 15-4-15.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@protocol ClassifyFirstCellDelegate
+
+- (void)firstCellGoodsBtnClick:(NSUInteger)row;
+
+@end
+
+@interface ClassifyCellIndex0 : UITableViewCell
+
+
+@property (strong, nonatomic) IBOutlet UIButton *goodBtn;
+
+
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row;
+
+@property (nonatomic, assign) id <ClassifyFirstCellDelegate> delegate;
+
+@end

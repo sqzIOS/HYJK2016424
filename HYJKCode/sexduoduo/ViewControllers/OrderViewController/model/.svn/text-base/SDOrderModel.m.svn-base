@@ -1,0 +1,61 @@
+//
+//  SDOrderModel.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/28.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDOrderModel.h"
+
+@implementation SDOrderModel
++(instancetype)builtWithDict:(NSDictionary *)dict;
+{
+    return [[[self class] alloc] initWithDict:dict];
+}
+
+
+
+-(instancetype)initWithDict:(NSDictionary *)dict
+{
+    if ((self = [super init]) && dict)
+    {
+        id value;
+        value = dict[@"onlineTotalPrice"];
+        if(value) _onlineTotalPrice = value;
+        
+        value = dict[@"totalPrice"];
+        if(value) _totalPrice = value;
+        
+        value = dict[@"productPrice"];
+        if(value) _productPrice = value;
+        
+        value = dict[@"preferentialPrice"];
+        if(value) _preferentialPrice = value;
+        
+        value = dict[@"onlinePostage"];
+        if(value) _onlinePostage = value;
+        
+        value = dict[@"postage"];
+        if(value) _postage = value;
+        
+        value = dict[@"activityDetail"];
+        if(value) _activityDetail = value;
+        
+        value = dict[@"couponsDetail"];
+        if(value) _couponsDetail = value;
+        
+    }else
+    {
+        //测试数据
+    
+    }
+    
+    return self;
+}
+
+
+
+
+
+@end

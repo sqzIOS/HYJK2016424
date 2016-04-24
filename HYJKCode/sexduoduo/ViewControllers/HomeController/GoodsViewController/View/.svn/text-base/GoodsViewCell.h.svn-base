@@ -1,0 +1,46 @@
+//
+//  GoodsViewCell.h
+//  sexduoduo
+//
+//  Created by showm on 14/6/24.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  商品列表 宫格
+
+#import <UIKit/UIKit.h>
+
+@protocol GoodsViewCellDelegate
+
+- (void)goodsBtnClick:(NSUInteger)row;
+
+
+@end
+
+@interface GoodsViewCell : UITableViewCell
+
+@property (weak, nonatomic) IBOutlet UIButton *leftBtn;
+@property (weak, nonatomic) IBOutlet UIButton *rightBtn;
+
+@property (weak, nonatomic) IBOutlet UIImageView *leftImg;
+@property (weak, nonatomic) IBOutlet UIImageView *rightImg;
+@property (weak, nonatomic) IBOutlet UILabel *leftPrice;
+@property (weak, nonatomic) IBOutlet UILabel *rightPrice;
+@property (weak, nonatomic) IBOutlet UILabel *titleLeft;
+@property (weak, nonatomic) IBOutlet UILabel *titleRight;
+@property (weak, nonatomic) IBOutlet UILabel *salesNumLeft;
+@property (weak, nonatomic) IBOutlet UILabel *salesNumRight;
+
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *leftIconOffline;
+
+@property (strong, nonatomic) IBOutlet UIImageView *rightIconOffline;
+
+
+
+
+
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row;
+
+@property (nonatomic, assign) id <GoodsViewCellDelegate> delegate;
+@end

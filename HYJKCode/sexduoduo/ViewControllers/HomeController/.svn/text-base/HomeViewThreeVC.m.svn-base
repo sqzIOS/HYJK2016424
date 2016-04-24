@@ -1,0 +1,995 @@
+//
+//  HomeViewThreeVC.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeViewThreeVC.h"
+#import "HomeThreeView.h"
+#import "HomeThreeView_Top.h"
+#import "HomeThreeView0.h"
+#import "HomeThreeView1.h"
+#import "HomeThreeView2.h"
+#import "HomeThreeView3.h"
+#import "HomeThreeView4.h"
+#import "HomeThreeView5.h"
+#import "HomeThreeView6.h"
+#import "HomeThreeView7.h"
+#import "HomeThreeView8.h"
+
+#import "NvShenDetailViewController.h"
+
+#import "GiFHUD.h"
+
+#import "ClassifyFileObj.h"
+
+#import "SRRecordHomeVC.h"
+#import "SDNvShenListVC.h"
+#import "SDTimeBuyModelManager.h"
+@interface HomeViewThreeVC ()<DaogouViewDelegate>
+{
+    
+    NSString *showHomeViewStr;
+    NSArray *showHomeViewArray;//显示那些板块
+    
+    NSString *fiveNameStr;
+    NSArray *fiveNameArray;// 五个板块的名称
+    
+    NSMutableArray *homeThreeViewArray;//记录板块
+    
+    UIButton *rightBtn;//分类按钮
+}
+@end
+
+@implementation HomeViewThreeVC
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        
+        [self judgeUmengOnline];
+    }
+    return self;
+}
+
+-(void)judgeUmengOnline
+{
+    if(IS_APPSTORE && !isPassStoreCheck)
+    {
+        //显示的view
+        showHomeViewStr=@"13,21,29,30";
+        
+        showHomeViewArray=[showHomeViewStr componentsSeparatedByString:@","];
+    }else
+    {
+        
+        //显示的view
+        showHomeViewStr=@"1,2,3,4,13,21,29,30,38";
+//        showHomeViewStr=@"1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38";
+        
+        NSString* isShowHomeViews = [MobClick getConfigParams:@"homeViewShow4.0Later"];
+        if (isShowHomeViews ) {
+            showHomeViewStr=isShowHomeViews;
+        }
+        
+        showHomeViewArray=[showHomeViewStr componentsSeparatedByString:@","];
+        
+    }
+   
+    fiveNameStr=@"全球套套,活动专场,男女器具,情趣服饰,调情用品";
+    NSString* isThreeNameStr = [MobClick getConfigParams:@"HomeViewFiveName4.0Later"];
+    if (isThreeNameStr) {
+        fiveNameStr=isThreeNameStr;
+    }
+    fiveNameArray=[fiveNameStr componentsSeparatedByString:@","];
+    
+    
+}
+
+//首页页面
+-(void)homeViewToFront
+{
+    AppDelegate *delegate1 = (AppDelegate*)[UIApplication sharedApplication].delegate;
+    [delegate1.tabController hidesTabBar:NO animated:YES];
+    
+    
+    //请求数据
+    [self requestData];
+    
+    [self judgeUmengOnline];
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(homeViewToFront) name:@"displayView0" object:nil];
+   
+    
+    // 首页商品数据
+    self.homeNewDataArray = [NSMutableArray arrayWithCapacity:0];
+    //读取缓存
+    NSArray *tempArr=[ClassifyFileObj readArrayWithPath:FILE_HomeView_path];
+    if (tempArr) {
+        self.homeNewDataArray = [NSMutableArray arrayWithArray:tempArr];
+    }
+    
+    homeThreeViewArray = [[NSMutableArray alloc] init];
+    
+    
+    
+    [self setTopNavView];
+    
+    //创建mainScview 并加载缓存
+    [self initMainScrollView];
+    
+
+    // 重新布局首页
+    [self setHomeViewLayOut:AdScrollViewHeight];
+
+    //创建广告页
+    [self.mainScrollView addSubview:self.adScrollView];
+
+    
+    
+    //请求数据
+    [self requestData];
+    
+  
+    
+    [SDTimeBuyModelManager sharedInstance];
+}
+
+
+-(SDHomeHeaderView *)adScrollView
+{
+    if (!_adScrollView) {
+        
+        _adScrollView = [[SDHomeHeaderView alloc] initWithFrameAndType:CGRectMake(0, 0, SCREEN_WIDTH, AdScrollViewHeight) pvc:self];
+    }
+    
+    return _adScrollView;
+}
+
+
+-(void)viewDidDisappear:(BOOL)animated
+{
+    
+}
+-(void)viewDidAppear:(BOOL)animated
+{
+    [m_appDelegate stopMusic];
+}
+
+
+
+#pragma mark  - layout
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int layOutH = -20;
+    if (IOS7_OR_LATER) {
+        layOutH = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, layOutH,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    
+    
+    UIImageView *titleImgV = [[UIImageView alloc] initWithFrame:CGRectMake(SCREEN_WIDTH/2.-92/3., 30, 92*2/3., 38*2/3.)];
+    [titleImgV setImage:[UIImage imageNamed:@"store_xingduoduo.png"]];
+    [navView addSubview:titleImgV];
+    
+    
+   
+    
+    rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightBtn.frame = CGRectMake(SCREEN_WIDTH-55, 30 , 45, 25);
+    [rightBtn setTitle:@"分类" forState:UIControlStateNormal];
+    [rightBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateNormal];
+    rightBtn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+    rightBtn.layer.cornerRadius = 11.5;
+    rightBtn.layer.borderColor = NAV_RED_COLOR.CGColor;
+    rightBtn.layer.borderWidth = 0.5;
+    [rightBtn addTarget:self action:@selector(rightBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:rightBtn];
+    
+    //1.通过审核后才可以显示分类  2.在隐藏性健康 显示分类版块时  首页的分类按钮隐藏
+    if(isPassStoreCheck && !isHiddenSexhealth)
+    {
+        rightBtn.hidden = NO;
+    }else rightBtn.hidden = YES;
+    
+}
+-(void)rightBtnClick:(id)sender
+{
+    ClasifyTwoVC *classifyVC2 = [[ClasifyTwoVC alloc]initWithNibName:@"ClasifyTwoVC" bundle:[NSBundle mainBundle]];
+    classifyVC2.type = SecondPage;
+    [self.navigationController pushViewController:classifyVC2 animated:YES];
+}
+
+
+#pragma mark 调整位置
+-(void)setHomeViewLayOut:(int)layH
+{
+    
+    CGFloat position_y=layH;
+    
+    position_y +=0;
+    
+    // 判断哪个板块显示
+    for (int i=0; i<homeThreeViewArray.count; i++) {
+        NSDictionary *dic=homeThreeViewArray[i];
+        BOOL isShow=NO;
+        for (NSString *showStr in showHomeViewArray) {
+            if(i== [showStr intValue]-1)
+                isShow=YES;
+        }
+        
+        if (isShow) {
+            HomeThreeView *view=[dic objectForKey:@"UIView"];
+            CGSize size=CGSizeFromString(dic[@"CGSize"]);
+            view.hidden=NO;
+            view.frame=CGRectMake(0, position_y, size.width, size.height);
+            
+            position_y +=size.height;
+            
+        }else{
+            UIView *view=[dic objectForKey:@"UIView"];
+            view.hidden=YES;
+            
+        }
+    }
+    
+    
+    
+    
+    //女神导购
+    BOOL isShowNvShenDao=NO;
+    
+    if(IS_APPSTORE && !isPassStoreCheck)//审核状态
+    {
+        isShowNvShenDao=NO;
+    }else
+    {
+        isShowNvShenDao=YES;
+    }
+    
+    if (isShowNvShenDao && self.nvShenDaoGouListArr.count>0) {
+        self.daoGouView.hidden=NO;
+        self.daoGouView.nvShenDaoGouListArr=self.nvShenDaoGouListArr;
+        
+        self.daoGouView.frame=CGRectMake(0, position_y, SCREEN_WIDTH, self.daoGouView.frame.size.height);
+        
+        position_y +=self.daoGouView.frame.size.height;
+    }
+    
+    
+    //调整首页 scView的frame
+    [self.mainScrollView setContentSize:CGSizeMake(SCREEN_WIDTH, position_y + 0)];
+    
+    
+}
+#pragma mark 将首页所有预留板块 加到数组当中
+-(void)testAddHomeView
+{
+    
+    //编号1区
+    if (1) {
+        HomeThreeView_Top *homeView=[[HomeThreeView_Top alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, 86));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    
+
+    //编号2区
+    if (1) {
+//        HomeThreeView0 *homeView=[[[NSBundle mainBundle] loadNibNamed:@"HomeThreeView0" owner:self options:nil] lastObject];
+        HomeThreeView0 *homeView=[[HomeThreeView0 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号3区
+    if (1) {
+        HomeThreeView1 *homeView= [[HomeThreeView1 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        if (fiveNameArray.count>0) {
+            homeView.lab.text=fiveNameArray[0];
+        }
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号4区
+    if (2) {
+        HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号5区
+    if (3) {
+        HomeThreeView3 *homeView=[[HomeThreeView3 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号6区
+    if (2) {
+        HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号7区
+    if (4) {
+        HomeThreeView4 *homeView=[[HomeThreeView4 alloc] init];
+        [homeView reset];
+        if (fiveNameArray.count>1) {
+            homeView.lab.text=fiveNameArray[1];
+        }
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号8-12区
+    if (2) {
+        for(int i=0;i<5;i++)
+        {
+            HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+            [homeView reset];
+            homeView.viewController=self;
+            [self.mainScrollView addSubview:homeView];
+            
+            NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+            [dic1 setObject:homeView forKey:@"UIView"];
+            NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+            [dic1 setObject:sizeString1 forKey:@"CGSize"];
+            [homeThreeViewArray addObject:dic1];
+            
+            homeView.indexNum=(int)homeThreeViewArray.count-1;
+        }
+        
+       
+    }
+    
+    //编号13区
+    if (5) {
+        HomeThreeView5 *homeView=[[HomeThreeView5 alloc] init];
+        [homeView reset];
+        if (fiveNameArray.count>2) {
+            homeView.lab.text=fiveNameArray[2];
+        }
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号14区
+    if (2) {
+        HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号15区
+    if (3) {
+        HomeThreeView3 *homeView=[[HomeThreeView3 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号16-20区
+    if (2) {
+        for(int i=0;i<5;i++)
+        {
+            
+            HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+            [homeView reset];
+            homeView.viewController=self;
+            [self.mainScrollView addSubview:homeView];
+            
+            NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+            [dic1 setObject:homeView forKey:@"UIView"];
+            NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+            [dic1 setObject:sizeString1 forKey:@"CGSize"];
+            [homeThreeViewArray addObject:dic1];
+            
+            homeView.indexNum=(int)homeThreeViewArray.count-1;
+        }
+    }
+    
+    //编号21区
+    if (6) {
+        HomeThreeView6 *homeView=[[HomeThreeView6 alloc] init];
+        [homeView reset];
+        homeView.lab.text=@"情趣服饰";
+        if (fiveNameArray.count>3) {
+            homeView.lab.text=fiveNameArray[3];
+        }
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号22区
+    if(2)
+    {
+        HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号23区
+    if (3) {
+        HomeThreeView3 *homeView=[[HomeThreeView3 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号24-28区
+    if (2) {
+        for(int i=0;i<5;i++)
+        {
+            
+            HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+            [homeView reset];
+            homeView.viewController=self;
+            [self.mainScrollView addSubview:homeView];
+            
+            NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+            [dic1 setObject:homeView forKey:@"UIView"];
+            NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+            [dic1 setObject:sizeString1 forKey:@"CGSize"];
+            [homeThreeViewArray addObject:dic1];
+            
+            homeView.indexNum=(int)homeThreeViewArray.count-1;
+        }
+    }
+    
+    //编号29区
+    if (1) {
+        HomeThreeView1 *homeView=[[HomeThreeView1 alloc] init];
+        [homeView reset];
+        homeView.lab.text=@"调情用品";
+        if (fiveNameArray.count>4) {
+            homeView.lab.text=fiveNameArray[4];
+        }
+        homeView.labLeftView.backgroundColor=UIColorFromRGB(0x5dc800);
+        homeView.lab.textColor=UIColorFromRGB(0x5dc800);
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号30区
+    if (7) {
+        HomeThreeView7 *homeView=[[HomeThreeView7 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    
+    
+    
+    //编号31区
+    if(2)
+    {
+        HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号32区
+    if (3) {
+        HomeThreeView3 *homeView=[[HomeThreeView3 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    
+    //编号33-37区
+    if (2) {
+        for(int i=0;i<5;i++)
+        {
+            
+            HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+            [homeView reset];
+            homeView.viewController=self;
+            [self.mainScrollView addSubview:homeView];
+            
+            NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+            [dic1 setObject:homeView forKey:@"UIView"];
+            NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+            [dic1 setObject:sizeString1 forKey:@"CGSize"];
+            [homeThreeViewArray addObject:dic1];
+            
+            homeView.indexNum=(int)homeThreeViewArray.count-1;
+        }
+    }
+    
+    
+    // 38区
+    if (8) {
+        HomeThreeView8 *homeView=[[HomeThreeView8 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    //编号39区
+    if (3) {
+        HomeThreeView3 *homeView=[[HomeThreeView3 alloc] init];
+        [homeView reset];
+        homeView.viewController=self;
+        [self.mainScrollView addSubview:homeView];
+        
+        NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+        [dic1 setObject:homeView forKey:@"UIView"];
+        NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH,[homeView getViewHeight]));
+        [dic1 setObject:sizeString1 forKey:@"CGSize"];
+        [homeThreeViewArray addObject:dic1];
+        
+        homeView.indexNum=(int)homeThreeViewArray.count-1;
+    }
+    
+    
+    //编号40-44区
+    if (2) {
+        for(int i=0;i<5;i++)
+        {
+            
+            HomeThreeView2 *homeView=[[HomeThreeView2 alloc] init];
+            [homeView reset];
+            homeView.viewController=self;
+            [self.mainScrollView addSubview:homeView];
+            
+            NSMutableDictionary *dic1=[[NSMutableDictionary alloc]init];
+            [dic1 setObject:homeView forKey:@"UIView"];
+            NSString *sizeString1= NSStringFromCGSize(CGSizeMake(SCREEN_WIDTH, [homeView getViewHeight]));
+            [dic1 setObject:sizeString1 forKey:@"CGSize"];
+            [homeThreeViewArray addObject:dic1];
+            
+            homeView.indexNum=(int)homeThreeViewArray.count-1;
+        }
+    }
+    
+    
+  
+    //===============================
+    //17 导购数据  和其他 数据分开
+    if(17){
+        
+        self.daoGouView=[[DaogouView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, MAKEOF5(240)*5+40)];
+        [self.daoGouView configView];
+        self.daoGouView.delegate=self;
+        self.daoGouView.hidden=YES;
+        [self.mainScrollView addSubview:self.daoGouView];
+    }
+    
+    
+}
+
+
+-(void)setGoodsViewData:(NSArray *)dataArray  andType:(int)type
+{
+    
+    if (type==1) {//首页分类
+        
+        int index=0;
+        
+        // 判断哪个板块显示
+        for (int i=0; i<homeThreeViewArray.count; i++) {
+            NSDictionary *dic=homeThreeViewArray[i];
+            BOOL isShow=NO;
+            for (NSString *showStr in showHomeViewArray) {
+                if(i== [showStr intValue]-1)
+                    isShow=YES;
+            }
+            
+            HomeThreeView *view=[dic objectForKey:@"UIView"];
+            NSMutableArray *array=[[NSMutableArray alloc]init];
+            for (int i=0; i<view.btnNum; i++) {
+                if (index+i < dataArray.count) {
+                    [array addObject:dataArray[index+i]];
+                }
+            }
+            index+=view.btnNum;
+            
+            if (isShow) {//赋值 会去下载图片  没有显示的就不下载图片了
+            
+                //对第一块做了特殊处理 替换为编号为27数组下标26的元素
+                if(i==1 && array.count>2){
+                    [array replaceObjectAtIndex:1 withObject:[dataArray lastObject]];
+                }
+                
+                view.dataArray=array;
+                
+            }else{}
+        }
+    }
+    
+    
+}
+-(void)initMainScrollView
+{
+    
+    self.mainScrollView.frame = CGRectMake(0,STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT- STAR_Y-50);
+    self.mainScrollView.delegate = self;
+    //    self.mainScrollView.backgroundColor = [UIColor colorWithRed:244/255.f green:244/255.f blue:244/255.f alpha:1.0];
+    self.mainScrollView.backgroundColor = CLEAR_COLOR;
+    [self.view addSubview:self.mainScrollView];
+    
+    self.mainScrollView.scrollsToTop=YES;
+    
+    [self.mainScrollView setContentSize:CGSizeMake(SCREEN_WIDTH,  260 + 360 * 4 + 5)];
+    if (IS_IPHONE_5) {
+        [self.mainScrollView setContentSize:CGSizeMake(SCREEN_WIDTH, 260 + 360 * 4 + 5 + 88)];
+    }
+
+    [self testAddHomeView];
+    [self setHomeViewLayOut:0];
+    
+    // 若有缓存数据 则显示
+    if (self.homeNewDataArray.count > 0) {
+        [self setGoodsViewData:self.homeNewDataArray andType:1];
+    }
+    
+    [self.mainScrollView addHeaderWithTarget:self action:@selector(reloadTableViewDataSource)];
+
+}
+
+#pragma mark - action
+-(void)leftBtnClick
+{
+    [SRRecordHomeVC gotoMySelf:self];
+}
+
+//rightBtn搜索方法
+- (void)search
+{
+    SearchViewController *controller = [[SearchViewController alloc] initWithNibName:@"SearchViewController" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:controller animated:YES];
+    
+}
+
+#pragma mark 女神导购点击
+-(void)daoGouViewCellBtnClick:(NSUInteger)row
+{
+    NSLog(@"女神导购");
+    NSString *topicId=@"0";
+    if (self.nvShenDaoGouListArr.count>row) {
+        topicId=self.nvShenDaoGouListArr[row][@"id"];
+    }
+    
+    NvShenDetailViewController *controller = [[NvShenDetailViewController alloc] initWithNibName:@"NvShenDetailViewController" bundle:[NSBundle mainBundle]];
+    controller.forumId=@"22";
+    controller.topicId=topicId;
+    controller.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController: controller animated:YES];
+    
+}
+
+-(void)moreDaoGouClick:(id)sender
+{
+    SDNvShenListVC *vc=[[SDNvShenListVC alloc] init];
+    [self.navigationController pushViewController:vc animated:YES];
+}
+
+#pragma mark - 请求
+
+-(void)requestData
+{
+    //首页信息
+    [self requestHomeDataWithWithDic:nil];
+    
+    //广告页
+    [self.adScrollView requestData];
+}
+
+//首页商品
+-(void)requestHomeDataWithWithDic:(NSDictionary *)dic
+{
+    
+    // 分类
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    if(IS_APPSTORE && !isPassStoreCheck)//AppStore审核状态
+    {
+        params = @{@"showAdress":@"11"};
+    }else
+    {
+        params = @{@"showAdress":@"9"};
+    }
+    
+    
+    //广告10 首页11
+    
+    [[MKHttpServiceEngine shareMyInstance] requestNewHomeWithDic:params completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray新首页分类及商品-->%@",responseDic);
+        NSLog(@"responseArray新首页分类及商品");
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            
+            [self.homeNewDataArray removeAllObjects];
+            
+            [self.homeNewDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            //保存缓存
+            if ([self.homeNewDataArray count]>0) {
+                [ClassifyFileObj writeToFileWithArray:self.homeNewDataArray andFilePath:FILE_HomeView_path];
+
+            }
+            
+            
+            [self setGoodsViewData:self.homeNewDataArray andType:1];
+        }
+        
+        
+        //获得女神导购list
+        [self requestNvShenDaoGouList];
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        
+        if (self.homeNewDataArray.count > 0) {
+            
+            [self setGoodsViewData:self.homeNewDataArray andType:1];
+        }
+        
+        [self doneLoadingTableViewData];
+
+    }];
+    
+}
+
+-(void)requestNvShenDaoGouList
+{
+    int pageIndex=1;
+    
+    NSString *nvShenForumId=@"22";
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",10] forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:nvShenForumId forKey:@"forumId"];
+    if(ISLOGIN)
+    {
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    
+    //请求列表
+    [[MKHttpExchangeDemo shareMyInstance] requestExchangePostListWithDic:tempDic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"--<>>%@-女神导购%@列表请求-%@",responseDic,nvShenForumId,[responseDic objectForKey:@"message"]);
+        
+        if (responseDic[@"success"] && responseDic[@"datasource"]) {
+            //            [self.nvShenDaoGouListArr removeAllObjects];//帖子列表内容清空
+            self.nvShenDaoGouListArr =[[NSMutableArray alloc] init];
+            
+            [PublicMethod formatRequestDataForAndroid:responseDic[@"datasource"] toArray:self.nvShenDaoGouListArr];
+            
+            
+            [self setHomeViewLayOut:AdScrollViewHeight];
+            
+        }
+        
+        [self doneLoadingTableViewData];
+    } errorHandler:^(NSError *error) {
+        [self doneLoadingTableViewData];
+
+    }];
+}
+
+
+
+#pragma RefreshView
+#pragma mark -
+#pragma mark Data Source Loading / Reloading Methods
+
+- (void)reloadTableViewDataSource{
+    
+    
+    // 查询在线参数
+    [self judgeUmengOnline];
+    //提示请求
+    [ShareFunction showHUDWithText:@"正在加载"];
+    
+    //请求数据
+    [self requestData];
+    
+}
+
+- (void)doneLoadingTableViewData{
+    
+    // 停止提示加载
+    [ShareFunction hiddenHUD];
+    
+    // 停止刷新
+    [self.mainScrollView headerEndRefreshing];
+}
+
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+
+@end

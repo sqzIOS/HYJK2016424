@@ -1,0 +1,16 @@
+//
+//  GoodListMainController.h
+//  
+//
+//  Created by apple on 15/12/29.
+//
+//
+
+#import <UIKit/UIKit.h>
+#import "GoodListBaseController.h"
+
+@interface GoodListMainController : GoodListBaseController
+
++ (instancetype)goodListMainControllerWithTitle:(NSString *)title;
+
+@end

@@ -1,0 +1,29 @@
+//
+//  SDMainVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "NoDataView.h"
+@interface SDMainVC : UIViewController
+{
+    //该项目后台 总页码没有用 始终为1 蛋疼 ；所以每次比较下载数据数是否==pageNum 来判断是否还有下一页
+    //    NSInteger totalPage;//总页码 此处无用
+    NSInteger pageIndex;//当前请求页码
+    NSInteger pageNum;// 每次请求的 数目
+    BOOL isHaveNextPage;//是否有下一页
+    
+    
+    GoTopView *goTopView;
+
+}
+@property(strong,nonatomic)NoDataView *noDataView;
+//判断是否有下一页
+-(void)judgeIsHaveNextPageWithDownDataNum:(NSInteger )dataNum;
+
+-(void)toBackView;
+
+@end

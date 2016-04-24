@@ -1,0 +1,30 @@
+//
+//  CouponsCell.h
+//  
+//
+//  Created by apple on 15/12/15.
+//
+//
+
+#import <UIKit/UIKit.h>
+
+@class CouponsCell,CouponsModel;
+
+@protocol CouponsCellDelegate <NSObject>
+
+- (void)couponsCellReceiveBtnClick:(CouponsCell *)cell ;
+
+@end
+
+
+@interface CouponsCell : UITableViewCell
+
+@property (nonatomic,strong) CouponsModel *model;
+@property (nonatomic,weak) id<CouponsCellDelegate> delegate;
+
+
++ (instancetype)couponsCellInTableView:(UITableView *)tableView;
+
+
+
+@end

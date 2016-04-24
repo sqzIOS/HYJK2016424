@@ -1,0 +1,104 @@
+//
+//  SDInterface.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/28.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#ifndef sexduoduo_SDInterface_h
+#define sexduoduo_SDInterface_h
+
+
+#pragma mark 服务器ip
+#define BBS_IP_TEST @"http://192.168.16.45:8080"
+#define BBS_IP @"http://bbs.xingduoduo.com:8080"
+
+
+#pragma mark 计算订单金额
+#define SDINTERFACE_calculatePrice @"/shopxx/app/order!calculatePrice.action"
+
+#pragma mark 我的优惠券列表
+#define SDINTERFACE_getMyCoupons @"/shopxx/app/coupons!getMyCoupons.action"
+
+#pragma mark 根据价格获得可用优惠劵列表
+#define SDINTERFACE_getCouponsList @"/shopxx/app/coupons!getCouponsList.action"
+
+#pragma mark 限时抢购获取时间段
+#define SDINTERFACE_getActivityCuttings @"/shopxx/app/activity!getActivityCuttings.action"
+
+#pragma mark 限时抢购获取商品
+//参数：id
+#define SDINTERFACE_getFlashSaleGoods @"/shopxx/app/goods!getFlashSaleGoods.action"
+
+#pragma BBS附近的人
+//参数：pageNo、 pageSize、lng、lat
+#define SDINTERFACE_appLocationUserList @"/bbs3/app/new/appLocationUserList.jhtml"
+
+#pragma BBS附近的帖子
+//参数：pageNo、 pageSize、lng、lat
+#define SDINTERFACE_appLocationPostList @"/bbs3/app/new/appLocationPostList.jhtml"
+
+#pragma 个人主页
+//参数：userId
+#define SDINTERFACE_getUserInfo @"/bbs3/app/new/getUserInfo.jhtml"
+
+#pragma 个人主页-打赏-喜欢
+//参数：userId
+#define SDINTERFACE_userInteraction @"/bbs3/app/userInteraction.jhtml"
+
+#pragma 个人主页-打赏我的-喜欢我的
+//参数：userId
+#define SDINTERFACE_userInteractionList @"/bbs3/app/userInteractionList.jhtml"
+
+#pragma 个人主页-私信
+//参数：userId
+#define SDINTERFACE_sendPrivateLetter @"/bbs3/app/new/sendPrivateLetter.jhtml"
+
+#pragma 个人主页-我的私信列表
+//参数：userId
+#define SDINTERFACE_getPrivateLetterList @"/bbs3/app/new/getPrivateLetterList.jhtml"
+
+#pragma mark 帖子点赞
+/**
+ *  参数：userId 用户id
+ *  参数：topicId 帖子id
+ *  参数：pageNo,pageSize
+ *  参数：type 1踩 2赞
+ *
+ *  @return
+ */
+
+#define SDINTERFACE_appComment  [NSString stringWithFormat:@"%@%@",BBS,@"/app/new/appComment.jhtml"]
+
+#pragma mark 楼层点赞
+/**
+ *  参数：postId
+ *  参数：userId
+ *
+ *  @return
+ */
+#define SDINTERFACE_appUserPraise  [NSString stringWithFormat:@"%@%@",BBS,@"/app/new/appUserPraise.jhtml"]
+
+
+#pragma mark 添加我的板块
+/*
+ 参数：userId
+ 参数：forumId
+ */
+#define SDINTERFACE_AddAttentionForum  [NSString stringWithFormat:@"%@%@",BBS,@"/app/new/appAddAttentionForum.jhtml"]
+
+#pragma mark 删除我的板块
+/*
+ 参数：userId
+ 参数：forumId
+ */
+#define SDINTERFACE_CancelAttentionForum  [NSString stringWithFormat:@"%@%@",BBS,@"/app/new/appCancelAttentionForum.jhtml"]
+
+#pragma mark 获取全部板块 （带有分组的）
+/*
+ 参数：userId
+ */
+
+#define SDINTERFACE_appCategoryForumLIst [ NSString stringWithFormat:@"%@%@",BBS,@"/app/new/appCategoryForumLIst.jhtml"]
+#endif

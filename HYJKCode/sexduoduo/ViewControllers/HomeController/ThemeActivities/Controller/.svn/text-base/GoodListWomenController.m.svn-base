@@ -1,0 +1,86 @@
+//
+//  GoodListWomenController.m
+//  
+//
+//  Created by apple on 15/12/31.
+//
+//
+
+#import "GoodListWomenController.h"
+
+@interface GoodListWomenController ()
+
+@end
+
+@implementation GoodListWomenController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+//    self.homeId = @"20";
+    [self createScrollView];
+    [self loadData];
+}
+
+
+
+#pragma mark - 创建scrollview
+- (void)createScrollView
+{
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    [self.view addSubview:scrollView];
+    scrollView.bounces = YES;
+    scrollView.showsVerticalScrollIndicator = NO;
+    scrollView.frame = CGRectMake(0,self.topView.bottom, SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.height);
+    
+    // 背景
+    CGFloat Y = 0;
+    CGRect bgimageViewFrame1 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(185));
+    [self createBgimageViewWithFrame:bgimageViewFrame1 inSuperView:scrollView];
+    
+    Y += QZMake(302);
+    Y += bgimageViewFrame1.size.height;
+    CGRect bgimageViewFrame2 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(527));
+    [self createBgimageViewWithFrame:bgimageViewFrame2 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame2.size.height;
+    CGRect bgimageViewFrame3 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(453));
+    [self createBgimageViewWithFrame:bgimageViewFrame3 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame3.size.height;
+    CGRect bgimageViewFrame4 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(247));
+    [self createBgimageViewWithFrame:bgimageViewFrame4 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame4.size.height;
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, Y);
+    
+    
+    // 商品
+    CGRect frame1 = CGRectMake(QZMake(0), QZMake(185), SCREEN_WIDTH, QZMake(166));
+    [self createGoodBtnWithFrame:frame1 inSuperView:scrollView];
+    CGRect frame2 = CGRectMake(QZMake(0), QZMake(351), SCREEN_WIDTH, QZMake(146));
+    [self createGoodBtnWithFrame:frame2 inSuperView:scrollView];
+   
+    for (int i = 0; i < 4; i++) {
+        CGRect frame = CGRectMake(QZMake(7) + QZMake(180) * (i % 2), QZMake(510) + (i / 2) * QZMake(180), QZMake(180), QZMake(180));
+        [self createGoodBtnWithFrame:frame inSuperView:scrollView];
+    }
+    
+    for (int i = 0; i < 6; i++) {
+        CGRect frame = CGRectMake( SCREEN_WIDTH / 3 * (i % 3), QZMake(1010) + (i / 3) * QZMake(218), SCREEN_WIDTH / 3, QZMake(218));
+        [self createGoodBtnWithFrame:frame inSuperView:scrollView];
+    }
+
+        
+    // 分类按钮
+    UIImageView *imageView = [self.bgimageViews lastObject];
+    for (int i = 0; i < 6; i++) {
+        CGFloat btnX = QZMake(80) + i % 3 * QZMake(82);
+        CGFloat btnY = i / 3 * QZMake(75) - QZMake(5);
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        [self.goodBtns addObject:btn];
+        btn.frame = CGRectMake(btnX, btnY,QZMake(52),QZMake(72));
+        [imageView addSubview:btn];
+    }
+}
+@end

@@ -1,0 +1,223 @@
+//
+//  SDInteractiveRecordVC.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  打赏我的，或者 喜欢我的
+
+#import "SDInteractiveRecordVC.h"
+#import "SDInteractiveRecordTableView.h"
+#import "SDInteractiveRecordModel.h"
+#import "SDMessageToMeModel.h"
+
+@interface SDInteractiveRecordVC ()
+{
+    NSInteger pageNo;
+}
+
+@property (nonatomic, strong) TopNavView *navView;
+
+@property (nonatomic, strong) SDInteractiveRecordTableView *tableView;
+
+@property (nonatomic, strong) NSMutableArray *dataArr;
+
+@end
+
+@implementation SDInteractiveRecordVC
+
+-(instancetype)initWithType:(SDInteractiveRecordType)type {
+    if (self = [super init]) {
+        self.type = type;
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    pageNo = 1;
+    
+    [self setTopNavView];
+    if (self.type == rewardType) {
+        [self requestData:@"1"];
+    } else if (self.type == likeType){
+        [self requestData:@"2"];
+    } else if (self.type == messageType) {
+        [self requestDataForMessage];
+    }
+    
+}
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int layOutH = -20;
+    if (IOS7_OR_LATER) {
+        layOutH = 0;
+    }
+
+    _navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, layOutH,SCREEN_WIDTH, 64)];
+    [self.view addSubview:_navView];
+
+    if (self.type == rewardType) {
+        [_navView setTitleStr:@"打赏我的"];
+    } else if (self.type == likeType) {
+        [_navView setTitleStr:@"喜欢我的"];
+    } else if (self.type == messageType) {
+        [_navView setTitleStr:@"私信我的"];
+    }
+    
+
+    [_navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+
+}
+
+- (void)initView {
+    if (_tableView ==  nil) {
+        if (self.type == messageType) {
+            _tableView = [[SDInteractiveRecordTableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) style:UITableViewStylePlain Array:_dataArr Controller:self Type:3];
+        } else {
+            _tableView = [[SDInteractiveRecordTableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y) style:UITableViewStylePlain Array:_dataArr Controller:self Type:1];
+        }
+        
+        [_tableView addHeaderWithTarget:self action:@selector(headRefresh)];
+        [_tableView addFooterWithTarget:self action:@selector(footRefresh)];
+        
+        [self.view addSubview:_tableView];
+        [_tableView clearDefaultLineByAddFootLine];
+    }
+    if (!self.isNextPage) {
+        _tableView.footerHidden = YES;
+    } else {
+        _tableView.footerHidden = NO;
+    }
+    [_tableView reloadData];
+}
+
+#pragma mark --- 网络请求
+- (void)requestData:(NSString *)type{
+
+    __weak typeof(self) weakSelf = self;
+    
+    [MBHud showInView:self.view withTitle:@"请稍等..."];
+    
+    NSDictionary *tempDic = @{@"userId":LUNTANUSERID, @"type":type, @"pageNo":[NSString stringWithFormat:@"%zi",pageNo], @"pageSize":@"10"};
+    
+    [AFHTTPClient getJSONPath:SDINTERFACE_userInteractionList httpHost:BBS_IP params:tempDic success:^(id json) {
+        
+        NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:json];
+        if (JudgeDatasourceHaveArrayData(dict)) {
+            if (_dataArr == nil) {
+                _dataArr = [[NSMutableArray alloc] initWithCapacity:1];
+            }
+            if (pageNo == 1) {
+                [_dataArr removeAllObjects];
+            }
+            for (NSDictionary *dic in dict[DATASOURCE]) {
+                SDInteractiveRecordModel *model = [SDInteractiveRecordModel SDPublicModelWithDictionary:dic];
+                [_dataArr addObject:model];
+            }
+            weakSelf.isNextPage = _dataArr.count % 10 == 0 ? YES : NO;
+
+            [weakSelf initView];
+        }
+        [weakSelf.tableView headerEndRefreshing];
+        [weakSelf.tableView footerEndRefreshing];
+        [MBHud removeFromView:self.view];
+    } fail:^{
+        [weakSelf.tableView headerEndRefreshing];
+        [weakSelf.tableView footerEndRefreshing];
+        [MBHud removeFromView:self.view];
+        
+    }];
+}
+/**
+ *  获取私信我的用户信息
+ */
+- (void)requestDataForMessage {
+    
+    __weak typeof(self) weakSelf = self;
+    
+    [MBHud showInView:self.view withTitle:@"请稍等..."];
+    
+    NSDictionary *tempDic = @{@"userId":LUNTANUSERID, @"pageNo":[NSString stringWithFormat:@"%zi",pageNo], @"pageSize":@"10"};
+    
+    [AFHTTPClient getJSONPath:SDINTERFACE_getPrivateLetterList httpHost:BBS_IP params:tempDic success:^(id json) {
+        
+        NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:json];
+        if (JudgeDatasourceHaveArrayData(dict)) {
+            if (_dataArr == nil) {
+                _dataArr = [[NSMutableArray alloc] initWithCapacity:1];
+            }
+            if (pageNo == 1) {
+                [_dataArr removeAllObjects];
+            }
+            for (NSDictionary *dic in dict[DATASOURCE]) {
+                SDMessageToMeModel *model = [SDMessageToMeModel SDPublicModelWithDictionary:dic];
+                [_dataArr addObject:model];
+            }
+            weakSelf.isNextPage = _dataArr.count % 10 == 0 ? YES : NO;
+            
+            [weakSelf initView];
+        }
+        [weakSelf.tableView headerEndRefreshing];
+        [weakSelf.tableView footerEndRefreshing];
+        [MBHud removeFromView:self.view];
+    } fail:^{
+        [weakSelf.tableView headerEndRefreshing];
+        [weakSelf.tableView footerEndRefreshing];
+        [MBHud removeFromView:self.view];
+    }];
+}
+
+#pragma mark - btn action
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark --- refresh
+/**
+ *  下拉刷新
+ */
+-(void)headRefresh
+{
+    pageNo = 1;
+    if (self.type == rewardType) {
+        [self requestData:@"1"];
+    } else if (self.type == likeType){
+        [self requestData:@"2"];
+    } else if (self.type == messageType) {
+        [self requestDataForMessage];
+    }
+}
+/**
+ *  上拉刷新
+ */
+-(void)footRefresh
+{
+    if (self.isNextPage) {
+        pageNo += 1;
+        if (self.type == rewardType) {
+            [self requestData:@"1"];
+        } else if (self.type == likeType){
+            [self requestData:@"2"];
+        } else if (self.type == messageType) {
+            [self requestDataForMessage];
+        }
+        return;
+    }
+    [ShareFunction showToast:@"已加载到最后" inSuperview:self.view];
+    [_tableView footerEndRefreshing];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

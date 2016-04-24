@@ -1,0 +1,312 @@
+//
+//  AboutUsVC.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/31.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "AboutUsVC.h"
+
+@interface AboutUsVC ()<UITableViewDataSource,UITableViewDelegate>
+
+@end
+
+@implementation AboutUsVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    self.listAry = [[NSArray alloc]initWithObjects:@"",@"用户协议",@"",@"帮助中心",@"",@"意见反馈",@"",@"给应用评分",nil];
+    self.imageArr =[[NSArray alloc]initWithObjects:@"",@"AboutUs_userXieyi",@"",@"KeFuCenter_5",@"",@"KeFuCenter_4",@"",@"setVC_5",@"",@"setVC_4", nil];
+    
+    
+    [self setTopNavView];
+    
+    
+    
+    [self initTbView];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    
+    [navView setTitleStr:@"关于我们"];
+    
+    
+}
+
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+
+#pragma mark - layout
+-(void)initTbView
+{
+    self.tbView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, SCREEN_HEIGHT - OFFSET_Y)];
+    self.tbView.dataSource = self;
+    self.tbView.delegate = self;
+    if (IOS7_OR_LATER) {
+        //        [self.setTableView setSeparatorInset:UIEdgeInsetsZero];
+        self.tbView.separatorColor = CLEAR_COLOR;
+    }
+    self.tbView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.tbView];
+    
+    
+    UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    footView.backgroundColor = [UIColor lightGrayColor];
+    self.tbView.tableFooterView = footView;
+    
+    
+    
+    UIView *headView=[[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 124)];
+    
+    headView.backgroundColor=WHITE_COLOR;
+    
+    UIImageView *logoImageView=[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 80, 80)];
+    
+    logoImageView.image=UIImageByName(@"myCenter_userImg2");
+    logoImageView.center = CGPointMake(SCREEN_WIDTH/2., 40 + 10);
+    [headView addSubview:logoImageView];
+    
+    
+    UILabel *lab = FastCreatLabel(CGRectMake(0, 70+ 20, SCREEN_WIDTH, 35), UICOLOR_RGB_A(80, 80, 80, 1), [UIFont fontWithName:k_Font size:12], CLEAR_COLOR, NSTextAlignmentCenter);
+    NSString *vesionStr= [ShareFunction getApplicationVersion];
+    lab.text=[NSString stringWithFormat:@"当前版本：%@",vesionStr];
+    [headView addSubview:lab];
+    
+    self.tbView.tableHeaderView = headView;
+    
+    
+    
+    
+    
+}
+#pragma mark- tableView detegate
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return self.listAry.count;
+
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if(!IS_APPSTORE)
+    {
+        if (indexPath.row == 0 || indexPath.row == 2 || indexPath.row == 4 || indexPath.row == 6 || indexPath.row == 8) {
+            return 12;
+        }
+    }else
+    {
+        if (indexPath.row == 0 || indexPath.row == 2 || indexPath.row == 4 || indexPath.row == 6 || indexPath.row == 8) {
+            return 12;
+        }
+    }
+    return 45;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"ClassifyCell";
+    UITableViewCell *cell = nil;
+    
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+      
+        
+    }
+    
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    [cell.imageView setImage:[UIImage imageNamed:self.imageArr[indexPath.row]]];
+    
+    cell.textLabel.text = [self.listAry objectAtIndex:indexPath.row];
+    cell.textLabel.textColor = [UIColor darkGrayColor];
+    cell.textLabel.font = [UIFont systemFontOfSize:16.0];
+    
+    
+    if (indexPath.row == 0 || indexPath.row == 2 || indexPath.row == 4 ||indexPath.row == 6 ||indexPath.row == 8) {
+        
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        cell.backgroundColor = WHITE_COLOR;
+        [cell.imageView setImage:nil];
+    }else
+    {
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        cell.backgroundColor = [UIColor whiteColor];
+    }
+    
+    if(indexPath.row == 1)//提醒消息
+    {
+        UISwitch *swch = (UISwitch *)[cell viewWithTag:1101];// 1101
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        if ([defaults objectForKey:@"isRejectPush"]) {
+            swch.on = NO;
+        }else
+        {
+            swch.on = YES;
+        }
+        [defaults synchronize];
+    }
+    
+    if (indexPath.row == 3) {//省流量模式
+        
+        UISwitch *swch = (UISwitch *)[cell viewWithTag:1103];//tag 1103
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        if ([defaults objectForKey:@"trafficSave"]) {
+            swch.on = YES;
+        }else
+        {
+            swch.on = NO;
+        }
+        [defaults synchronize];
+    }
+    
+
+    
+    
+    if (indexPath.row == 9) {//版本更新
+        
+        UILabel *sizeLab=(UILabel *)[cell viewWithTag:1001];
+        if (!sizeLab) {
+            sizeLab = [[UILabel alloc] initWithFrame:CGRectMake(SCREEN_WIDTH - 95, 12, 70, 20)];
+            sizeLab.backgroundColor = [UIColor clearColor];
+            sizeLab.font = [UIFont systemFontOfSize:14.0];
+            sizeLab.textAlignment = NSTextAlignmentRight;
+            sizeLab.textColor = [UIColor darkGrayColor];
+            sizeLab.tag=1001;
+            [cell addSubview:sizeLab];
+        }
+        
+        NSString *vesionStr= [ShareFunction getApplicationVersion];
+        
+        sizeLab.text=[NSString stringWithFormat:@"V%@",vesionStr];
+        
+    }
+    
+    
+    
+    
+    
+    if (IOS7_OR_LATER) {
+        //cell上面化线
+        UIView *line=[[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0.5)];
+        line.backgroundColor=UICOLOR_RGB_A(80, 80, 80,0.2);
+        [cell addSubview:line];
+    }
+    
+    
+    
+    
+    
+    return cell;
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (indexPath.row == 1) {//用户协议
+        
+        ProtocolViewController *ctr = [[ProtocolViewController alloc] initWithNibName:@"ProtocolViewController" bundle:nil];
+        ctr.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:ctr animated:YES];
+    }
+    
+    if (indexPath.row == 3) {//帮助中心
+        HelpCenterViewController *controller = [[HelpCenterViewController alloc] initWithNibName:@"HelpCenterViewController" bundle:[NSBundle mainBundle]];
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.navigationController pushViewController:controller animated:YES];
+    }
+    
+    if (indexPath.row == 5)
+    {
+        [self presentViewController:[UMFeedback feedbackModalViewController] animated:YES completion:^{
+            
+        }];
+
+    }
+    
+    if (indexPath.row == 7) {
+        
+        NSString *url =[NSString stringWithFormat:@"https://itunes.apple.com/us/app/xiu-ai-qing-qu-shang-cheng/id%@?l=zh&ls=1&mt=8",ITUNES_APP_ID];
+        //打分
+        BOOL isPingLun=[[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+   
+        NSLog(@"评论成功与否=%d",isPingLun);
+    }
+    
+    if (indexPath.row == 9) {
+        //检查更新
+        [MobClick checkUpdateWithDelegate:self selector:@selector(updateMethod:)];
+    }
+}
+
+//友盟检查更新
+- (void)updateMethod:(NSDictionary*)appInfo
+{
+    NSLog(@"%@", appInfo);
+    NSString *update = [appInfo objectForKey:@"update"];
+    if ([update boolValue])
+    {
+        updatePath = [appInfo objectForKey:@"path"];
+        NSString *title = [NSString stringWithFormat:@"有可用的新版本%@", [appInfo objectForKey:@"version"]];
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:title message:[appInfo objectForKey:@"update_log"] delegate:self cancelButtonTitle:@"暂时忽略" otherButtonTitles:@"去下载",nil];
+        [alertView show];
+    }
+    else
+    {
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"版本检测" message:@"当前已是最新版本!" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:nil];
+        [alertView show];
+    }
+}
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == 1010) {
+        if (buttonIndex == 1)
+        {
+           
+        }
+    }else
+        if (buttonIndex == 1)
+        {
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:updatePath]];
+        }
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+@end

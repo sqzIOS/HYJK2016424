@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>name</key>
+		<string>普通期刊</string>
+		<key>subArray</key>
+		<array>
+			<string>中国初级卫生保健</string>
+			<string>黑龙江医学</string>
+			<string>医药前沿</string>
+			<string>中国卫生工程学</string>
+			<string>辽宁医学院学报</string>
+			<string>现代诊断与治疗</string>
+			<string>微创医学</string>
+			<string>内科</string>
+			<string>亚太传统医药</string>
+			<string>海峡药学</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>科技核心期刊</string>
+		<key>subArray</key>
+		<array>
+			<string>现代生物医学进展</string>
+			<string>中国实验诊断学</string>
+			<string>中国实用神经疾病杂志</string>
+			<string>中国肿瘤临床与康复</string>
+			<string>陕西中医</string>
+			<string>中国组织工程研究</string>
+			<string>山东医药</string>
+			<string>海南医学</string>
+			<string>实用预防医学（符合浙江目录）</string>
+			<string>中国基层医药（符合浙江目录）</string>
+			<string>中国公共卫生管理（符合浙江目录）</string>
+		</array>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>中国核心期刊</string>
+		<key>subArray</key>
+		<array>
+			<string>中国老年学杂志</string>
+			<string>中国妇幼保健</string>
+			<string>中华医院感染学杂志</string>
+			<string>中国公共卫生</string>
+			<string>中国现代医学杂志</string>
+			<string>中国内镜杂志</string>
+		</array>
+	</dict>
+</array>
+</plist>

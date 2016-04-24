@@ -1,0 +1,267 @@
+//
+//  SRResultVC.m
+//  sexduoduo
+//
+//  Created by ly1992 on 15/6/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SRResultVC.h"
+
+@interface SRResultVC ()
+{
+    UISegmentedControl *segmentdControl;
+    UILabel *contentLabel;
+}
+@end
+
+@implementation SRResultVC
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [self initView];
+    
+    [self setTopNavView];
+}
+
+-(void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    //设置segment的title的选中的属性 相应的也可以设置其他状态的属性
+    NSDictionary *textAttibutesSelected = [NSDictionary dictionaryWithObjectsAndKeys:
+                                           [UIFont fontWithName:k_Font size:16],UITextAttributeFont,
+                                           NAV_COLOR,UITextAttributeTextColor,
+                                           WHITE_COLOR,UITextAttributeTextShadowColor,
+                                           [NSValue valueWithCGSize:CGSizeMake(0, 0)],UITextAttributeTextShadowOffset,nil];
+    [[UISegmentedControl appearance] setTitleTextAttributes:textAttibutesSelected
+                                                   forState:UIControlStateSelected];
+    
+}
+#pragma mark ---UI
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    UIView *navView = [[UIView alloc] initWithFrame:CGRectMake(0, imgY, SCREEN_WIDTH, 64)];
+    if (_type == ResultTypeSexMan) {
+        navView.backgroundColor = RGBCOLOR(255, 145, 123);
+    } else {
+        navView.backgroundColor = RGBCOLOR(233, 151, 189);
+    }
+    navView.userInteractionEnabled = YES;
+    [self.view addSubview:navView];
+    //
+    UIButton *leftBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    leftBtn.frame = CGRectMake(SCREEN_SPACE(10), SCREEN_SPACE(25) , SCREEN_SPACE(44), SCREEN_SPACE(44));
+    [leftBtn setImage:[UIImage imageNamed:@"record_back"] forState:UIControlStateNormal];
+    [leftBtn addTarget:self action:@selector(bt_action_topEvent:) forControlEvents:UIControlEventTouchUpInside];
+    leftBtn.tag = 1;
+    [navView addSubview:leftBtn];
+    //
+    UIImageView *imageTitle = [[UIImageView alloc]init];
+    imageTitle.frame = CGRectMake(160-92/3., 30, 92*2/3., 38*2/3.);
+    imageTitle.centerX = SCREEN_WIDTH/2.;
+
+    imageTitle.backgroundColor = [UIColor clearColor];
+    imageTitle.image =[UIImage imageNamed:@"record_title_nav"];
+    [navView addSubview:imageTitle];
+}
+- (void)initView
+{
+    //背景图
+    UIImageView *imgV = [[UIImageView alloc]initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, SCREEN_HEIGHT)];
+    imgV.backgroundColor = [UIColor clearColor];
+    if (_type == ResultTypeSexMan) {
+        imgV.image = [UIImage imageNamed:@"record_background_man"];
+    } else {
+        imgV.image = [UIImage imageNamed:@"record_background_women"];
+    }
+    imgV.userInteractionEnabled = YES;
+    [self.view addSubview:imgV];
+    //图标
+    imgV = [[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_SPACE(55), SCREEN_SPACE(100), SCREEN_SPACE(100), SCREEN_SPACE(100))];
+    imgV.backgroundColor = [UIColor clearColor];
+    if (_type == ResultTypeSexMan) {
+        imgV.image = [UIImage imageNamed:@"record_result_man"];
+    } else {
+        imgV.image = [UIImage imageNamed:@"record_result_women"];
+    }
+    [self.view addSubview:imgV];
+    UIImageView *userImageView = [[UIImageView alloc]init];
+    userImageView.backgroundColor = [UIColor clearColor];
+    userImageView.frame = CGRectMake(14, 14, 58, 58);
+    userImageView.layer.cornerRadius = 29;
+    userImageView.layer.masksToBounds = YES;
+    userImageView.image = [PublicMethod getHeaderImage];
+    [imgV addSubview:userImageView];
+    
+    /*
+    //分值
+    UILabel *label = [[UILabel alloc]init];
+    label.backgroundColor = [UIColor clearColor];
+    if (_type == ResultTypeSexMan) {
+        label.textColor = RGBCOLOR(177, 109, 95);
+    } else {
+        label.textColor = RGBCOLOR(203, 91, 142);
+    }
+    label.font = [UIFont boldSystemFontOfSize:16.0f];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.frame = CGRectMake(0, SCREEN_SPACE(40), imgV.width, SCREEN_SPACE(20));
+    label.text = [NSString stringWithFormat:@"%@",_model.percentNum];
+    [imgV addSubview:label];
+     */
+    
+    
+    //昵称
+    UILabel* nameLabel = [[UILabel alloc]init];
+    nameLabel.backgroundColor = [UIColor clearColor];
+    nameLabel.textColor = [UIColor whiteColor];
+    nameLabel.font = [UIFont systemFontOfSize:16.0];
+    nameLabel.frame = CGRectMake(SCREEN_SPACE(180), imgV.top + SCREEN_SPACE(20), SCREEN_WIDTH - SCREEN_SPACE(200), SCREEN_SPACE(20));
+    NSString *nameStr = [NSString stringWithFormat:@"昵称 : %@",NICKNAME];
+    nameLabel.text = nameStr;
+    [self.view addSubview:nameLabel];
+    //等级
+    UILabel *levelLabel = [[UILabel alloc]init];
+    levelLabel.backgroundColor = [UIColor clearColor];
+    levelLabel.textColor = [UIColor whiteColor];
+    levelLabel.font = [UIFont systemFontOfSize:16.0f];
+    levelLabel.frame = CGRectMake(nameLabel.left, nameLabel.bottom + SCREEN_SPACE(10), nameLabel.width, SCREEN_SPACE(20));
+    NSString *levelStr = [NSString stringWithFormat:@"等级 : %@",BBSUSERLEVEL];
+    levelLabel.text = levelStr;
+    [self setLableText:levelLabel attribute:BBSUSERLEVEL instr:levelStr withColor:RGBCOLOR(43, 121, 239)];
+    [self.view addSubview:levelLabel];
+    //
+    NSArray *segmentedArray = [[NSArray alloc]initWithObjects:@"分析",@"建议",nil];
+    segmentdControl = [[UISegmentedControl alloc]initWithItems:segmentedArray];
+    segmentdControl.backgroundColor = [UIColor clearColor];
+    segmentdControl.frame = CGRectMake((SCREEN_WIDTH - SCREEN_SPACE(240))/2, SCREEN_SPACE(160) + SCREEN_SPACE(64), SCREEN_SPACE(240), 30);
+    segmentdControl.selectedSegmentIndex = 0;
+    if (_type == ResultTypeSexMan) {
+        segmentdControl.tintColor = RGBCOLOR(255, 145, 123);
+    } else {
+        segmentdControl.tintColor = RGBCOLOR(233, 151, 189);
+    }
+    [segmentdControl addTarget:self action:@selector(segmentAction:)forControlEvents:UIControlEventValueChanged];  //添加委托方法
+    [self.view addSubview:segmentdControl];
+    //白色背景View
+    UIView *bottomView = [[UIView alloc]init];
+    bottomView.backgroundColor = [UIColor colorWithWhite:1 alpha:0.4];
+    bottomView.frame = CGRectMake(15, segmentdControl.bottom +  SCREEN_SPACE(20), SCREEN_WIDTH-30, SCREEN_HEIGHT - segmentdControl.bottom  -  SCREEN_SPACE(20) - 35);
+    bottomView.layer.cornerRadius=5;
+//    bottomView.layer
+    bottomView.userInteractionEnabled = YES;
+    [self.view addSubview:bottomView];
+    
+    //图标
+//    UIImageView *iconImageView = [[UIImageView alloc]init];
+//    iconImageView.backgroundColor = [UIColor clearColor];
+//    UIImage *image  = nil;
+//    if (_type == ResultTypeSexMan) {
+//        image = [UIImage imageNamed:@"record_result_iconman"];
+//        iconImageView.frame = CGRectMake(SCREEN_WIDTH - image.size.width - SCREEN_SPACE(20), bottomView.height - image.size.height - SCREEN_SPACE(25), image.size.width, image.size.height);
+//    } else {
+//        image = [UIImage imageNamed:@"record_result_iconwomen"];
+//        iconImageView.frame = CGRectMake(SCREEN_SPACE(20), bottomView.height - image.size.height - SCREEN_SPACE(25), image.size.width, image.size.height);
+//    }
+    
+//    iconImageView.image = image;
+//    [bottomView addSubview:iconImageView];
+    
+    //内容
+    contentLabel = [[UILabel alloc]init];
+    contentLabel.backgroundColor = [UIColor clearColor];
+//    contentLabel.textColor = RGBCOLOR(139, 77, 79);
+    contentLabel.textColor = RGBCOLOR(80, 80, 80);
+    contentLabel.font = [UIFont systemFontOfSize:13.0f];
+    contentLabel.text = _model.analyzeStr;
+    contentLabel.numberOfLines = 0;
+//    CGSize size = [contentLabel.text sizeWithFont:contentLabel.font constrainedToSize:CGSizeMake(SCREEN_WIDTH - SCREEN_SPACE(80), SCREEN_HEIGHT) lineBreakMode:NSLineBreakByWordWrapping];
+//    contentLabel.frame = CGRectMake(SCREEN_SPACE(25), SCREEN_SPACE(40),size.width,size.height);
+    
+    contentLabel.frame = CGRectMake(20, 30,bottomView.width-40  ,bottomView.height-80);
+    
+    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    [paragraphStyle setLineSpacing:6];//调整行间距
+    NSMutableAttributedString *str = [[NSMutableAttributedString alloc] initWithString:_model.analyzeStr];
+    [str addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:NSMakeRange(0, [_model.analyzeStr length])];
+    contentLabel.attributedText = str;
+    [contentLabel sizeToFit];
+    
+   
+    [bottomView addSubview:contentLabel];
+}
+
+#pragma mark ---事件
+- (void)bt_action_topEvent:(UIButton*)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+#pragma mark ---Delegate
+-(void)segmentAction:(UISegmentedControl *)Seg{
+    NSInteger index = Seg.selectedSegmentIndex;
+    
+    contentLabel.frame = CGRectMake(20, 30,contentLabel.superview.width-40  ,contentLabel.superview.height-40);
+    
+    NSString *string=nil;
+    if (index == 0) {
+        contentLabel.text = _model.analyzeStr;
+        string = _model.analyzeStr;
+    } else if (index == 1){
+        contentLabel.text = _model.adviceStr;
+        string =  _model.adviceStr;
+    }
+    
+    
+    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    [paragraphStyle setLineSpacing:6];//调整行间距
+    NSMutableAttributedString *str = [[NSMutableAttributedString alloc] initWithString:string];
+    [str addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:NSMakeRange(0, [string length])];
+    contentLabel.attributedText = str;
+    [contentLabel sizeToFit];
+}
+
+#pragma mark ---didReceiveMemoryWarning
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+-(void)setLableText:(UILabel*)label attribute:(NSString*)attribute instr:(NSString*)str withColor:(UIColor*)color
+{
+    NSRange matchRange = [str rangeOfString:attribute];
+    if (matchRange.location != NSNotFound) {
+        NSMutableAttributedString *attributestr = [[NSMutableAttributedString alloc] initWithString:str];
+        [attributestr addAttribute:NSForegroundColorAttributeName value:color range:matchRange];
+        label.attributedText = attributestr;
+    } else {
+        label.text = str;
+    }
+}
+
+#pragma mark ---gotoMyself---
++(void)gotoMySelf:(id)pvc withModel:(SRecordModel*)model withType:(ResultTypeSex)type
+{
+    if (pvc == nil) {
+        return;
+    }
+    
+    SRResultVC* vc = [[SRResultVC alloc]init];
+    vc.model = model;
+    vc.type = type;
+    vc.hidesBottomBarWhenPushed = YES;
+    if ([pvc isKindOfClass:[UINavigationController class]]) {
+        [pvc pushViewController:vc animated:YES];
+    } else if ([pvc isKindOfClass:[UIViewController class]]) {
+        UIViewController *uvc = pvc;
+        [uvc.navigationController pushViewController:vc animated:YES];
+    }
+}
+
+@end

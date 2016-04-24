@@ -1,0 +1,30 @@
+//
+//  GoodBtn.h
+//  
+//
+//  Created by apple on 15/12/29.
+//
+//
+
+#import <UIKit/UIKit.h>
+#import "GoodsModel.h"
+
+@interface GoodBtn : UIButton
+
+//"newLogoPath": "http://7xl8y7.com2.z0.glb.qiniucdn.com/20151203152745483",
+
+
+@property (nonatomic,copy) NSString *theNewLogoPath;
+@property (nonatomic,copy) NSString *guardPath;
+@property (nonatomic,copy) NSString *name;
+@property (nonatomic,copy) NSString *showAddress;
+@property (nonatomic,copy) NSString *gdCategory;
+@property (nonatomic,copy) NSString *logoPath;
+@property (nonatomic,copy) NSString *orderList;
+@property (nonatomic,copy) NSString *homeId;
+@property (nonatomic,copy) NSString *introduction;
+@property (nonatomic,copy) NSString *theNewGuardPath;
+
+- (void)setInfoWithModel:(GoodsModel *)model;
+
+@end

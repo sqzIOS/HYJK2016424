@@ -1,0 +1,89 @@
+//
+//  MenuView.m
+//  
+//
+//  Created by apple on 15/12/11.
+//
+//
+
+#import "MenuView.h"
+#import "ClubingModel.h"
+#import "ShareFunction.h"
+
+@implementation MenuView
+
++ (instancetype)menuViewWithDataArry:(NSMutableArray *)dataArry
+{
+    MenuView *menuView = [[MenuView alloc] init];
+    menuView.layer.cornerRadius = QZMake(5);
+    menuView.clipsToBounds = YES;
+    menuView.frame = CGRectMake(0, 0, QZMake(100), QZMake(35) * dataArry.count);
+    for (int i = 0 ; i < dataArry.count; i++) {
+        UIButton *category = [[UIButton alloc] init];
+        category.frame = CGRectMake(0, i * QZMake(35),QZMake(100), QZMake(35));
+        [menuView addSubview:category];
+        category.tag = i + 1;
+        menuView.backgroundColor = [UIColor whiteColor];
+        ClubingModel *model = [dataArry objectAtIndex:i];
+        UIImage *image;
+        NSString *title;
+        switch (model.ID) {
+            case 4:
+                title = @"  性致";
+                image = [UIImage imageNamed:@"clubing_btn_sex"];
+                break;
+            case 5:
+                title = @"  健康";
+                image = [UIImage imageNamed:@"clubing_btn_healthy"];
+                break;
+            case 6:
+                title = @"  情感";
+                image = [UIImage imageNamed:@"clubing_btn_emotion"];
+                break;
+            case 7:
+                title = @"  自拍";
+                image = [UIImage imageNamed:@"clubing_btn_selfie"];
+                break;
+            case 8:
+                title = @"  生活";
+                image = [UIImage imageNamed:@"clubing_btn_life"];
+                break;
+            case 9:
+                title = @"  兴趣";
+                image = [UIImage imageNamed:@"clubing_btn_interest"];
+                break;
+            case 10:
+                title = @"  活动";
+                image = [UIImage imageNamed:@""];
+                break;
+            case 11:
+                title = @"  话题";
+                image = [UIImage imageNamed:@"clubing_btn_topic-"];
+                break;
+        }
+        [category setTitle:title forState:UIControlStateNormal];
+        category.adjustsImageWhenHighlighted = NO;
+        [category setImage:image forState:UIControlStateNormal];
+        [category setTitleColor:RGBCOLOR(149, 66, 229) forState:UIControlStateNormal];
+        [category addTarget:menuView action:@selector(categoryBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    
+    return menuView;
+}
+
+- (void)categoryBtnClick:(UIButton *)categoryBtn
+{
+    if ([self.delegate respondsToSelector:@selector(menuViewCategoryBtnClick:)]) {
+        [self.delegate menuViewCategoryBtnClick:categoryBtn];
+    }
+}
+
+- (void)setPoint:(CGPoint)point
+{
+    CGRect frame  = self.frame;
+    frame.origin = point;
+    self.frame = frame;
+}
+
+
+@end

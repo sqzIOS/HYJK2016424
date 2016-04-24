@@ -1,0 +1,223 @@
+//
+//  homeThreeView.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeThreeView.h"
+#import "TaoBaoWebViewController.h"
+#import "BBSDetailNewViewController.h"
+#import "BrandStreetViewController.h"
+#import "GoodsDetailTwoViewController.h"
+#import "JiFenShopViewController.h"
+
+#import "SRRecordHomeVC.h"
+
+//优惠券
+#import "SDDiscountListVC.h"
+
+//双十一活动
+#import "SDDouble11VC.h"
+//活动页面
+#import "GoodListMainController.h"
+
+//限时抢购
+#import "SDSetTimeBuyGoodsVC.h"
+
+@implementation HomeThreeView
+
+-(void)judgeJumpToSubControllerWithDic:(NSDictionary *)dic
+{
+    
+    GoodListMainController *ctrVc = [GoodListMainController goodListMainControllerWithTitle:dic[@"name"]];
+
+    [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+    
+    return;
+    
+    
+
+    if ([dic[@"gdCategory"] intValue]==1) {  // 商品
+        
+        GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.goodsIdStr = [NSString stringWithFormat:@"%@",[dic objectForKey:@"homeId"]];
+        //        ctrVc.classifyIdStr = [NSString stringWithFormat:@"%@",[[taotaoArray objectAtIndex:0] objectForKey:@"goodsCategoryId"]];
+        [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+        
+        
+    }else if([dic[@"gdCategory"] intValue]==2){//分类
+        
+        
+        GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        
+        if (1) {
+            ctrVc.isHiddenSort=YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.classifyId = dic[@"homeId"];
+            ctrVc.titleStr = dic[@"name"];
+            ctrVc.requestType = classifyType;
+            
+        }else{
+            ctrVc.disPlayOne = YES;
+            ctrVc.classifyStr = dic[@"homeId"];
+            ctrVc.titleStr = dic[@"name"];
+            ctrVc.requestType = homeViewType;
+            
+        }
+        [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+    }else if([dic[@"gdCategory"] intValue]==3)//论坛帖子
+    {
+        
+        BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+        //论坛主题id
+        controller.forumId = dic[@"introduction"];
+        controller.topicId = dic[@"homeId"];
+        if (isPassStoreCheck) {
+            controller.isBackToJumpBBS=YES;
+        }
+        controller.hidesBottomBarWhenPushed = YES;
+        [self.viewController.navigationController pushViewController:controller animated:YES];
+        
+    }else if([dic[@"gdCategory"] intValue]==4)//专区活动
+    {
+        
+        if([dic[@"homeId"] isEqualToString:@"isTime"])
+        {
+         
+            
+            SDSetTimeBuyGoodsVC *vc = [[SDSetTimeBuyGoodsVC alloc] init];
+            [self.viewController.navigationController pushViewController:vc animated:YES];
+            
+        }else if([dic[@"homeId"] isEqualToString:@"isActivities"])
+        {
+            ActivityViewController*ctrVc = [[ActivityViewController alloc] initWithNibName:@"ActivityViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.classifyStr = @"isActivities";
+            [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        }else if([dic[@"homeId"] isEqualToString:@"NO"])
+        {
+            [m_appDelegate.tabController setSelectedIndex:2];
+        }else{
+            GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.disPlayOne = YES;
+            ctrVc.classifyStr = dic[@"homeId"];
+            ctrVc.titleStr = dic[@"name"];
+            ctrVc.requestType = homeViewType;
+            [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        }
+        
+        
+        
+    }else if([dic[@"gdCategory"] intValue]==5)//论坛板块
+    {
+        if(isPassStoreCheck)
+        {
+            [m_appDelegate.tabController setSelectedIndex:2];
+        }
+        
+        
+    }
+    //淘宝网店推广
+    else if ([[dic objectForKey:@"gdCategory"] intValue] == 6 )
+    {
+        TaoBaoWebViewController *ctrVc = [[TaoBaoWebViewController alloc] initWithNibName:@"TaoBaoWebViewController" bundle:nil];
+        //        ctrVc.webURLStr=@"http://shop116244450.taobao.com/?spm=a230r.7195193.1997079397.2.TrKzTs&qq-pf-to=pcqq.c2c";
+        ctrVc.webURLStr=dic[@"homeId"];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.nameStr=dic[@"name"];
+        [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+    }
+    //年货专区 主题活动
+    else if ([[dic objectForKey:@"gdCategory"] intValue] == 7)
+    {
+        
+        GoodListMainController *ctrVc = [GoodListMainController goodListMainControllerWithTitle:dic[@"name"]];
+        
+        [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+        
+    }
+    //品牌街
+    else if ([[dic objectForKey:@"gdCategory"] intValue] == 8)
+    {
+        
+        BrandStreetViewController *ctrVc = [[BrandStreetViewController alloc] initWithNibName:@"BrandStreetViewController" bundle:nil];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        
+        [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+        
+    //积分商城 --
+    }else if([[dic objectForKey:@"gdCategory"] intValue] ==9)
+    {
+        
+        if(ISLOGIN){
+            NSLog(@"积分 click");
+            JiFenShopViewController *ctrVc = [[JiFenShopViewController alloc] initWithNibName:@"JiFenShopViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.titleStr = @"积分商城";
+            
+            ctrVc.isHiddenSort=YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.requestType = classifyType;
+            ctrVc.classifyId =@"8a04bc8b4a050d2c014a05252972004a";
+            [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+        }else
+        {
+            LoginViewController *loginVC = [[LoginViewController alloc]initWithNibName:@"LoginViewController" bundle:[NSBundle mainBundle]];
+            loginVC.hidesBottomBarWhenPushed = YES;
+            [self.viewController.navigationController pushViewController:loginVC animated:YES];
+        }
+    // 标签
+    }else if([[dic objectForKey:@"gdCategory"] intValue] ==10)
+    {
+        
+            GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.disPlayOne = YES;
+            ctrVc.classifyStr = dic[@"homeId"];
+            ctrVc.titleStr = dic[@"name"];
+            ctrVc.requestType = flagType;
+            [self.viewController.navigationController pushViewController:ctrVc animated:YES];
+        
+        
+        
+    // 爱记录
+    }else if([[dic objectForKey:@"gdCategory"] intValue] ==11)
+    {
+        
+        [SRRecordHomeVC gotoMySelf:self.viewController];
+        
+    }
+    
+    
+    
+}
+
+-(void)reset
+{
+    
+}
+
+-(void)resetFrame
+{
+
+}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

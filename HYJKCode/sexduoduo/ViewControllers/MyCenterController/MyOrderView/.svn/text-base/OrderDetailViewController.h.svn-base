@@ -1,0 +1,52 @@
+//
+//  OrderDetailViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-8-8.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  订单详情
+
+#import <UIKit/UIKit.h>
+#import "OrderCell.h"
+#import "ToCommentViewController.h"
+
+@interface OrderDetailViewController : UIViewController<UITableViewDataSource,UITableViewDelegate>
+{
+    SEL _result;
+    CGRect cancelBtnFrame;
+    CGRect toPayBtnFrame;
+    CGRect toDeleteBtnFrame;
+}
+
+@property (nonatomic,assign) SEL result;//这里声明为属性方便在于外部传入
+@property (strong, nonatomic) UITableView *orderDetailTableView;
+@property (strong, nonatomic) NSMutableArray *orderArray;
+@property (strong, nonatomic) NSMutableArray *orderDetailArray;
+
+@property (strong, nonatomic) UIImageView *detailIconImg;
+@property (strong, nonatomic) IBOutlet UIView *headerView;
+
+@property (strong, nonatomic) NSString *orderIdStr;
+@property (strong, nonatomic) NSMutableDictionary *orderDetailDic;
+
+@property (weak, nonatomic) IBOutlet UILabel *userNameLab;
+@property (weak, nonatomic) IBOutlet UILabel *userPhoneLab;
+@property (weak, nonatomic) IBOutlet UILabel *userAddrLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *orderStateLab;
+@property (weak, nonatomic) IBOutlet UILabel *orderTimeLab;
+@property (weak, nonatomic) IBOutlet UILabel *orderNumLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *orderPayWay;
+@property (weak, nonatomic) IBOutlet UIButton *toPayOffBtn;
+@property (weak, nonatomic) IBOutlet UIButton *toDeleteOrderBtn;
+@property (weak, nonatomic) IBOutlet UIButton *cancelOrderBtn;
+
+
+@property (strong, nonatomic) UILabel *promptLab;
+
+-(void)paymentResult:(NSString *)result;
+
+
+-(void)paymentResultDelegate:(NSString *)result;
+@end

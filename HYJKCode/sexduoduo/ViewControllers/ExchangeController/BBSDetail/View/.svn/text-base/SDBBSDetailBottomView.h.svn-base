@@ -1,0 +1,25 @@
+ //
+//  SDBBSDetailBottomView.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/7.
+//  Copyright © 2015年 dbCode. All rights reserved.
+//  论坛详情底部 赞 踩 评论view
+
+#import <UIKit/UIKit.h>
+@protocol BBSDetailBottomViewBtnClick;
+
+@interface SDBBSDetailBottomView : UIView
+@property (nonatomic, assign) id<BBSDetailBottomViewBtnClick> btnDelegate;
+@property (nonatomic, strong) UIButton *bottomBtn1;
+@property (nonatomic, strong) UIButton *bottomBtn2;
+@property (nonatomic, strong) UIButton *bottomBtn3;
+
+@end
+
+
+
+@protocol BBSDetailBottomViewBtnClick <NSObject>
+-(void)bottomBtnClick:(UIButton *)sender;
+@end
+

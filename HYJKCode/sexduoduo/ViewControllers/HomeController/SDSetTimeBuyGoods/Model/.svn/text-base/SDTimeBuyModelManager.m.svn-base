@@ -1,0 +1,53 @@
+//
+//  SDTimeBuyModelManager.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/24.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDTimeBuyModelManager.h"
+@implementation SDTimeBuyModelManager
+
+DEFINE_SINGLETON_FOR_CLASS(SDTimeBuyModelManager)
+
+
+-(instancetype)init
+{
+    if (self =[super init]) {
+        
+        [self requestTimeList];
+    }
+    
+    return self;
+}
+
+
+- (void)requestTimeList {
+    
+//    __weak typeof(self) weakSelf = self;
+    [AFHTTPClient getJSONPath:SDINTERFACE_getActivityCuttings httpHost:sexHealthIP params:nil success:^(id json) {
+        
+        NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:json];
+        
+        if (JudgeDatasourceHaveArrayData(dict)) {
+            
+            
+            NSMutableArray *   _sectionDataArr = [[NSMutableArray alloc] initWithCapacity:1];
+            
+            for (NSDictionary *dic in dict[DATASOURCE]) {
+                
+                SDSetTimeModel *setTimeModel = [[SDSetTimeModel alloc] initWithDict:dic];
+                
+                
+                [_sectionDataArr addObject:setTimeModel];
+            }
+            
+            self.dataArray = _sectionDataArr;
+            
+        }
+    } fail:^{
+        
+    }];
+}
+@end

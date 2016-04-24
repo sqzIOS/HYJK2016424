@@ -1,0 +1,19 @@
+//
+//  SDPhotoBrowseVC.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/11.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  图片浏览
+
+#import <UIKit/UIKit.h>
+
+@interface SDPhotoBrowseVC : UIViewController
+
+@property (nonatomic, strong) NSArray *dataArr;
+
+@property (nonatomic, assign) int num;
+
+- (instancetype)initWithArr:(NSArray *)dataArr Num:(int)num;
+
+@end

@@ -1,0 +1,225 @@
+//
+//  EditingView.m
+//  
+//
+//  Created by apple on 15/12/16.
+//
+//
+
+#import "EditingView.h"
+#import "SDPersonalCenterModel.h"
+#import "ShareFunction.h"
+#import "UIView+Extend.h"
+
+@interface EditingView () <UITextFieldDelegate>
+
+
+@property (nonatomic,strong) SDPersonalCenterModel *model;
+@property (nonatomic,weak) UIScrollView *scrollView;
+
+
+@end
+
+
+@implementation EditingView
+
++ (instancetype)editingViewWithModel:(SDPersonalCenterModel *)model andFrame:(CGRect)frame
+{
+    EditingView *editingView = [[EditingView alloc] init];
+    editingView.backgroundColor = [UIColor whiteColor];
+    editingView.frame = frame;
+    editingView.model = model;
+    
+    // 照片墙
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    scrollView.frame = CGRectMake(0, 0, SCREEN_WIDTH, QZMake(75));
+    scrollView.showsHorizontalScrollIndicator = NO;
+    editingView.scrollView = scrollView;
+    [editingView addSubview:scrollView];
+    
+    // 头像
+    UIImageView *iconView = [[UIImageView alloc] init];
+    [iconView sd_setImageWithURL:[NSURL URLWithString:model.avatar] placeholderImage:[UIImage imageNamed:@"myCenter_userImg2"]];
+    iconView.frame = CGRectMake((SCREEN_WIDTH - QZMake(72)) / 2,QZMake(58), QZMake(72), QZMake(72));
+    iconView.layer.borderColor = RGBCOLOR16(0x9c46e5).CGColor;
+    iconView.layer.borderWidth = 1;
+    editingView.iconView = iconView;
+    iconView.layer.cornerRadius = QZMake(36);
+    iconView.clipsToBounds = YES;
+    [editingView addSubview:iconView];
+    
+    // 头像左图标
+    UIImageView *leftIcon = [[UIImageView alloc] init];
+    leftIcon.image = [UIImage imageNamed:@"btn-like"];
+    leftIcon.frame = CGRectMake(0,0, QZMake(30), QZMake(30));
+    CGPoint center = iconView.center;
+    center.x -= QZMake(36 + 18 + 7.5);
+    leftIcon.center = center;
+    [editingView addSubview:leftIcon];
+    
+
+    
+    // 头像右图标
+    UIImageView *rightIcon = [[UIImageView alloc] init];
+    rightIcon.image = [UIImage imageNamed:@"btn-read"];
+    rightIcon.frame = CGRectMake(0,0, QZMake(30), QZMake(30));
+    center.x += QZMake(7.5 + 18 + 72 + 18 + 7.5);
+    rightIcon.center = center;
+    [editingView addSubview:rightIcon];
+    
+    // 修改头像按钮
+    UIButton *changeTip = [[UIButton alloc] initWithFrame:iconView.frame];
+    [changeTip setTitle:@"点击修改" forState:UIControlStateNormal];
+    [changeTip setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    changeTip.titleLabel.font = [UIFont systemFontOfSize:QZMake(15)];
+    [editingView addSubview:changeTip];
+    [changeTip addTarget:editingView action:@selector(changeTipClick) forControlEvents:UIControlEventTouchUpInside];
+    
+    // 修改昵称
+    UITextField *nickName = [[UITextField alloc] init];
+    nickName.layer.borderWidth = 1;
+    nickName.layer.borderColor = RGBCOLOR(230, 230, 230).CGColor;
+    nickName.layer.cornerRadius = QZMake(5);
+    nickName.clipsToBounds = YES;
+    nickName.textAlignment = NSTextAlignmentLeft;
+    nickName.delegate = editingView;
+    nickName.textColor = RGBCOLOR16(0xa5a5a5);
+    nickName.font = [UIFont systemFontOfSize:QZMake(16)];
+    nickName.text = model.nickname;
+    editingView.nickName = nickName.text;
+    nickName.frame = CGRectMake(iconView.center.x - QZMake(55), CGRectGetMaxY(iconView.frame) + QZMake(10), QZMake(110), QZMake(30));
+    [editingView addSubview:nickName];
+    
+    // 性别女
+    UIButton *women = [[UIButton alloc] init];
+    women.layer.borderWidth = 1;
+    women.layer.borderColor = RGBCOLOR(230, 230, 230).CGColor;
+    women.layer.cornerRadius = QZMake(5);
+    women.clipsToBounds = YES;
+    women.tag = sexTypeWomen;
+    [women setImage:[UIImage imageNamed:@"icon-female"] forState:UIControlStateNormal];
+    women.frame = CGRectMake(CGRectGetMinX(nickName.frame), CGRectGetMaxY(nickName.frame) + QZMake(10), QZMake(50), QZMake(30));
+    [editingView addSubview:women];
+    
+    if ([model.sex isEqualToString:@"0"]) {
+        [women setBackgroundColor:RGBCOLOR16(0x3299cc)];
+        editingView.chooseSex = women;
+    }
+    women.adjustsImageWhenHighlighted = NO;
+    [women addTarget:editingView action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+    
+    // 性别男
+    UIButton *men = [[UIButton alloc] init];
+    men.layer.borderWidth = 1;
+    men.tag = sexTypeMen;
+    men.layer.borderColor = RGBCOLOR(230, 230, 230).CGColor;
+    men.layer.cornerRadius = QZMake(5);
+    men.clipsToBounds = YES;
+    [men setImage:[UIImage imageNamed:@"icon-male"] forState:UIControlStateNormal];
+    men.frame = CGRectMake(CGRectGetMaxX(women.frame) + QZMake(10), CGRectGetMaxY(nickName.frame) + QZMake(10), QZMake(50), QZMake(30));
+    [editingView addSubview:men];
+    if ([model.sex isEqualToString:@"1"]) {
+        [men setBackgroundColor:RGBCOLOR16(0x3299cc)];
+        editingView.chooseSex = men;
+    }
+    men.adjustsImageWhenHighlighted = NO;
+    [men addTarget:editingView action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+
+    return editingView;
+}
+
+- (void)setScrollContent:(NSMutableArray *)imageArry
+{
+    self.imageArry = imageArry;
+    [self.scrollView removeAllSubviews];
+    if (imageArry.count < 5) {
+        self.scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, QZMake(75));
+    } else {
+        self.scrollView.contentSize = CGSizeMake((imageArry.count + 1) * QZMake(75), QZMake(75));
+    }
+    
+    for (int i = 0; i<imageArry.count; i++) {
+        UIImageView *imageView = [imageArry objectAtIndex:i];
+        imageView.tag = i + 1;
+        imageView.frame = CGRectMake(i * QZMake(75), 0, QZMake(73), QZMake(73));
+        [self.scrollView addSubview:imageView];
+        
+        UIButton *deleteBtn = [[UIButton alloc] init];
+        [deleteBtn setBackgroundImage:[UIImage imageNamed:@"btn_delete"] forState:UIControlStateNormal];
+        deleteBtn.adjustsImageWhenHighlighted = NO;
+        deleteBtn.tag = i + 101;
+        deleteBtn.frame = CGRectMake(QZMake(42 + i * 75), 0, QZMake(30), QZMake(30));
+        [deleteBtn addTarget:self action:@selector(deleteBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self.scrollView addSubview:deleteBtn];
+    }
+    UIButton *addBtn = [[UIButton alloc] init];
+    addBtn.frame = CGRectMake(imageArry.count * QZMake(75) , 0, QZMake(73), QZMake(73));
+    [addBtn setImage:[UIImage imageNamed:@"btnAddPhoto"] forState:UIControlStateNormal];
+    [self.scrollView addSubview:addBtn];
+    [addBtn addTarget:self action:@selector(addBtnClik) forControlEvents:UIControlEventTouchUpInside];
+    
+}
+
+// 删除照片
+- (void)deleteBtnClick:(UIButton *)deleteBtn
+{
+    UIImageView *imageView = [self.imageArry objectAtIndex:deleteBtn.tag - 101];
+    
+    NSString *path = @"/bbs3/app/userImageDelete.jhtml";
+    NSDictionary *params = @{@"imageId":imageView.qzTagString};
+    [AFHTTPClient getJSONPath:path httpHost:BBS_IP params:params success:^(id json) {        
+        // 通知代理刷新照片墙
+        if ([self.delegate respondsToSelector:@selector(editingViewDeleteBtnClick)]) {
+            [self.delegate editingViewDeleteBtnClick];
+        }
+    } fail:^{
+        
+    }];
+    
+    [self.imageArry removeObjectAtIndex:deleteBtn.tag - 101];
+    [self setScrollContent:self.imageArry];
+    
+    [self endEditing:YES];    
+
+}
+
+// 更换照片墙通知代理
+- (void)addBtnClik
+{
+    if ([self.delegate respondsToSelector:@selector(editingViewChangePhotoWall)]) {
+        [self.delegate editingViewChangePhotoWall];
+    }
+    
+    [self endEditing:YES];
+}
+
+// 更换头像通知代理
+- (void)changeTipClick
+{
+    if ([self.delegate respondsToSelector:@selector(editingViewChangeIcon)]) {
+        [self.delegate editingViewChangeIcon];
+    }
+    
+    [self endEditing:YES];
+}
+
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
+    self.nickName = textField.text;
+}
+
+// 改变性别选择
+- (void)btnClick:(UIButton *)btn
+{
+    [self.chooseSex setBackgroundColor:[UIColor whiteColor]];
+    self.chooseSex = btn;
+    [self.chooseSex setBackgroundColor:RGBCOLOR16(0x3299cc)];
+    [self endEditing:YES];
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [self endEditing:YES];
+}
+
+@end

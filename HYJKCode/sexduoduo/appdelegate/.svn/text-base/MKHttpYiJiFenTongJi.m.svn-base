@@ -1,0 +1,84 @@
+//
+//  MKHttpYiJiFenTongJi.m
+//  sexduoduo
+//
+//  Created by sqz on 14-12-18.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "MKHttpYiJiFenTongJi.h"
+#define YiJiFen_SERVER @"api.yijifen.com"
+
+@implementation MKHttpYiJiFenTongJi
+
++(id)shareMyInstance
+{
+    static MKHttpYiJiFenTongJi *sharedClient=nil;
+    static dispatch_once_t   p;
+    dispatch_once(&p,^{
+        sharedClient = [[MKHttpYiJiFenTongJi alloc]initWithHostName:YiJiFen_SERVER];
+        [sharedClient useCache];
+    });
+    return sharedClient;
+    
+}
+
+
+//获取论坛板块列表
+-(MKNetworkOperation*) requestYiJiFencompletionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                                   errorHandler:(MKNKErrorBlock) errorBlock
+{
+    
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc] init];
+    [dic setObject:@"123456" forKey:@"appid"];
+//    [dic setObject:[ShareFunction getMACAddress] forKey:@"deviceid"];
+//    [dic setObject:[ShareFunction GetKeychainUUID] forKey:@"OPENUDID"];
+    [dic setObject:[ShareFunction getADFA] forKey:@"IDFA"];
+    
+    NSLog(@"易积分提交激活请求%@",dic);
+    MKNetworkOperation *op = [self operationWithPath:[NSString stringWithFormat:@"/EScore_API/common/comfirmActivateCheckGet.do"]
+                                              params:dic
+                                          httpMethod:@"GET"];
+    [self completionWithNetWorkOperation:op completionHandler:completionBlock errorHandler:errorBlock];
+    
+    
+    return op;
+    
+}
+
+#pragma mark - 下载完成和出错的处理
+-(void)completionWithNetWorkOperation:(MKNetworkOperation*)op completionHandler:(HttpResponseSuccessIdObject) completionBlock
+                         errorHandler:(MKNKErrorBlock) errorBlock
+{
+    [op addCompletionHandler:^(MKNetworkOperation* completedOperation) {
+        
+        //        DLog(@"字符数据%@", [completedOperation responseString]);
+        if([completedOperation isCachedResponse]) {
+            
+            DLog(@"Data from cache");
+            [completedOperation responseJSONWithCompletionHandler:^(id jsonObject) {
+                completionBlock(jsonObject);
+            }];
+            
+        }else {
+            
+            DLog(@"Data from server");
+            [completedOperation responseJSONWithCompletionHandler:^(id jsonObject) {
+                completionBlock(jsonObject);
+            }];
+            
+        }
+        
+        
+    }
+                errorHandler:^(MKNetworkOperation *errorOp, NSError* error) {
+                    
+                    errorBlock(error);
+                }];
+    [self enqueueOperation:op];
+    
+}
+
+
+
+@end

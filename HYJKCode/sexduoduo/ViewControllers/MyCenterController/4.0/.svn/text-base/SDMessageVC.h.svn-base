@@ -1,0 +1,28 @@
+//
+//  SDMessageVC.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/10.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  私信
+
+#import <UIKit/UIKit.h>
+#import "SDPersonalCenterModel.h"
+#import "SDMessageToMeModel.h"
+
+typedef enum {
+    OtherMessageType = 0,   //私信TA
+    PersonalMessageType     //私信我的
+} SDMessageType;
+
+@interface SDMessageVC : UIViewController
+
+@property (nonatomic, strong) SDPersonalCenterModel *model;
+
+@property (nonatomic, strong) SDMessageToMeModel *personalMessageModel;
+
+@property (nonatomic) SDMessageType type;
+
+- (instancetype)initWithType:(SDMessageType)type;
+
+@end

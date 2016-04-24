@@ -1,0 +1,201 @@
+//
+//  SDNearPeopleTableViewCell.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDNearPeopleTableViewCell.h"
+
+@implementation SDNearPeopleTableViewCell
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    
+    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+        self.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        [self initView];
+    }
+    return self;
+}
+/**
+ *  初始化视图
+ */
+- (void)initView {
+    
+    self.headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(QZMake(10), QZMake(15), QZMake(70), QZMake(70))];
+    self.headImageView.layer.cornerRadius = _headImageView.width/2.;
+    self.headImageView.layer.masksToBounds = YES;
+    self.headImageView.layer.borderWidth = 1.;
+    self.headImageView.layer.borderColor = [colorWith05 CGColor];
+    self.headImageView.contentMode = UIViewContentModeScaleAspectFill;
+    self.headImageView.clipsToBounds = YES;
+    [self.contentView addSubview:self.headImageView];
+    
+    //分割线
+    UILabel *line = [[UILabel alloc] initWithFrame:CGRectMake(QZMake(10), _headImageView.bottom + QZMake(14.5), SCREEN_WIDTH - QZMake(20), QZMake(0.5))];
+    line.backgroundColor = RGBCOLOR16(0xeaeaea);
+    [self.contentView addSubview:line];
+    
+    //性别
+    self.sexImageView = [[UIImageView alloc] initWithFrame:CGRectMake(_headImageView.right - QZMake(20), _headImageView.bottom - QZMake(20)  , QZMake(20), QZMake(20))];
+    self.sexImageView.layer.cornerRadius = _sexImageView.width/2.;
+    self.sexImageView.layer.masksToBounds = YES;
+    [self.contentView addSubview:self.sexImageView];
+    
+    //昵称
+    self.nickNameLab = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.nickNameLab.font = FONT_WITH_SIZE(16);
+    self.nickNameLab.textColor = RGBCOLOR16(0x616161);
+    [self.contentView addSubview:self.nickNameLab];
+    
+    //等级
+    self.levelImageView = [[UIImageView alloc] initWithFrame:CGRectZero];
+    [self.contentView addSubview:self.levelImageView];
+    
+    self.levelLabName = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.levelLabName.font = FONT_WITH_SIZE(13);
+    self.levelLabName.textColor = RGBCOLOR16(0xa5a5a5);
+    [self.contentView addSubview:self.levelLabName];
+    
+    //年龄
+    self.ageLab = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.ageLab.font = FONT_WITH_SIZE(14);
+    self.ageLab.textColor = RGBCOLOR16(0xa5a5a5);
+    [self.contentView addSubview:self.ageLab];
+    
+    //地址
+    self.addressLab = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.addressLab.font = FONT_WITH_SIZE(14);
+    self.addressLab.textColor = RGBCOLOR16(0xa5a5a5);
+    self.addressLab.numberOfLines = 0;
+    [self.contentView addSubview:self.addressLab];
+    
+    //距离
+    UIImageView *imgV = [[UIImageView alloc]initWithFrame:CGRectMake(SCREEN_WIDTH - QZMake(100), QZMake(32), QZMake(15), QZMake(15))];
+    imgV.image = [UIImage imageNamed:@"icon_distance"];
+    [self.contentView addSubview:imgV];
+    
+    self.distanceLab = [[UILabel alloc] initWithFrame:CGRectMake(imgV.right + QZMake(5), imgV.top, 0, 0)];
+    self.distanceLab.font = FONT_WITH_SIZE(13);
+    self.distanceLab.textColor = RGBCOLOR16(0xa5a5a5);
+    [self.contentView addSubview:self.distanceLab];
+    
+    //时间
+    _timeImgV = [[UIImageView alloc] initWithFrame:CGRectMake(imgV.left, imgV.bottom + QZMake(10), imgV.width, imgV.height)];
+    _timeImgV.image = [UIImage imageNamed:@"icon_time"];
+    [self.contentView addSubview:_timeImgV];
+    
+    self.timeLab = [[UILabel alloc] initWithFrame:CGRectMake(_timeImgV.right + QZMake(5), _timeImgV.top, 0, 0)];
+    self.timeLab.font = FONT_WITH_SIZE(13);
+    self.timeLab.textColor = RGBCOLOR16(0xa5a5a5);
+    [self.contentView addSubview:self.timeLab];
+}
+
+- (void)theDataWith:(SDNearPeopleModel *)model {
+    //
+    if (![model.avatar isEqualToString:@"<null>"] && ![model.avatar isEqualToString:@"null"] && model.avatar) {
+        [self.headImageView sd_setImageWithURL:[NSURL URLWithString:model.avatar] placeholderImage:[UIImage imageNamed:@"myCenter_userImg2"]];
+    } else {
+        self.headImageView.image = [UIImage imageNamed:@"myCenter_userImg2"];
+    }
+    
+    //性别
+    if ([model.sex isEqualToString:@"0"] || [model.sex isEqualToString:@"女"])
+         self.sexImageView.image = [UIImage imageNamed:@"icon_female"];
+    else
+       self.sexImageView.image = [UIImage imageNamed:@"icon_male"];
+    
+    //昵称
+    NSString *str = model.nickname;
+    CGSize size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(16) withSize:CGSizeMake(SCREEN_WIDTH  - QZMake(20), MAXFLOAT)];
+    self.nickNameLab.frame = CGRectMake(_headImageView.right + QZMake(10), QZMake(30), size.width, size.height);
+    if (size.width > QZMake(80)) {
+        self.nickNameLab.width = QZMake(80);
+    }
+    if (![str isEqualToString:@"<null>"] && ![str isEqualToString:@"null"] && str.length > 0) {
+        self.nickNameLab.text = str;
+    } else {
+        self.nickNameLab.text = @"";
+    }
+    
+    //等级
+    switch ([model.groupId intValue]) {
+        case 1: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_1"]; break;
+        case 2: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_2"]; break;
+        case 3: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_3"]; break;
+        case 4: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_4"]; break;
+        case 5: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_5"]; break;
+        case 6: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_6"]; break;
+        case 7: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_7"]; break;
+        case 8: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_8"]; break;
+        case 9: _levelImageView.image = [UIImage imageNamed:@"BBS_dengji_9"]; break;
+        default:
+            break;
+    }
+    self.levelImageView.frame = CGRectMake(_nickNameLab.right + QZMake(5), 0, QZMake(25), QZMake(19.5));
+    self.levelImageView.centerY = _nickNameLab.centerY;
+    
+    size = [NSString getTextMultilineContent:model.groupName withFont:FONT_WITH_SIZE(13) withSize:CGSizeMake(SCREEN_WIDTH  - QZMake(20), MAXFLOAT)];
+    self.levelLabName.frame = CGRectMake(_levelImageView.right + QZMake(2), _levelImageView.top, size.width, size.height);
+    self.levelLabName.text = model.groupName;
+    self.levelLabName.centerY = _levelImageView.centerY;
+    
+    //年龄
+    str = [NSString stringWithFormat:@"%@岁",model.age];
+    size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(14) withSize:CGSizeMake(SCREEN_WIDTH  - QZMake(20), MAXFLOAT)];
+    self.ageLab.text = str;
+    self.ageLab.frame = CGRectMake(_nickNameLab.left, _nickNameLab.bottom + QZMake(10), size.width, size.height);
+    
+    //地址
+    size = [NSString getTextMultilineContent:model.comefrom withFont:FONT_WITH_SIZE(14) withSize:CGSizeMake(_timeLab.left - _ageLab.right + QZMake(10), MAXFLOAT)];
+    self.addressLab.frame = CGRectMake(_ageLab.right + QZMake(5), _ageLab.top, _timeImgV.left - _ageLab.right - QZMake(10), size.height);
+    if (![model.comefrom isEqualToString:@"<null>"] && model.comefrom.length > 0) {
+        self.addressLab.text = model.comefrom;
+    }
+    
+    //距离
+    str = model.distance;
+    size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(13) withSize:CGSizeMake(SCREEN_WIDTH  - QZMake(20), MAXFLOAT)];
+    self.distanceLab.width = size.width;
+    self.distanceLab.height = size.height;
+    self.distanceLab.text = str;
+    
+    //时间
+    NSDate *today = [NSDate date];
+    long long lastTime = [model.lastTime longLongValue]/1000;
+    long long nowDate = [today timeIntervalSince1970];
+    long long time = nowDate - lastTime;
+    if (time < 60*60) {
+        if (time/60 <= 0) {
+            str = @"刚刚";
+        } else {
+            str = [NSString stringWithFormat:@"%zi分钟前",time/60];
+        }
+    }else if (time < 60*60*24) {
+        str = [NSString stringWithFormat:@"%zi小时前",time/60/60];
+    }else if (time < 60*60*24*30) {
+        str = [NSString stringWithFormat:@"%zi天前",time/60/60/24];
+    }else if (time < 60*60*24*30*12) {
+        str = [NSString stringWithFormat:@"%zi个月前",time/60/60/24/30];
+    }else {
+        str = [NSString stringWithFormat:@"%zi年前",time/60/60/24/30/12];
+    }
+    size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(13) withSize:CGSizeMake(SCREEN_WIDTH  - QZMake(20), MAXFLOAT)];
+    self.timeLab.width = size.width;
+    self.timeLab.height = size.height;
+    self.timeLab.text = str;
+}
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

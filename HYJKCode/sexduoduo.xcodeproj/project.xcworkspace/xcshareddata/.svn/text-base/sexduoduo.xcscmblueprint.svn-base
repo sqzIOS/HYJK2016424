@@ -1,0 +1,35 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "8e98d677-5f9d-4f0b-ae10-6cbb345a366c++2599",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+    "8e98d677-5f9d-4f0b-ae10-6cbb345a366c++2599" : {
+
+    },
+    "24ce8f1b-3634-1c46-b4b0-87694830074e++7030" : {
+
+    }
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "8e98d677-5f9d-4f0b-ae10-6cbb345a366c++2599" : 0,
+    "24ce8f1b-3634-1c46-b4b0-87694830074e++7030" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "1EE88790-3AC7-4305-8D0C-95C49F361056",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "8e98d677-5f9d-4f0b-ae10-6cbb345a366c++2599" : "sexduoduo-%E5%90%88%E5%B9%B6",
+    "24ce8f1b-3634-1c46-b4b0-87694830074e++7030" : ""
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "sexduoduo",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "sexduoduo.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/192.168.16.99\/svn\/XMPPDD",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "24ce8f1b-3634-1c46-b4b0-87694830074e++7030"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "svn:\/\/192.168.16.47\/usr\/svnbox\/ios",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8e98d677-5f9d-4f0b-ae10-6cbb345a366c++2599"
+    }
+  ]
+}

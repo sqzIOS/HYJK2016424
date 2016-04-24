@@ -1,0 +1,58 @@
+//
+//  MyCenterVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/7/28.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  4.0-4.1版本的个人中心
+
+#import <UIKit/UIKit.h>
+#import "PAPasscodeViewController.h"
+#import "EGORefreshTableHeaderView.h"
+//#import "ZBarSDK.h"
+#import <AVFoundation/AVFoundation.h>
+#import "AppDelegate.h"
+#import "MyInfoViewController.h"
+//#import "UMFeedbackViewController.h"
+#import "MyInfoViewController.h"
+//#import "UITableView+ZGParallelView.h"
+#import "MyOrderViewController.h"
+#import "RegisterViewController.h"
+#import "GoodsViewController.h"
+#import "LoginViewController.h"
+#import "HelpCenterViewController.h"
+
+#import "SetViewVC.h"
+#import "KeFuCenterVC.h"
+
+#import "JiFenShopViewController.h"
+#import "AboutUsVC.h"
+
+#import "SDUnLoginHeadView.h"
+
+@interface MyCenterVC : UIViewController<UITableViewDataSource,UITableViewDelegate,PAPasscodeViewControllerDelegate,UIScrollViewDelegate>
+{
+    NSString *updatePath;
+    UIButton *registerBtn;
+}
+
+@property (strong, nonatomic) IBOutlet UIView *headerView;//登录的head
+@property (weak, nonatomic) IBOutlet UIImageView *headerBgImg;
+@property (weak, nonatomic) IBOutlet UIImageView *userHeaderImg;//用户头像
+@property (weak, nonatomic) IBOutlet UILabel *userNameLab;//用户名
+@property (weak, nonatomic) IBOutlet UILabel *userLevLab;//用户等级
+@property (weak, nonatomic) IBOutlet UILabel *userDuoBiLab;//用户多币
+
+@property (strong, nonatomic) IBOutlet UIView *headerViewUnLogin;//没有登录的head
+@property (weak, nonatomic) IBOutlet UILabel *unLoginAlertLab;
+
+@property (strong, nonatomic) UITableView *mycenterTableV ;
+@property (strong, nonatomic) UIImageView *userTopImgV;
+@property (strong, nonatomic) NSArray *listAry;
+@property (strong, nonatomic) NSArray *listAryImage;
+
+@property (nonatomic, strong) SDUnLoginHeadView *sdUnLoginHeadView; //4.3版本没有登录head
+
+@property (strong, nonatomic) IBOutlet UIView *barBtnView;//我的订单 我的泡吧 多币商城 
+
+@end

@@ -1,0 +1,14 @@
+//
+//  SDMySexHealthVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/25.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  泡泡 之 我的性健康
+
+#import <UIKit/UIKit.h>
+
+@interface SDMySexHealthVC : UIViewController
+
+@end
+

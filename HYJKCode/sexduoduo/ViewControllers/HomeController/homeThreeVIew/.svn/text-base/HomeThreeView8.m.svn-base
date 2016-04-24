@@ -1,0 +1,220 @@
+//
+//  HomeThreeView8.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeThreeView8.h"
+
+@implementation HomeThreeView8
+
+-(instancetype)init
+{
+    if (self=[super init]) {
+        
+        self.btn1 = [UIButton buttonWithType:0];
+        self.btn1.tag = 0;
+        [self.btn1 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn1 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn1];
+        
+        
+        self.btn2 = [UIButton buttonWithType:0];
+        self.btn2.tag = 1;
+        [self.btn2 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn2 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn2];
+        
+        self.btn3 = [UIButton buttonWithType:0];
+        self.btn3.tag = 2;
+        [self.btn3 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn3 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn3];
+        
+        
+        self.btn4 = [UIButton buttonWithType:0];
+        self.btn4.tag = 3;
+        [self.btn4 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn4 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn4];
+        
+        self.btn5 = [UIButton buttonWithType:0];
+        self.btn5.tag = 4;
+        [self.btn5 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn5 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn5];
+        
+        self.btn6 = [UIButton buttonWithType:0];
+        self.btn6.tag = 5;
+        [self.btn6 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn6 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn6];
+        
+        self.btn1.frame = CGRectMake(MAKEOF5(5), MAKEOF5(2), MAKEOF5(100), MAKEOF5(36));
+        
+        self.btn2.frame = CGRectMake(0, self.btn1.top, MAKEOF5(100), MAKEOF5(36));
+        self.btn2.centerX = SCREEN_WIDTH/2.;
+        
+        self.btn3.frame = CGRectMake(0, self.btn1.top, MAKEOF5(100), MAKEOF5(36));
+        self.btn3.right = SCREEN_WIDTH - MAKEOF5(5);
+        
+        self.btn4.frame = CGRectMake(MAKEOF5(5), self.btn1.bottom +MAKEOF5(4), MAKEOF5(100), MAKEOF5(36));
+        
+        self.btn5.frame = CGRectMake(0, self.btn4.top, MAKEOF5(100), MAKEOF5(36));
+        self.btn5.centerX = SCREEN_WIDTH/2.;
+        
+        self.btn6.frame = CGRectMake(0, self.btn4.top, MAKEOF5(100), MAKEOF5(36));
+        self.btn6.right = SCREEN_WIDTH - MAKEOF5(5);
+    }
+    return self;
+}
+
+-(CGFloat)getViewHeight
+{
+    return self.btn6.bottom +MAKEOF5(2);
+}
+-(void)reset
+{
+    self.btnNum=6;
+    self.dataArray=[[NSMutableArray alloc]init];
+    
+    self.btn1.layer.cornerRadius = 3.5;
+    self.btn1.layer.borderColor = btnBorderColor;
+    self.btn1.layer.borderWidth = 0.5;
+    
+    
+    self.btn2.layer.cornerRadius = 3.5;
+    self.btn2.layer.borderColor = btnBorderColor;
+    self.btn2.layer.borderWidth = 0.5;
+    
+    self.btn3.layer.cornerRadius = 3.5;
+    self.btn3.layer.borderColor = btnBorderColor;
+    self.btn3.layer.borderWidth = 0.5;
+    
+    
+    self.btn4.layer.cornerRadius = 3.5;
+    self.btn4.layer.borderColor = btnBorderColor;
+    self.btn4.layer.borderWidth = 0.5;
+    
+    self.btn5.layer.cornerRadius = 3.5;
+    self.btn5.layer.borderColor = btnBorderColor;
+    self.btn5.layer.borderWidth = 0.5;
+    
+    self.btn6.layer.cornerRadius = 3.5;
+    self.btn6.layer.borderColor = btnBorderColor;
+    self.btn6.layer.borderWidth = 0.5;
+    
+    self.btn1.clipsToBounds=YES;
+    self.btn2.clipsToBounds=YES;
+    self.btn3.clipsToBounds=YES;
+    self.btn4.clipsToBounds=YES;
+    self.btn5.clipsToBounds=YES;
+    self.btn6.clipsToBounds=YES;
+}
+
+
+- (IBAction)btnClick:(id)sender {
+    
+    UIButton *btn=sender;
+    NSLog(@"homeView  indexNum=%d 点击按钮%d btnNum=%d",self.indexNum,(int)btn.tag,self.btnNum);
+    NSString *str=[NSString stringWithFormat:@"ModuleNew_%d_%d",self.indexNum+1,(int)btn.tag+1];
+    // 统计 计数事件
+    [MobClick event:str];
+    
+    if (btn.tag<self.dataArray.count) {
+        NSDictionary *dic=self.dataArray[btn.tag];
+        
+        [self judgeJumpToSubControllerWithDic:dic];
+    }
+    
+    
+    
+}
+-(void)setDataArray:(NSMutableArray *)dataArray
+{
+    
+    _dataArray=dataArray;
+//    if (dataArray.count>0)
+//    {
+//        //        self.lab.text = dataArray[0][@"name"];
+//        [self.btn1 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[0][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+//        if (dataArray.count>1)
+//        {
+//            [self.btn2 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[1][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+//            
+//            if (dataArray.count>2)
+//            {
+//                [self.btn3 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[2][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+//                
+//                if (dataArray.count>3)
+//                {
+//                    [self.btn4 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[3][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+//                    
+//                    if (dataArray.count>4)
+//                    {
+//                        [self.btn5 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[4][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+//                        
+//                        if (dataArray.count>5)
+//                        {
+//                            [self.btn6 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[5][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+//                            
+//                            
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+    for (int i=0; i<self.btnNum; i++) {
+        
+        if (i>=dataArray.count) {
+            return;
+        }
+        
+        UIButton *btn;
+        switch (i) {
+            case 0:
+                btn=self.btn1;
+                break;
+            case 1:
+                btn=self.btn2;
+                break;
+            case 2:
+                btn=self.btn3;
+                break;
+            case 3:
+                btn=self.btn4;
+                break;
+            case 4:
+                btn = self.btn5;
+                break;
+            case 5:
+                btn = self.btn6;
+                break;
+            default:
+                break;
+        }
+        
+        if (judgeUrlIsHave(dataArray[i],@"newLogoPath")) {
+            
+            [btn sd_setImageWithURL:[NSURL URLWithString:dataArray[i][@"newLogoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }else{
+            [btn sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[i][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }
+        
+        
+    }
+}
+
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

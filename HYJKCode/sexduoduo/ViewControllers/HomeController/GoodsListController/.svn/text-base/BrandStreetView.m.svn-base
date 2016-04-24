@@ -1,0 +1,74 @@
+//
+//  BrandStreetView.m
+//  sexduoduo
+//
+//  Created by dsz on 15-2-5.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "BrandStreetView.h"
+
+@implementation BrandStreetView
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        
+        self.leftLine = [UIImageView qzImageViewLineWithX:MAKEOF5(10) withY:0 withWidth:1 withHeight:self.height];
+        [self addSubview:self.leftLine];
+        
+        self.rightLine = [UIImageView qzImageViewLineWithX:self.width-MAKEOF5(10) withY:0 withWidth:1 withHeight:self.height];
+        [self addSubview:self.rightLine];
+        
+        self.upLine = [UIImageView qzImageViewLineWithX:MAKEOF5(10) withY:0 withWidth:self.width-MAKEOF5(20) withHeight:1];
+        [self addSubview:self.upLine];
+        
+        self.downLine = [UIImageView qzImageViewLineWithX:MAKEOF5(10) withY:self.height withWidth:self.width-MAKEOF5(20) withHeight:1];
+        [self addSubview:self.downLine];
+        
+        self.centerLine = [UIImageView qzImageViewLineWithX:self.width/2. withY:0 withWidth:1 withHeight:self.height];
+        [self addSubview:self.centerLine];
+        
+        
+        self.leftBtn = [UIButton buttonWithType:0];
+        self.leftBtn.frame = CGRectMake(MAKEOF5(10), 1, self.width/2.-MAKEOF5(12), self.height-2);
+        [self.leftBtn addTarget:self action:@selector(leftBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.leftBtn];
+        
+        self.rightBtn = [UIButton buttonWithType:0];
+        self.rightBtn.frame = CGRectMake(self.width/2., 1, self.width/2.-MAKEOF5(12), self.height-2);
+        [self.rightBtn addTarget:self action:@selector(rightBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.rightBtn];
+        
+    }
+    return self;
+}
+
+
+- (IBAction)leftBtnClick:(id)sender {
+    
+    NSLog(@"leftBtn id=%@",self.leftBrandId);
+    
+    if ([self.delegate respondsToSelector:@selector(brandStreetViewProtocolActionWithBrandId:andTitle:)]) {
+        [self.delegate brandStreetViewProtocolActionWithBrandId:self.leftBrandId andTitle:self.leftTitle];
+    }
+}
+
+- (IBAction)rightBtnClick:(id)sender {
+    
+     NSLog(@"rightBtn id=%@",self.rightBrandId);
+    if ( self.rightBrandId && [self.delegate respondsToSelector:@selector(brandStreetViewProtocolActionWithBrandId:andTitle:)]) {
+        [self.delegate brandStreetViewProtocolActionWithBrandId:self.rightBrandId andTitle:self.rightTitle];
+    }
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

@@ -1,0 +1,19 @@
+//
+//  SDPersonalPhotoWall.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/10.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface SDPersonalPhotoWall : UICollectionView<UICollectionViewDataSource,UICollectionViewDelegate,UICollectionViewDelegateFlowLayout>
+
+@property (nonatomic, strong) NSArray *dataArr;
+
+@property (nonatomic, strong) UIViewController *mainVC;
+
+- (instancetype)initWithFrame:(CGRect)frame collectionViewLayout:(UICollectionViewLayout *)layout Array:(NSArray *)dataArr Controller:(UIViewController *)vc;
+
+@end

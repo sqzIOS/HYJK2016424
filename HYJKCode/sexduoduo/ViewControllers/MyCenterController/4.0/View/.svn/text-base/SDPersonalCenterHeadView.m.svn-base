@@ -1,0 +1,445 @@
+//
+//  SDPersonalCenterHeadView.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDPersonalCenterHeadView.h"
+#import "SDPersonalPhotoWall.h"
+#import "SDMessageVC.h"
+#import "SDInteractiveRecordVC.h"
+
+@interface SDPersonalCenterHeadView ()
+
+@property (nonatomic, strong) UIView *bgView1;  //上部分
+
+@property (nonatomic, strong) UIView *bgView2;  //第二部分
+
+@property (nonatomic, strong) UIView *bgView3;  //最近看过的商品部分
+
+@property (nonatomic, strong) UIView *bgView4;  //最近看过的帖子部分
+
+
+@property (nonatomic, strong) UILabel *loverNum;
+
+@property (nonatomic, strong) UILabel *loverNum2;   //用于动画
+
+@end
+
+@implementation SDPersonalCenterHeadView
+
+
+- (instancetype)initWithFrame:(CGRect)frame Model:(SDPersonalCenterModel *)model Controller:(UIViewController *)vc Type:(int)type{
+    if (self = [super initWithFrame:frame]) {
+        
+        switch (self.type = type) {
+            case 1: {
+                self.title1 = @"打赏TA";
+                self.title2 = @"私信TA";
+                self.title3 = @"喜欢TA";
+            } break;
+                
+            case 2:{
+                self.title1 = @"打赏我的";
+                self.title2 = @"私信我的";
+                self.title3 = @"喜欢我的";
+            } break;
+            default:
+                break;
+        }
+        
+        self.mainVC = vc;
+        self.backgroundColor = colorWith05;
+        self.model = model;
+        [self initView];
+        
+    }
+    return self;
+}
+
+- (void)initView {
+    
+    //1
+    [self addSubview:self.bgView1];
+    
+    //2
+    [self addSubview:self.bgView2];
+    
+    //3
+    //    [self addSubview:self.bgView3];
+    //4
+    //    [self addSubview:self.bgView4];
+    
+    
+    //    if ([_model.replyPost isKindOfClass:[NSArray class]]) {
+    //        if (_model.replyPost.count < 6 && _model.replyPost.count > 0) {
+    //            _bgView4.height = QZMake(40) + 44 * _model.replyPost.count;
+    //            _bgView4.hidden = NO;
+    //        } else {
+    //            _bgView4.height = 0;
+    //            _bgView4.hidden = YES;
+    //        }
+    //    } else {
+    //        _bgView4.height = 0;
+    //        _bgView4.hidden = YES;
+    //    }
+    //
+    //    if (self.height < self.bgView4.bottom) {
+    //        self.height = self.bgView4.bottom;
+    //    }
+    self.height = self.bgView2.bottom;
+}
+
+// 刷新数据
+- (void)resetHeadViewWithphotoWallDataArry:(NSArray *)dataArry
+{
+    if (self.photeoWall == nil && dataArry.count > 0) {
+        UICollectionViewFlowLayout *flow = [[UICollectionViewFlowLayout alloc] init];
+        flow.minimumLineSpacing = 0;
+        flow.minimumInteritemSpacing = 0;
+        flow.sectionInset = UIEdgeInsetsMake(0, 0, 0, 0);
+        flow.itemSize = CGSizeMake(QZMake(72), QZMake(70));
+        flow.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+        
+        _photeoWall = [[SDPersonalPhotoWall alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, QZMake(70)) collectionViewLayout:flow Array:dataArry Controller:self.mainVC];
+        
+        [self.bgView1 addSubview:_photeoWall];
+    }
+    
+    if (dataArry.count > 0) {
+        self.photeoWall.dataArr = dataArry;
+        [self.photeoWall reloadData];
+    }
+}
+
+- (void)resetHeadViewWithIcon:(UIImage *)icon
+{
+    self.headImageView.image = icon;
+}
+
+- (void)resetHeadViewWithNickname:(NSString *)nickname andSex:(NSString *)sex
+{
+    CGSize oldSize = [NSString getTextMultilineContent:self.nickLab.text withFont:FONT_WITH_SIZE(17) withSize:CGSizeMake(SCREEN_WIDTH - 20, MAXFLOAT)];
+    CGSize newSize = [NSString getTextMultilineContent:nickname withFont:FONT_WITH_SIZE(17) withSize:CGSizeMake(SCREEN_WIDTH - 20, MAXFLOAT)];
+    CGRect frame = self.nickLab.frame;
+    frame.origin.x -= (newSize.width - oldSize.width);
+    frame.size = newSize;
+    self.nickLab.frame = frame;
+    
+    CGPoint center = self.headImageView.center;
+    center.y += QZMake(52.5 + newSize.height / 2);
+    self.nickLab.center = center;
+    
+    self.nickLab.text = nickname;
+    
+    if ([sex isEqualToString:@"1"] || [sex isEqualToString:@"男"]) {
+        self.sexImageView.image = [UIImage imageNamed:@"icon-male"];
+    }else {
+        self.sexImageView.image = [UIImage imageNamed:@"icon-female"];
+    }
+    self.sexImageView.left = self.nickLab.right + QZMake(5);
+}
+
+#pragma mark --- 第一部分
+
+/**
+ *  第一部分
+ */
+- (void)oneView {
+    if ([_model.image_url isKindOfClass:[NSArray class]] && _model.image_url.count > 0) {
+        UICollectionViewFlowLayout *flow = [[UICollectionViewFlowLayout alloc] init];
+        flow.minimumLineSpacing = 0;
+        flow.minimumInteritemSpacing = 0;
+        flow.sectionInset = UIEdgeInsetsMake(0, 0, 0, 0);
+        flow.itemSize = CGSizeMake(QZMake(72), QZMake(70));
+        flow.scrollDirection = UICollectionViewScrollDirectionHorizontal;
+        
+        _photeoWall = [[SDPersonalPhotoWall alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, QZMake(70)) collectionViewLayout:flow Array:self.model.image_url Controller:self.mainVC];
+        
+        [self.bgView1 addSubview:_photeoWall];
+    } else {
+        UIImageView *imgV = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, QZMake(70))];
+        imgV.image = [UIImage imageNamed:@"userTopImg.jpg"];
+        imgV.contentMode = UIViewContentModeScaleAspectFill;
+        imgV.clipsToBounds = YES;
+        [self.bgView1 addSubview:imgV];
+    }
+    
+    //t头像
+    UIImageView *headImageView = [[UIImageView alloc] initWithFrame:CGRectMake(_bgView1.width/2. - QZMake(85)/2., QZMake(50), QZMake(85), QZMake(85))];
+    NSString *headStr = [NSString stringWithFormat:@"%@",_model.avatar];
+    [headImageView sd_setImageWithURL:[NSURL URLWithString:headStr] placeholderImage:[UIImage imageNamed:@"myCenter_userImg2"]];
+    headImageView.layer.cornerRadius = headImageView.width/2.;
+    headImageView.layer.masksToBounds = YES;
+    headImageView.layer.borderWidth = 2.;
+    self.headImageView = headImageView;
+    headImageView.layer.borderColor = [NAV_RED_COLOR CGColor];
+    [self.bgView1 addSubview:headImageView];
+    
+    //点赞
+    UIButton *loverBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    loverBtn.frame = CGRectMake(QZMake(97), 0, QZMake(30), QZMake(30));
+    [loverBtn setImage:[UIImage imageNamed:@"btn-like"] forState:UIControlStateNormal];
+    [self.bgView1 addSubview:loverBtn];
+    loverBtn.centerY = headImageView.centerY;
+    
+    CGSize size = [NSString getTextMultilineContent:_model.like_count withFont:FONT_WITH_SIZE(14) withSize:CGSizeMake(SCREEN_WIDTH - 20, MAXFLOAT)];
+    _loverNum = [[UILabel alloc] initWithFrame:CGRectMake(0, loverBtn.bottom + QZMake(2), size.width, size.height)];
+    _loverNum.font = FONT_WITH_SIZE(14);
+    _loverNum.textColor = NAV_RED_COLOR;
+    _loverNum.textAlignment = NSTextAlignmentCenter;
+    _loverNum.text = _model.like_count;
+    [self.bgView1 addSubview:_loverNum];
+    _loverNum.centerX = loverBtn.centerX;
+    
+    //浏览
+    UIButton *browseBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    browseBtn.frame = CGRectMake(headImageView.right + QZMake(18), 0, QZMake(30), QZMake(30));
+    [browseBtn setImage:[UIImage imageNamed:@"btn-read"] forState:UIControlStateNormal];
+    [self.bgView1 addSubview:browseBtn];
+    browseBtn.centerY = headImageView.centerY;
+    
+    size = [NSString getTextMultilineContent:_model.focus_count withFont:FONT_WITH_SIZE(14) withSize:CGSizeMake(SCREEN_WIDTH - 20, MAXFLOAT)];
+    UILabel *browseNum = [[UILabel alloc] initWithFrame:CGRectMake(0, browseBtn.bottom + QZMake(2), size.width, size.height)];
+    browseNum.font = FONT_WITH_SIZE(14);
+    browseNum.textColor = NAV_RED_COLOR;
+    browseNum.textAlignment = NSTextAlignmentCenter;
+    browseNum.text = _model.focus_count;
+    [self.bgView1 addSubview:browseNum];
+    browseNum.centerX = browseBtn.centerX;
+    
+    
+    //昵称
+    if (![_model.nickname isEqualToString:@"<null>"]) {
+        CGSize size = [NSString getTextMultilineContent:_model.nickname withFont:FONT_WITH_SIZE(17) withSize:CGSizeMake(SCREEN_WIDTH - 20, MAXFLOAT)];
+        UILabel *nickLab = [[UILabel alloc] initWithFrame:CGRectMake(0, headImageView.bottom + QZMake(10), size.width, size.height)];
+        nickLab.font = FONT_WITH_SIZE(17);
+        nickLab.textColor = NAV_RED_COLOR;
+        nickLab.text = _model.nickname;
+        self.nickLab = nickLab;
+        
+        [self.bgView1 addSubview:nickLab];
+        nickLab.centerX = headImageView.centerX;
+        
+        //性别
+        UIImageView *sexImageView = [[UIImageView alloc] initWithFrame:CGRectMake(nickLab.right + QZMake(5), nickLab.top, QZMake(20), QZMake(20))];
+        [self.bgView1 addSubview:sexImageView];
+        self.sexImageView = sexImageView;
+        if ([_model.sex isEqualToString:@"1"] || [_model.sex isEqualToString:@"男"]) {
+            sexImageView.image = [UIImage imageNamed:@"icon-male"];
+        }else {
+            sexImageView.image = [UIImage imageNamed:@"icon-female"];
+        }
+    }
+}
+
+
+/**
+ *  第二部分
+ */
+- (void)twoView {
+    
+    CGSize size = [NSString getTextMultilineContent:@"打赏我的" withFont:FONT_WITH_SIZE(14) withSize:CGSizeMake(SCREEN_WIDTH - 20, MAXFLOAT)];
+    
+    //打赏
+    UIButton *rewardMeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rewardMeBtn.frame = CGRectMake(0, 0, (SCREEN_WIDTH - 2)/3., QZMake(53));
+    [rewardMeBtn addTarget:self action:@selector(rewardMeBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    [self.bgView2 addSubview:rewardMeBtn];
+    
+    UIImageView *rewardImgV = [[UIImageView alloc] initWithFrame:CGRectMake(rewardMeBtn.width/2. - QZMake(25)/2., QZMake(5), QZMake(25), QZMake(25))];
+    rewardImgV.image = [UIImage imageNamed:@"icon-reward-me"];
+    [rewardMeBtn addSubview:rewardImgV];
+    
+    UILabel *rewardTitle = [[UILabel alloc] initWithFrame:CGRectMake(0, rewardMeBtn.bottom - size.height - QZMake(5), rewardMeBtn.width, size.height)];
+    rewardTitle.text = self.title1;
+    rewardTitle.font = FONT_WITH_SIZE(14);
+    rewardTitle.textColor = RGBCOLOR16(0xa5a5a5);
+    rewardTitle.textAlignment = NSTextAlignmentCenter;
+    [rewardMeBtn addSubview:rewardTitle];
+    
+    //分割线
+    UILabel *line = [[UILabel alloc] initWithFrame:CGRectMake(rewardMeBtn.right, QZMake(11), 1, QZMake(30))];
+    line.backgroundColor = RGBCOLOR16(0xeaeaea);
+    [self.bgView2 addSubview:line];
+    
+    //私信
+    UIButton *messagesMeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    messagesMeBtn.frame = CGRectMake(line.right, 0, (SCREEN_WIDTH - 2)/3., rewardMeBtn.height);
+    [messagesMeBtn addTarget:self action:@selector(messagesMeBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    [self.bgView2 addSubview:messagesMeBtn];
+    
+    UIImageView *messagesImgV = [[UIImageView alloc] initWithFrame:CGRectMake(messagesMeBtn.width/2. - QZMake(25)/2., QZMake(5), QZMake(25), QZMake(25))];
+    messagesImgV.image = [UIImage imageNamed:@"icon-contact-me"];
+    [messagesMeBtn addSubview:messagesImgV];
+    
+    UILabel *messageTitle = [[UILabel alloc] initWithFrame:CGRectMake(0, messagesMeBtn.bottom - size.height - QZMake(5), messagesMeBtn.width, size.height)];
+    messageTitle.text = self.title2;
+    messageTitle.font = FONT_WITH_SIZE(14);
+    messageTitle.textColor = RGBCOLOR16(0xa5a5a5);
+    messageTitle.textAlignment = NSTextAlignmentCenter;
+    [messagesMeBtn addSubview:messageTitle];
+    
+    //分割线
+    line = [[UILabel alloc] initWithFrame:CGRectMake(messagesMeBtn.right, QZMake(11), 1, QZMake(30))];
+    line.backgroundColor = RGBCOLOR16(0xeaeaea);
+    [self.bgView2 addSubview:line];
+    
+    //喜欢我的
+    UIButton *loveMeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    loveMeBtn.frame = CGRectMake(line.right, 0, (SCREEN_WIDTH - 2)/3., rewardMeBtn.height);
+    [loveMeBtn addTarget:self action:@selector(loveMeBtnAction) forControlEvents:UIControlEventTouchUpInside];
+    [self.bgView2 addSubview:loveMeBtn];
+    
+    UIImageView *loveImgV = [[UIImageView alloc] initWithFrame:CGRectMake(loveMeBtn.width/2. - QZMake(25)/2., QZMake(5), QZMake(25), QZMake(25))];
+    loveImgV.image = [UIImage imageNamed:@"icon-like-me"];
+    [loveMeBtn addSubview:loveImgV];
+    
+    UILabel *loveTitle = [[UILabel alloc] initWithFrame:CGRectMake(0, loveMeBtn.bottom - size.height - QZMake(5), loveMeBtn.width, size.height)];
+    loveTitle.text = self.title3;
+    loveTitle.font = FONT_WITH_SIZE(14);
+    loveTitle.textColor = RGBCOLOR16(0xa5a5a5);
+    loveTitle.textAlignment = NSTextAlignmentCenter;
+    [loveMeBtn addSubview:loveTitle];
+    
+    //
+    _loverNum2 = [[UILabel alloc] initWithFrame:CGRectMake(loveImgV.right + QZMake(5), QZMake(20), _loverNum2.width, loveTitle.height)];
+    _loverNum2.font = FONT_WITH_SIZE(14);
+    _loverNum2.textColor = NAV_RED_COLOR;
+    _loverNum2.textAlignment = NSTextAlignmentCenter;
+    _loverNum2.hidden = YES;
+    [loveMeBtn addSubview:_loverNum2];
+    
+    line = [[UILabel alloc] initWithFrame:CGRectMake(0, rewardMeBtn.bottom, _bgView2.width, QZMake(12))];
+    line.backgroundColor = colorWith05;
+    [self.bgView2 addSubview:line];
+}
+
+/**
+ *  第四部分
+ */
+- (void)fourView {
+    
+    //标题
+    UIImageView *titleImageView = [[UIImageView alloc] initWithFrame:CGRectMake(QZMake(10), QZMake(5), QZMake(30), QZMake(30))];
+    titleImageView.image = [UIImage imageNamed:@"icon-read-the-post"];
+    [self.bgView4 addSubview:titleImageView];
+    
+    UILabel *titleLab = [[UILabel alloc] initWithFrame:CGRectMake(titleImageView.right + QZMake(5), titleImageView.top, QZMake(200), titleImageView.height)];
+    titleLab.text = @"最近看过的帖子";
+    titleLab.font = FONT_WITH_SIZE(14);
+    titleLab.textColor = NAV_RED_COLOR;
+    [self.bgView4 addSubview:titleLab];
+    
+    //分割线
+    UILabel *line = [[UILabel alloc] initWithFrame:CGRectMake(0, titleImageView.bottom + QZMake(4), _bgView4.width, 1)];
+    line.backgroundColor = colorWith05;
+    [self.bgView4 addSubview:line];
+    
+}
+/**
+ *  改变值或状态
+ *
+ *  @param isLike
+ */
+- (void)changeValue:(BOOL)isLike Num:(int)type{
+    NSInteger num = 0;
+    if (isLike) {
+        num = [_loverNum.text intValue] + 1;
+        _loverNum.text = [NSString stringWithFormat:@"%zi",num];
+        _loverNum2.text = @"+1";
+    } else {
+        num = [_loverNum.text intValue] - 1;
+        _loverNum.text = [NSString stringWithFormat:@"%zi",num];
+        _loverNum2.text = @"-1";
+    }
+    if (type == 2) {
+        _loverNum2.hidden = NO;
+        [UIView animateWithDuration:1.0 animations:^{
+            _loverNum2.alpha = 0.0;
+            _loverNum2.frame = CGRectMake(_loverNum2.left, 0, QZMake(20), _loverNum2.height);
+        } completion:^(BOOL finished) {
+            _loverNum2.hidden = YES;
+            _loverNum2.top = QZMake(20);
+            _loverNum2.alpha = 1.;
+        }];
+    }
+}
+
+#pragma mark --- btnAction
+/**
+ *  打赏
+ */
+- (void)rewardMeBtnAction {
+    if (self.type == 2) {
+        SDInteractiveRecordVC *vc = [[SDInteractiveRecordVC alloc] initWithType:rewardType];
+        [self.mainVC.navigationController pushViewController:vc animated:YES];
+        return;
+    }
+    self.headBlock(1,_model.userId);
+}
+/**
+ *  私信
+ */
+- (void)messagesMeBtnAction {
+    if (self.type == 2) {
+        SDInteractiveRecordVC *vc = [[SDInteractiveRecordVC alloc] initWithType:messageType];
+        [self.mainVC.navigationController pushViewController:vc animated:YES];
+        return;
+    }
+    SDMessageVC *vc = [[SDMessageVC alloc] initWithType:OtherMessageType];
+    vc.model = _model;
+    [self.mainVC.navigationController pushViewController:vc animated:YES];
+}
+/**
+ *  喜欢
+ */
+- (void)loveMeBtnAction {
+    if (self.type == 2) {
+        SDInteractiveRecordVC *vc = [[SDInteractiveRecordVC alloc] initWithType:likeType];
+        [self.mainVC.navigationController pushViewController:vc animated:YES];
+        return;
+    }
+    self.headBlock(2,_model.userId);
+}
+
+#pragma mark --- get
+
+-(UIView *)bgView1 {
+    if (_bgView1 == nil) {
+        _bgView1 = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, QZMake(172))];
+        _bgView1.backgroundColor = WHITE_COLOR;
+        [self oneView];
+    }
+    return _bgView1;
+}
+
+-(UIView *)bgView2 {
+    if (_bgView2 == nil) {
+        _bgView2 = [[UIView alloc] initWithFrame:CGRectMake(0, _bgView1.bottom + QZMake(12), SCREEN_WIDTH, QZMake(65))];
+        _bgView2.backgroundColor = WHITE_COLOR;
+        [self twoView];
+    }
+    return _bgView2;
+}
+
+//-(UIView *)bgView3 {
+//    if (_bgView3 == nil) {
+//        _bgView3 = [[UIView alloc] initWithFrame:CGRectMake(0, _bgView2.bottom + QZMake(12), SCREEN_WIDTH, QZMake(221))];
+//        _bgView3.backgroundColor = WHITE_COLOR;
+//    }
+//    return _bgView3;
+//}
+
+-(UIView *)bgView4 {
+    if (_bgView4 == nil) {
+        _bgView4 = [[UIView alloc] initWithFrame:CGRectMake(0, _bgView2.bottom + QZMake(12), SCREEN_WIDTH, QZMake(40) + 220)];
+        _bgView4.backgroundColor = WHITE_COLOR;
+        [self fourView];
+    }
+    return _bgView4;
+}
+
+@end

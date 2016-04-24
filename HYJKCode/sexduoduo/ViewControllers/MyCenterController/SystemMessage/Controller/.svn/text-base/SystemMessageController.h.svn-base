@@ -1,0 +1,13 @@
+//
+//  SystemMessageController.h
+//  
+//
+//  Created by apple on 15/12/7.
+//
+//
+
+#import <UIKit/UIKit.h>
+
+@interface SystemMessageController : UIViewController
+
+@end

@@ -1,0 +1,325 @@
+//
+//  ToCommentViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-9-3.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "ToCommentViewController.h"
+
+@interface ToCommentViewController ()
+
+@end
+
+@implementation ToCommentViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        _orderArray = [NSMutableArray arrayWithCapacity:0];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.commentTextArray = [NSMutableArray arrayWithCapacity:0];
+    self.quantityArray = [NSMutableArray arrayWithCapacity:0];
+    self.attitudeArray = [NSMutableArray arrayWithCapacity:0];
+    self.speedArray = [NSMutableArray arrayWithCapacity:0];
+    
+    for (int i = 0; i < self.orderArray.count; i++) {
+        [self.commentTextArray addObject:@""];
+        [self.quantityArray addObject:@"5"];
+        [self.attitudeArray addObject:@"5"];
+        [self.speedArray addObject:@"5"];
+        
+    }
+    
+    [self setTopNavView];
+
+    
+    [self initCommentTextView];
+}
+
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"评论"];
+    
+    
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+-(void)initCommentTextView
+{
+    self.commentTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y - TABBARHEIGHT)];
+    self.commentTableView.backgroundColor = [UIColor clearColor];
+    self.commentTableView.dataSource = self;
+    self.commentTableView.delegate = self;
+    [self.view addSubview:self.commentTableView];
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(10, 0, self.commentTableView.frame.size.width, 0.5)];
+    line.backgroundColor = [UIColor colorWithRed:244/255.f green:244/255.f blue:244/255.f alpha:1.0];
+    self.commentTableView.tableFooterView = line;
+    
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:self.promptLab];
+    
+    
+    
+    self.sureBtn.centerX= SCREEN_WIDTH/2.;
+    self.sureBtn.backgroundColor = NAV_MoreBg_COLOR;
+}
+
+- (IBAction)toCommentAction:(id)sender {
+    for (int i = 0; i < self.commentTextArray.count; i++) {
+        if ([[self.commentTextArray objectAtIndex:i] length] < 1) {
+            self.isCanComment = NO;
+            self.promptLab.text = @"写点评论吧。亲!";
+            [self showPromptLab];
+            return;
+        }else
+        {
+            self.isCanComment = YES;
+        }
+    }
+    
+    if (self.isCanComment == YES) {
+        for (int i =0; i < self.commentTextArray.count; i++) {
+            NSDictionary *params = [[NSDictionary alloc]init];
+            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+            params = @{@"reviesUID":[defaults objectForKey:@"userId"],@"reviesgoodsId":[[self.orderArray objectAtIndex:i] objectForKey:@"goodId"],@"contendApp":[self.commentTextArray objectAtIndex:i],@"goodsQuality":[self.self.quantityArray objectAtIndex:i],@"serviceAttitude":[self.attitudeArray objectAtIndex:i],@"deliverySpeed":[self.speedArray objectAtIndex:i]};
+            
+            [self requestToCommentWithDic:params];
+        }
+    }
+    
+    
+}
+
+//显示提示
+-(void)showPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:0.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:nil];
+}
+
+
+
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return self.orderArray.count;
+    
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 420;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"ToCommentCell";
+    ToCommentCell *cell = (ToCommentCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ToCommentCell" owner:self options:nil] lastObject];
+
+    }
+    
+    cell.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    
+    cell.commentField.accessibilityLanguage = [NSString stringWithFormat: @"%zi",indexPath.row];
+    cell.commentField.delegate = self;
+    if ([[self.commentTextArray objectAtIndex:indexPath.row] length] > 0) {
+        cell.commentField.text = [self.commentTextArray objectAtIndex:indexPath.row];
+    }
+
+    
+    NSDictionary *dic = [NSDictionary dictionaryWithDictionary:[self.orderArray objectAtIndex:indexPath.row]];
+    
+    [cell.goodsImgView sd_setImageWithURL:[PublicMethod imgWithUrl:[dic objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    cell.goodsTitleLab.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"productName"]];
+    
+    cell.goodsNumLab.text = [NSString stringWithFormat:@"数量:%@",[dic objectForKey:@"quanity"]];
+    cell.goodsPriceLab.text = [NSString stringWithFormat:@"小计:%.2f",[[dic objectForKey:@"productPrice"] floatValue] * [[dic objectForKey:@"quanity"] floatValue]];
+    if ([[dic objectForKey:@"Specifications"] isKindOfClass:[NSNull class]]) {
+        cell.goodsColorLab.text = @"规格:标准规格";
+    }else
+    {
+        cell.goodsColorLab.text = [NSString stringWithFormat:@"规格:%@",[dic objectForKey:@"Specifications"]];
+    }
+
+    
+    cell.delegate = self;
+    NSLog(@"--??%@",self.quantityArray);
+    [cell.starQuality displayRating:[[self.quantityArray objectAtIndex:indexPath.row] floatValue]];
+    [cell.starAttitude displayRating:[[self.attitudeArray objectAtIndex:indexPath.row] floatValue]];
+    [cell.starSpeed displayRating:[[self.speedArray objectAtIndex:indexPath.row] floatValue]];
+    
+    return cell;
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+}
+
+
+#pragma OrderRequest
+
+-(void)requestToCommentWithDic:(NSDictionary *)dic
+{
+ 
+    [[MKHttpServiceEngine shareMyInstance] requestToCommentWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            self.promptLab.text = [responseDic objectForKey:@"message"];
+            [self showPromptLab];
+            [self performSelector:@selector(toBackView) withObject:self afterDelay:1.0];
+            
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+    }];
+    
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    NSLog(@"-->%@",textField.accessibilityLanguage);
+    [self.commentTableView setContentOffset:CGPointMake(0, 145 * [textField.accessibilityLanguage intValue])];
+    [self.commentTextArray removeObjectAtIndex:[textField.accessibilityLanguage intValue]];
+}
+
+- (void)textViewDidBeginEditing:(UITextView *)textView
+{
+    NSLog(@"-->%@",textView.accessibilityLanguage);
+    textView.text = @"";
+    self.commentTextView = textView;
+    [textView becomeFirstResponder];
+    [self.commentTableView setContentOffset:CGPointMake(0, 420 * [textView.accessibilityLanguage intValue] + 255)];
+    [self.commentTextArray removeObjectAtIndex:[textView.accessibilityLanguage intValue]];
+
+}
+- (void)textViewDidEndEditing:(UITextView *)textView
+{
+    [textView resignFirstResponder];
+    [self.commentTextArray insertObject:textView.text atIndex:[textView.accessibilityLanguage intValue]];
+
+    
+    NSLog(@"-->%@",self.commentTextArray);
+}
+
+
+- (void)textFieldDidEndEditing:(UITextField *)textField
+{
+    
+    [self.commentTextArray insertObject:textField.text atIndex:[textField.accessibilityLanguage intValue]];
+
+    
+    NSLog(@"-->%@",self.commentTextArray);
+}
+
+-(BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text
+{
+    if ([text isEqualToString:@"\n"]) {
+        [textView resignFirstResponder];
+        return NO;
+    }
+    return YES;
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [self.commentTableView setContentOffset:CGPointMake(0, 0)];
+    [textField resignFirstResponder];
+    return YES;
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
+    
+    [self.commentTextView resignFirstResponder];
+}
+
+
+-(void)endWriteComment:(ToCommentCell *)cell andViewIndex:(int )viewIndex
+{
+    NSLog(@"88>%@",cell.quantityNum);
+     NSIndexPath *indexPath = [self.commentTableView indexPathForCell:cell];
+    if (viewIndex == 1) {
+        [self.quantityArray removeObjectAtIndex:indexPath.row];
+        [self.quantityArray insertObject:cell.quantityNum atIndex:indexPath.row];
+    }else
+    if (viewIndex == 2) {
+        [self.attitudeArray removeObjectAtIndex:indexPath.row];
+        [self.attitudeArray insertObject:cell.attitudeNum atIndex:indexPath.row];
+    }else
+    if (viewIndex == 3) {
+        [self.speedArray removeObjectAtIndex:indexPath.row];
+        [self.speedArray insertObject:cell.speedNum atIndex:indexPath.row];
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

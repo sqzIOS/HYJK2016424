@@ -1,0 +1,43 @@
+//
+//  PostMsgViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-7-29.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  发帖
+
+#import <UIKit/UIKit.h>
+#import "CTAssetsPickerController.h"
+
+typedef enum
+{
+    externalTypeNone = 0,
+    externalTypeSRRecord
+}ExternalType;
+
+typedef void (^PostSuccessIdObject)(id responseObject);
+
+@interface PostMsgViewController : UIViewController<CTAssetsPickerControllerDelegate,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate>
+{
+    MKNetworkOperation *opration;
+}
+//@property (strong ,nonatomic) NSMutableArray *picArray;
+@property (strong, nonatomic) IBOutlet UIScrollView *mainScView;
+
+@property (strong, nonatomic) IBOutlet UITextField *biaoTiTextField;
+@property (strong, nonatomic) IBOutlet UITextView *detailTextView;
+@property (strong, nonatomic) IBOutlet UIView *ImageContentView;
+
+@property (strong, nonatomic) IBOutlet UIButton *addImageBtn;
+
+@property (strong, nonatomic) IBOutlet UILabel *contentDefaultLab;
+@property (strong, nonatomic) NSString *forumId;
+
+@property (strong,nonatomic) UIImage *reportImage;
+@property (nonatomic) ExternalType type;
+@property (strong,nonatomic) NSString *titleStr;
+
+@property (strong,nonatomic)PostSuccessIdObject myBlock;
+
+-(void)SRecordCallBack:(PostSuccessIdObject)callbackBlock;
+@end

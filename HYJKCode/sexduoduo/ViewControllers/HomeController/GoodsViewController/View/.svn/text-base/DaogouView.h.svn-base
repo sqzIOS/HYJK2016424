@@ -1,0 +1,30 @@
+//
+//  DaogouView.h
+//  sexduoduo
+//
+//  Created by dsz on 15-3-13.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  承载首页的导购view
+
+#import <UIKit/UIKit.h>
+#import "HomeDaoGouCell.h"
+
+@protocol DaogouViewDelegate
+
+- (void)daoGouViewCellBtnClick:(NSUInteger)row;
+- (void)moreDaoGouClick:(id)sender;
+
+@end
+
+@interface DaogouView : UIView<UITableViewDelegate,UITableViewDataSource,HomeDaoGouCellDelegate,UICollectionViewDelegate,UICollectionViewDataSource>
+
+@property (strong, nonatomic) NSMutableArray *nvShenDaoGouListArr; //女神导购array
+@property (strong, nonatomic) UITableView *daoGouTableView ;
+@property (assign, nonatomic)id<DaogouViewDelegate> delegate;
+
+
+@property (nonatomic, strong) UICollectionView *collectionView;
+
+
+-(void)configView;
+@end

@@ -1,0 +1,86 @@
+//
+//  HelpCenterViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-9-17.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "HelpCenterViewController.h"
+
+@interface HelpCenterViewController ()
+
+@end
+
+@implementation HelpCenterViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+    UIScrollView *scrolView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y)];
+    scrolView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:scrolView];
+    
+    NSString *str = @"\n1．你们商城宝贝是正品吗？\n泡泡情趣用品商城100%正品，全部商品均具有品牌授权书与质量检查报告，绝无劣质虚假商品上架，请亲们放心购买。\n\n2．亲！你们商城发港澳台或者国外吗？\n不好意思，我们只发大陆地区，因为港澳台和国外地区快递无法送达。\n\n3．你们的包裹怎么保证隐私呢？\n我们的包裹是保密包装，快递单上不会显示任何和商品商城的相关信息，包裹外面还有一层黑色的塑料薄膜，让同事朋友签收也没有问题的！\n\n4．泡泡商城用什么物流呢？\n“货到付款的订单能发圆通快递哦；支付宝支付的订单默认发圆通”这句改为“我们会按照各个地区，选择最快的物流。\n\n5．商城满多少包邮这个怎么操作呢？需要用购物车吗？\n亲将宝贝放入购物车，在结算的时候选择付款方式，就会有相应的包邮优惠！ 注意事项：亲买多件商品的话记得用购物车结算哦，只有用购物车结算才能算单笔运费或者享受相应的满额包邮优惠！\n\n6．亲！便宜点喽，要不给个包邮？下次还来！\n亲，我们商城的价格是由厂家制定的，恕不议价。\n\n7．你们发货时间，客服在线时间怎么安排？周末呢？\n一般在15:00之前下的订单当天发出；15:00之后的订单次日发出，周末也一样哦；客服在线时间是9:00-18:00，周末也在线的。如果亲需要尽快发货的话可以在第一时间内来电和客服沟通！\n\n8．你们商城发什么物流呢？多久会到呢？\n一般是3-5天会到，新疆西藏等偏远地区可能需要10天左右，具体要看当地的物流情况。\n\n9．我订单下错了怎么删除呢？\n收到订单之后，我们客服MM都会打电话和亲确认的，到时候和客服确认删除就可以；如果亲不方便接电话的话可以主动来电确认删除哦！不过需要保证电话号码和订单上的联系方式一致。\n\n10．亲！我地址填错了，可以改地址吗？\n如果该订单还未发货的话，需要亲联系我们客服MM进行更改哦，不过需要保证电话号码和订单上的联系方式一致。如果已经发货了，那就没有办法更改了。\n\n11．我提交订单了，选择货到付款，后续需要怎么操作？\n下单后务必保证亲的电话畅通哦，我们收到订单之后，客服MM都会打电话和亲确认，确认无误之后就会给亲发货，货款到时候直接给快递员即可；如果亲不方便接电话的话也欢迎亲主动和我们的客服MM联系确认，不过需要保证电话号码和订单上的联系方式一致。\n\n12．我提交订单了，选择支付宝付款，后续需要怎么操作？\n我们收到订单之后，客服MM都会打电话和亲确认，确定收到款项之后就会给亲发货；如果亲不方便接电话的话也欢迎亲主动和我们的客服MM联系确认，不过需要保证电话号码和订单上的联系方式一致。\n\n13．怎么查看我的订单状态呢？\n打开泡泡APP-个人中心-我的订单 中就可以看到订单状态。\n\n14．商城买的宝贝物流太慢或者物流存在疑问怎么办？\n亲，具体到货时间要看当地的物流情况哦，3-5天内都是正常的，还需要亲耐心等待下；如果看到物流信息确实可疑，可以致电我们泡泡官方400电话客服咨询。\n\n15．包裹收到了，但是宝贝损坏了怎么办！\n亲发现宝贝损坏了之后请第一时间联系我们客服MM，客服MM会指导亲发照片确认，确认快递损坏之后，我们承担邮费给亲免费退换哦。\n\n16．宝贝收到了，但是发错货了怎么办！\n亲发现发错货了之后请第一时间联系我们客服MM，客服MM会指导亲发照片确认，如果确实发错了，我们承担邮费给亲免费退换哦。\n\n17．物流显示已经签收了，但是我没收到货啊？\n亲可以询问下同事或者门卫，可能是代为签收了，如果确认没有送到的话请致电我们客服MM沟通解决哦 。\n\n18. 亲！我对商城买的宝贝有疑问，需要咨询怎么办？\n欢迎亲致电我们泡泡官方客服咨询。\n\n19. 亲！商城买的宝贝需要退货/换货怎么处理？你们的七天无理由退换有什么条件？\n七天无理由退换：是根据包裹签收时间的次日凌晨算起，在保证包装完好，未被使用，不影响二次销售的情况下可以退换。\n \n退换货流程：需要退换货的亲们需要先致电我们客服登记，然后快递寄回，并告诉我们客服MM物流单号，我们收到包裹，确认无误之后会进行退款/换货操作；\n\n退货邮费：如果出现质量问题，发错货，货物损坏并且和我们客服MM确认之后，由我们承担邮费；由于个人原因需要亲承担退回邮费。\n\n注意事项：\n 1.退回包裹请勿发到付包裹，如果是需要我们承担运费的退回件，也请亲先垫付下，我们确认之后会联系您，将邮费退还您的银行卡或者支付宝。 \n2.换货的物流在APP上是查不到的，需要查询的顾客可以致电我们客服MM。";
+    
+    CGSize detailSize = [str sizeWithFont:[UIFont systemFontOfSize:14.0]
+                                                                constrainedToSize:CGSizeMake(SCREEN_WIDTH-20, SIZE_MAX)
+                                                                    lineBreakMode:NSLineBreakByWordWrapping];
+    
+    
+    
+    UILabel *describeLab = [[UILabel alloc] initWithFrame:CGRectMake(10, 0, SCREEN_WIDTH-20, detailSize.height)];
+    describeLab.backgroundColor = [UIColor clearColor];
+    describeLab.text = str;
+    describeLab.numberOfLines = 0;
+    describeLab.font = [UIFont systemFontOfSize:14.0];
+    describeLab.textColor = [UIColor darkGrayColor];
+    [scrolView addSubview:describeLab];
+    
+    [scrolView setContentSize:CGSizeMake(SCREEN_WIDTH, detailSize.height)];
+}
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"帮助中心"];
+    
+   
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

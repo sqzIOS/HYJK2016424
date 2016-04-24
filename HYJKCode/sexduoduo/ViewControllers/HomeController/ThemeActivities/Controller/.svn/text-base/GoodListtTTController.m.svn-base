@@ -1,0 +1,124 @@
+
+//
+//  Created by apple on 15/12/31.
+//
+//  GoodListMainController.m
+//
+//
+//  Created by apple on 15/12/29.
+//
+//
+
+#import "GoodListtTTController.h"
+
+@interface GoodListtTTController ()
+
+
+
+@end
+
+@implementation GoodListtTTController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    [self createScrollView];
+    [self loadData];
+}
+
+
+
+#pragma mark - 创建scrollview
+- (void)createScrollView
+{
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    [self.view addSubview:scrollView];
+    scrollView.bounces = YES;
+    scrollView.showsVerticalScrollIndicator = NO;
+    scrollView.frame = CGRectMake(0,self.topView.bottom, SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.height);
+    
+    // 背景
+    CGFloat Y = 0;
+    CGRect bgimageViewFrame1 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(402));
+    [self createBgimageViewWithFrame:bgimageViewFrame1 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame1.size.height;
+    CGRect bgimageViewFrame2 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(438));
+    [self createBgimageViewWithFrame:bgimageViewFrame2 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame2.size.height;
+    CGRect bgimageViewFrame3 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(140));
+    [self createBgimageViewWithFrame:bgimageViewFrame3 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame3.size.height;
+    CGRect bgimageViewFrame4 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(438));
+    [self createBgimageViewWithFrame:bgimageViewFrame4 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame4.size.height;
+    CGRect bgimageViewFrame5 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(140));
+    [self createBgimageViewWithFrame:bgimageViewFrame5 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame5.size.height;
+    CGRect bgimageViewFrame6 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(438));
+    [self createBgimageViewWithFrame:bgimageViewFrame6 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame6.size.height;
+    CGRect bgimageViewFrame7 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(61));
+    [self createBgimageViewWithFrame:bgimageViewFrame7 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame7.size.height;
+    CGRect bgimageViewFrame8 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(150));
+    [self createBgimageViewWithFrame:bgimageViewFrame8 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame8.size.height;
+    CGRect bgimageViewFrame9 = CGRectMake(0,Y, SCREEN_WIDTH, QZMake(100));
+    [self createBgimageViewWithFrame:bgimageViewFrame9 inSuperView:scrollView];
+    
+    Y += bgimageViewFrame9.size.height;
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, Y);
+    
+    
+    // 商品列表按钮
+    for (int i = 0; i < 3; i++) {
+        UIImageView *bgimageView = [self.bgimageViews objectAtIndex:i * 2 + 1];
+        
+        GoodBtn *btn1 = [[GoodBtn alloc] init];
+        btn1.frame = CGRectMake(QZMake(70), 0, SCREEN_WIDTH - 2 * QZMake(70), QZMake(140));
+        [bgimageView  addSubview:btn1];
+        [self.goodBtns addObject:btn1];
+        
+        GoodBtn *btn2 = [[GoodBtn alloc] init];
+        btn2.frame = CGRectMake(QZMake(70), QZMake(20) + btn1.bottom, SCREEN_WIDTH - 2 * QZMake(70), QZMake(115));
+        [bgimageView  addSubview:btn2];
+        [self.goodBtns addObject:btn2];
+        
+        GoodBtn *btn3 = [[GoodBtn alloc] init];
+        btn3.frame = CGRectMake(QZMake(70), QZMake(20) + btn2.bottom, QZMake(110), QZMake(140));
+        [bgimageView  addSubview:btn3];
+        [self.goodBtns addObject:btn3];
+        
+        GoodBtn *btn4 = [[GoodBtn alloc] init];
+        btn4.frame = CGRectMake(btn3.right + QZMake(15), QZMake(20) + btn2.bottom, QZMake(110), QZMake(140));
+        [bgimageView  addSubview:btn4];
+        [self.goodBtns addObject:btn4];
+    }
+    
+    // 分类按钮
+    UIImageView *imageView8 = [self.bgimageViews objectAtIndex:7];
+    for (int i = 0; i < 6; i++) {
+        CGFloat btnX = QZMake(45) + i % 3 * QZMake(110);
+        CGFloat btnY = i / 3 * QZMake(85);
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        [self.goodBtns addObject:btn];
+        btn.frame = CGRectMake(btnX, btnY,QZMake(52),QZMake(72));
+        [imageView8 addSubview:btn];
+    }
+}
+
+
+
+
+
+
+
+@end

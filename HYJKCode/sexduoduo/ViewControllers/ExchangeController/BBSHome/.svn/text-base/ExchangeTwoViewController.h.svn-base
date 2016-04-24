@@ -1,0 +1,44 @@
+//
+//  ExchangeTwoViewController.h
+//  sexduoduo
+//
+//  Created by dsz on 15-1-21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
+#import "AppDelegate.h"
+#import "BBSListViewController.h"
+#import "DDPageControl.h"
+@interface ExchangeTwoViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,UIScrollViewDelegate>
+{
+  
+}
+@property (strong, nonatomic) UITableView *exchangeTableV ;
+
+
+@property (strong, nonatomic) NSArray *forumIdArray;
+
+@property (nonatomic, strong) NSMutableArray *extendDataArray;//推广的活动板块最多三条 
+
+@property (strong, nonatomic) NSMutableArray *bbsDataArray;//全部版块
+@property (strong, nonatomic) NSMutableArray *myBBSListArr;//我的版块
+
+@property (strong, nonatomic) NSMutableArray *tuiJianBBSListArr;//推荐版块
+@property (strong, nonatomic) NSMutableArray *canTuiJianListArr;//可以作为推荐的版块
+
+@property (strong, nonatomic) NSMutableArray *nvShenDaoGouListArr;//女神导购
+@property (strong, nonatomic) NSMutableArray *adListArr;//广告的数组
+
+
+@property (strong, nonatomic) UIView *blackView;//弹框后黑色背景
+
+-(void)addBtnClickWithIndexRow:(NSInteger )indexRow;
+
+@property (strong, nonatomic) UIImageView *numImg ;// 我的消息个数 背景
+@property (strong, nonatomic) UILabel *numLabel;//我的消息个数 Lab
+
+
+
+@end

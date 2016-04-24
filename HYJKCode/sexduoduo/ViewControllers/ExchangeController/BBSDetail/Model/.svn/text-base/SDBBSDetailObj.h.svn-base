@@ -1,0 +1,22 @@
+//
+//  SDBBSDetailObj.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/7.
+//  Copyright © 2015年 dbCode. All rights reserved.
+//  帖子详情的model
+
+#import <Foundation/Foundation.h>
+
+@interface SDBBSDetailObj : NSObject
+
+@property (nonatomic, copy) NSMutableArray *hotPostArr;//最热回复
+@property (nonatomic, copy) NSMutableArray *normalPostArr;//正常回复
+@property (nonatomic, copy) NSDictionary *mainContent;//帖子详情
+
+
+
+
+
+
+@end

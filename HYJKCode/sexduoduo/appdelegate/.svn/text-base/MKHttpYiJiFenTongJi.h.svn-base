@@ -1,0 +1,21 @@
+//
+//  MKHttpYiJiFenTongJi.h
+//  sexduoduo
+//
+//  Created by sqz on 14-12-18.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+#import "MKNetworkEngine.h"
+
+typedef void (^HttpResponseSuccessIdObject)(id responseObject);
+
+@interface MKHttpYiJiFenTongJi : MKNetworkEngine
+
++(id)shareMyInstance;
+
+//获取论坛板块列表
+-(MKNetworkOperation*) requestYiJiFencompletionHandler:(HttpResponseSuccessIdObject) completionBlock
+                                                   errorHandler:(MKNKErrorBlock) errorBlock;
+@end

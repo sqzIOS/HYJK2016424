@@ -1,0 +1,148 @@
+//
+//  RankingCell.m
+//  
+//
+//  Created by sqz on 15/12/2.
+//
+//
+
+#import "RankingCell.h"
+#import "RankingModel.h"
+#import "ShareFunction.h"
+#import "NSString+Category.h"
+#import "UIImageView+WebCache.h"
+
+@interface RankingCell ()
+
+@property (nonatomic,weak) UIImageView *iconView;
+@property (nonatomic,weak) UIImageView *rankingView;
+@property (nonatomic,weak) UIImageView *sexView;
+@property (nonatomic,weak) UILabel *nameLabel;
+@property (nonatomic,weak) UILabel *rankingLabel;
+@property (nonatomic,weak) UILabel *infoLabel;
+@property (nonatomic,weak) UILabel *addNumberLabel;
+
+@end
+
+@implementation RankingCell
+
++ (instancetype)rankingCellWithModel:(RankingModel *)model inTableView:(UITableView *)tableView
+{
+    static NSString *ID = @"RankingCell";
+    RankingCell *cell = [tableView dequeueReusableCellWithIdentifier:ID];
+    if (cell == nil) {
+        
+    // 创建cell
+      cell = [self createCellWithIdentifier:ID];
+    }
+    
+    // 设置cell数据
+    return  [self setCellContent:cell withModel:model];
+}
+
++ (RankingCell *)setCellContent:(RankingCell *)cell withModel:(RankingModel *)model
+{
+    // 头像
+    NSURL *url = [NSURL URLWithString:model.avatar];
+    UIImage *placeholderImage;
+    if (model.sex) {
+        placeholderImage = [UIImage imageNamed:@"morentouxiangWoman"];
+    } else {
+        placeholderImage = [UIImage imageNamed:@"morentouxiangMan"];
+    }
+    [cell.iconView sd_setImageWithURL:url placeholderImage:placeholderImage];
+    
+    // 昵称
+    if ([model.nickname isKindOfClass:[NSNull class]] || model.nickname.length == 0) {
+        model.nickname = @"***";
+    }
+    cell.nameLabel.text = model.nickname;
+    CGSize nameSize = [model.nickname sizeWithFont:cell.nameLabel.font maxSize:CGSizeMake(MAXFLOAT, MAXFLOAT)];
+    cell.nameLabel.frame = CGRectMake(CGRectGetMaxX(cell.iconView.frame) + QZMake(10), QZMake(19), nameSize.width , QZMake(14));
+    
+    // 性别
+    if (model.sex == SexMan) {
+        cell.sexView.image = [UIImage imageNamed:@"rank_ic_man"];
+    } else {
+        cell.sexView.image = [UIImage imageNamed:@"rank_ic_woman"];
+    }
+    cell.sexView.frame = CGRectMake(CGRectGetMaxX(cell.nameLabel.frame) + QZMake(11.5), QZMake(19), QZMake(15.5), QZMake(14.5));
+    
+    // 年龄和地区
+    if ([model.comefrom isKindOfClass:[NSNull class]] || model.comefrom.length == 0) {
+        cell.infoLabel.text = [NSString stringWithFormat:@"%@岁",model.age];
+    } else {
+        cell.infoLabel.text = [NSString stringWithFormat:@"%@岁/%@",model.age,model.comefrom];
+    }
+    CGSize infoSize = [cell.infoLabel.text sizeWithFont:cell.infoLabel.font maxSize:CGSizeMake(MAXFLOAT, MAXFLOAT)];
+    cell.infoLabel.frame = CGRectMake(CGRectGetMaxX(cell.iconView.frame) + QZMake(10), QZMake(45),infoSize.width, QZMake(12));
+    
+    // 今日
+    if (model.sumPrestige) {
+        cell.addNumberLabel.text = [NSString stringWithFormat:@"今日打赏%@",model.sumPrestige];
+    } else {
+        cell.addNumberLabel.text = [NSString stringWithFormat:@"今日新增%@",model.sumPoint];
+    }
+    cell.addNumberLabel.frame = CGRectMake(CGRectGetMaxX(cell.infoLabel.frame) + QZMake(10), QZMake(45), QZMake(130), QZMake(12));
+    
+    // 排名
+    cell.rankingLabel.text = [NSString stringWithFormat:@"%d",model.ranking];
+    return cell;
+}
+
++ (RankingCell *)createCellWithIdentifier:(NSString *)ID
+{
+    RankingCell *cell = [[RankingCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
+    
+    // 头像
+    UIImageView *icon = [[UIImageView alloc] init];
+    icon.frame = CGRectMake(QZMake(25), QZMake(10.5), QZMake(49), QZMake(49));
+    icon.layer.cornerRadius = QZMake(24.5);
+    icon.clipsToBounds = YES;
+    cell.iconView = icon;
+    [cell.contentView addSubview:icon];
+    
+    // 昵称
+    UILabel *nameLabel = [[UILabel alloc] init];
+    nameLabel.font = [UIFont systemFontOfSize:QZMake(14)];
+    cell.nameLabel = nameLabel;
+    [cell.contentView addSubview:nameLabel];
+    
+    // 性别
+    UIImageView *sexImage = [[UIImageView alloc] init];
+    cell.sexView = sexImage;
+    [cell.contentView addSubview:sexImage];
+    
+    
+    // 年龄和地区
+    UILabel *infoLabel = [[UILabel alloc] init];
+    infoLabel.font = [UIFont systemFontOfSize:QZMake(12)];
+    cell.infoLabel = infoLabel;
+    infoLabel.textColor = [UIColor colorWithRed:102/255.0 green:102/255.0 blue:102/255.0 alpha:1];
+    [cell.contentView addSubview:infoLabel];
+    
+    // 今日新增
+    UILabel *newAddNumberLabel = [[UILabel alloc] init];
+    cell.addNumberLabel = newAddNumberLabel;
+    newAddNumberLabel.textColor = [UIColor colorWithRed:160/255.0 green:152/255.0 blue:152/255.0 alpha:1];
+    newAddNumberLabel.font = [UIFont systemFontOfSize:QZMake(12)];
+    [cell.contentView addSubview:newAddNumberLabel];
+    
+    // 排名
+    UIImageView *rankingView = [[UIImageView alloc] init];
+    rankingView.frame = CGRectMake(QZMake(317), 0, QZMake(39), QZMake(37.5));
+    rankingView.image = [UIImage imageNamed:@"rank_bg_flag"];
+    cell.rankingView = rankingView;
+    [cell.contentView addSubview:rankingView];
+    UILabel *rankingLabel = [[UILabel alloc] init];
+    rankingLabel.frame = CGRectMake(0, QZMake(9), QZMake(39), QZMake(16));
+    rankingLabel.font = [UIFont systemFontOfSize:QZMake(18)];
+    rankingLabel.textColor = [UIColor whiteColor];
+    rankingLabel.textAlignment = NSTextAlignmentCenter;
+    cell.rankingLabel = rankingLabel;
+    [rankingView addSubview:rankingLabel];
+    
+    return cell;
+}
+
+@end

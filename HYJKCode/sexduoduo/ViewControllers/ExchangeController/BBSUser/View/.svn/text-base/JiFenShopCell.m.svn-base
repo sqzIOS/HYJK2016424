@@ -1,0 +1,81 @@
+//
+//  JiFenShopCell.m
+//  sexduoduo
+//
+//  Created by sqz on 14-12-2.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "JiFenShopCell.h"
+
+@implementation JiFenShopCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row
+{
+    UIView *lineFir = [[UIView alloc] initWithFrame:CGRectMake(159.75, 0, 0.5, 195)];
+    lineFir.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [self.contentView addSubview:lineFir];
+    
+    if ([arry count] == 2) {
+        self.leftBtn.tag = row * 2;
+        self.rightBtn.tag = row * 2 + 1;
+        self.rightBtn.hidden = NO;
+        self.rightDuoBi.hidden = NO;
+        
+        self.titleLeft.text = [NSString stringWithFormat:@"%@",[[arry objectAtIndex:0] objectForKey:@"name"]];
+        self.titleRight.text = [NSString stringWithFormat:@"%@",[[arry objectAtIndex:1] objectForKey:@"name"]];
+        self.titleRight.hidden = NO;
+        
+        NSLog(@"-->%@",[PublicMethod imgWithUrl:[[arry objectAtIndex:0] objectForKey:@"SmallGoodsImagePath"]]);
+        
+        [self.leftImg sd_setImageWithURL:[PublicMethod imgWithUrl:[[arry objectAtIndex:0] objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        [self.rightImg sd_setImageWithURL:[PublicMethod imgWithUrl:[[arry objectAtIndex:1] objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        self.rightImg.hidden = NO;
+        
+        self.leftPrice.text = [NSString stringWithFormat:@"%.f",[[[arry objectAtIndex:0] objectForKey:@"marketPrice"] floatValue]];
+        self.rightPrice.text = [NSString stringWithFormat:@"%.f",[[[arry objectAtIndex:1] objectForKey:@"marketPrice"] floatValue]];
+        self.rightPrice.hidden = NO;
+        
+        self.salesNumLeft.text = [NSString stringWithFormat:@"销量%@",[[arry objectAtIndex:0] objectForKey:@"salesVolume"]];
+        self.salesNumRight.text = [NSString stringWithFormat:@"销量%@",[[arry objectAtIndex:1] objectForKey:@"salesVolume"]];
+        self.salesNumRight.hidden = NO;
+        
+        
+        
+    }else if ([arry count] == 1)
+    {
+        self.leftBtn.tag = row * 2;
+        self.rightBtn.hidden = YES;
+        self.rightDuoBi.hidden = YES;
+        
+        self.titleLeft.text = [NSString stringWithFormat:@"%@",[[arry objectAtIndex:0] objectForKey:@"name"]];
+        self.titleRight.hidden = YES;
+        
+        [self.leftImg sd_setImageWithURL:[PublicMethod imgWithUrl:[[arry objectAtIndex:0] objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        self.rightImg.hidden = YES;
+        
+        self.leftPrice.text = [NSString stringWithFormat:@"%.f",[[[arry objectAtIndex:0] objectForKey:@"marketPrice"] floatValue]];
+        self.rightPrice.hidden = YES;
+        
+        self.salesNumLeft.text = [NSString stringWithFormat:@"销量%@",[[arry objectAtIndex:0] objectForKey:@"salesVolume"]];
+        self.salesNumRight.hidden = YES;
+    }
+}
+
+-(IBAction)btnClick:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    [self.delegate goodsBtnClick:btn.tag];
+}
+@end

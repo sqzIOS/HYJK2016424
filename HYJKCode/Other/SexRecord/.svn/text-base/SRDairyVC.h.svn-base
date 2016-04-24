@@ -1,0 +1,18 @@
+//
+//  SRDairyVC.h
+//  sexduoduo
+//
+//  Created by ly1992 on 15/6/3.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  日历
+
+#import <UIKit/UIKit.h>
+
+@interface SRDairyVC : UIViewController
+
+@property (weak, nonatomic) IBOutlet UIScrollView *scrollView;
+@property (nonatomic, copy) void(^indexBlockCall)(NSInteger index);
+
++(void)gotoMySelf:(id)pvc;
+
+@end

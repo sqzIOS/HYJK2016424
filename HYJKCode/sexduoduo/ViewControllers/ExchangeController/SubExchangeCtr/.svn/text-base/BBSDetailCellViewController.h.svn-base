@@ -1,0 +1,26 @@
+//
+//  BBSDetailCellViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-8-25.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  二级 回复 
+
+#import <UIKit/UIKit.h>
+@interface BBSDetailCellViewController : UIViewController<UITableViewDelegate,UITableViewDataSource>
+
+{
+    NSInteger pageIndex;
+    
+    MKNetworkOperation *opration;
+}
+
+@property (strong, nonatomic) NSString *forumId;//分类id
+@property(nonatomic,strong) NSString *postId; //要回复的帖子id
+
+@property (strong, nonatomic) NSDictionary *detailDic;
+@property (strong, nonatomic) NSMutableArray *bbsDataArr;
+@property (strong, nonatomic) UILabel *promptLab;
+
+@property (assign, nonatomic)BOOL isFirstShowKeyboard; //
+@end

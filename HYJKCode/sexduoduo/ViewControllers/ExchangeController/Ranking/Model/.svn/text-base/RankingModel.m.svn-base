@@ -1,0 +1,33 @@
+//
+//  RankingModel.m
+//  
+//
+//  Created by sqz on 15/12/2.
+//
+//
+
+#import "RankingModel.h"
+
+@implementation RankingModel
+
++ (instancetype)rankingModelWithDict:(NSDictionary *)dict
+{
+    RankingModel *model = [[RankingModel alloc] init];
+    
+    model.sex = [dict[@"sex"] boolValue];
+    model.nickname = dict[@"nickname"];
+    model.age = dict[@"age"];
+    model.userId = dict[@"userId"];
+    model.sumPoint = dict[@"sumPoint"];
+    model.realName = dict[@"realName"];
+    model.ranking = [dict[@"ranking"] intValue];
+    model.comefrom = dict[@"comefrom"];
+    model.avatar = dict[@"avatar"];
+    model.ranking = [dict[@"ranking"] intValue];
+    model.sumPrestige = dict[@"sumPrestige"];
+    model.totalPrestige = dict[@"totalPrestige"];
+    
+    return model;
+}
+
+@end

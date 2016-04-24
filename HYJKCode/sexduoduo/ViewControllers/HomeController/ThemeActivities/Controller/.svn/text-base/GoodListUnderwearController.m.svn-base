@@ -1,0 +1,89 @@
+//
+//  GoodListUnderwearController.m
+//  
+//
+//  Created by apple on 16/1/4.
+//
+//
+
+#import "GoodListUnderwearController.h"
+
+@interface GoodListUnderwearController ()
+
+@end
+
+@implementation GoodListUnderwearController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    
+    [self createScrollView];
+    [self loadData];
+}
+
+#pragma mark - 创建scrollview
+- (void)createScrollView
+{
+    UIScrollView *scrollView = [[UIScrollView alloc] init];
+    [self.view addSubview:scrollView];
+    scrollView.bounces = YES;
+    scrollView.showsVerticalScrollIndicator = NO;
+    scrollView.frame = CGRectMake(0,self.topView.bottom, SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.height);
+    
+    // 背景
+    CGRect bgimageViewFrame = CGRectMake(0,0, SCREEN_WIDTH, QZMake(193));
+    [self createBgimageViewWithFrame:bgimageViewFrame inSuperView:scrollView];
+    
+    
+    // 商品列表按钮
+    CGRect frame1 = CGRectMake(0, bgimageViewFrame.size.height, QZMake(173 * 1.12), QZMake(258.5* 1.12));
+    [self createGoodBtnWithFrame:frame1 inSuperView:scrollView];
+    CGRect frame2 = CGRectMake(frame1.size.width, bgimageViewFrame.size.height, QZMake(162* 1.12), QZMake(136.5* 1.12));
+    [self createGoodBtnWithFrame:frame2 inSuperView:scrollView];
+    CGRect frame3 = CGRectMake(frame1.size.width, frame2.origin.y + frame2.size.height, QZMake(162* 1.12), QZMake(122* 1.12));
+    [self createGoodBtnWithFrame:frame3 inSuperView:scrollView];
+    
+    CGRect frame4 = CGRectMake(0, frame1.origin.y + frame1.size.height, QZMake(144.5* 1.12), QZMake(295* 1.12));
+    [self createGoodBtnWithFrame:frame4 inSuperView:scrollView];
+    CGRect frame5 = CGRectMake(frame4.size.width, frame4.origin.y, QZMake(190.5* 1.12), QZMake(181.5* 1.12));
+    [self createGoodBtnWithFrame:frame5 inSuperView:scrollView] ;
+    CGRect frame6 = CGRectMake(frame4.size.width, frame5.origin.y + frame5.size.height, QZMake(190.5* 1.12), QZMake(113.5* 1.12));
+    [self createGoodBtnWithFrame:frame6 inSuperView:scrollView];
+    
+    CGRect frame7 = CGRectMake(0, frame4.origin.y + frame4.size.height, QZMake(173* 1.12), QZMake(295* 1.12));
+    [self createGoodBtnWithFrame:frame7 inSuperView:scrollView];
+    CGRect frame8 = CGRectMake(frame7.size.width, frame7.origin.y, QZMake(162* 1.12), QZMake(167* 1.12));
+    [self createGoodBtnWithFrame:frame8 inSuperView:scrollView];
+    CGRect frame9 = CGRectMake(frame7.size.width, frame8.origin.y + frame8.size.height, QZMake(162* 1.12), QZMake(168* 1.12));
+    [self createGoodBtnWithFrame:frame9 inSuperView:scrollView];
+    
+    CGRect frame10 = CGRectMake(0, frame7.origin.y + frame7.size.height, QZMake(173* 1.12), QZMake(295* 1.12));
+    [self createGoodBtnWithFrame:frame10 inSuperView:scrollView];
+    CGRect frame11 = CGRectMake(frame10.size.width, frame10.origin.y, QZMake(162* 1.12), QZMake(160.5* 1.12));
+    [self createGoodBtnWithFrame:frame11 inSuperView:scrollView];
+    CGRect frame12 = CGRectMake(frame10.size.width, frame11.origin.y + frame11.size.height, QZMake(162* 1.12), QZMake(134.5* 1.12));
+    [self createGoodBtnWithFrame:frame12 inSuperView:scrollView];
+    
+    // 分类按钮
+    UIView *bgView = [[UIView alloc] init];
+    bgView.backgroundColor = [UIColor purpleColor];
+    bgView.frame = CGRectMake(0,frame12.origin.y + frame12.size.height, SCREEN_WIDTH, QZMake(200));
+    [scrollView addSubview:bgView];
+    scrollView.contentSize = CGSizeMake(SCREEN_WIDTH, bgView.bottom);
+    for (int i = 0; i < 6; i++) {
+        GoodBtn *btn = [[GoodBtn alloc] init];
+        btn.frame = CGRectMake((i % 3) * QZMake(53.5) + (i % 3 + 1) * (SCREEN_WIDTH - 3 * QZMake(53.5)) / 4, QZMake(30) + QZMake(73.5) * (i / 3), QZMake(53.5), QZMake(73.5));
+        [bgView addSubview:btn];
+        [self.goodBtns addObject:btn];
+    }
+}
+
+- (void)createGoodBtnWithFrame:(CGRect)frame inSuperView:(UIView *)superView
+{
+    GoodBtn *goodBtn = [[GoodBtn alloc] init];
+    goodBtn.frame = frame ;
+    [superView addSubview:goodBtn];
+    [self.goodBtns addObject:goodBtn];
+}
+
+@end

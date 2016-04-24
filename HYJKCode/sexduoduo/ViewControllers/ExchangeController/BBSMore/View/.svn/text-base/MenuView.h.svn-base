@@ -1,0 +1,26 @@
+//
+//  MenuView.h
+//  
+//
+//  Created by apple on 15/12/11.
+//
+//
+
+#import <UIKit/UIKit.h>
+@class ClubingModel;
+
+@protocol MenuViewDlegate <NSObject>
+
+- (void)menuViewCategoryBtnClick:(UIButton *)categoryBtn;
+
+@end
+
+@interface MenuView : UIView
+
+@property (nonatomic,weak) id<MenuViewDlegate> delegate;
+
+
+- (void)setPoint:(CGPoint)point;
++ (instancetype)menuViewWithDataArry:(NSMutableArray *)dataArry;
+
+@end

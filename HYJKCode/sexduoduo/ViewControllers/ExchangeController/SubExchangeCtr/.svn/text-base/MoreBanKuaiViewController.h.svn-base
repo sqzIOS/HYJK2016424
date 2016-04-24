@@ -1,0 +1,30 @@
+//
+//  MoreBanKuaiViewController.h
+//  sexduoduo
+//
+//  Created by dsz on 15-1-21.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  更多版块
+
+#import <UIKit/UIKit.h>
+#import "EGORefreshTableHeaderView.h"
+#import <AVFoundation/AVFoundation.h>
+#import "AppDelegate.h"
+#import "BBSListViewController.h"
+@interface MoreBanKuaiViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,UIScrollViewDelegate>
+//,EGORefreshTableHeaderDelegate>
+{
+//    BOOL _reloading;
+//    EGORefreshTableHeaderView *_refreshHeaderView;
+}
+@property (strong, nonatomic) UITableView *exchangeTableV ;
+
+@property (strong, nonatomic) NSMutableArray *bbsDataArray;//全部版块
+@property (strong, nonatomic) NSMutableArray *myBBSListArr;//我的版块
+@property (strong, nonatomic) NSMutableArray *bbsDataFlagArr;//版本表示
+
+@property (strong, nonatomic) NSMutableArray *canTuiJianListArr;//可以作为推荐的版块
+@property (strong, nonatomic) NSMutableArray *tuiJianBBSListArr;//推荐版块
+
+
+@end

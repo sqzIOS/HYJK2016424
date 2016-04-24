@@ -1,0 +1,92 @@
+//
+//  TaoBaoWebViewController.m
+//  sexduoduo
+//
+//  Created by dsz on 15-1-28.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "TaoBaoWebViewController.h"
+
+@interface TaoBaoWebViewController ()<UIWebViewDelegate>
+
+@end
+
+@implementation TaoBaoWebViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+    detaiWebImg = [[UIWebView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH,SCREEN_HEIGHT - STAR_Y)];
+    detaiWebImg.delegate=self;
+    detaiWebImg.autoresizesSubviews = YES;
+    //        detaiWebImg.scalesPageToFit = NO;
+    detaiWebImg.backgroundColor = [UIColor whiteColor];
+    //        [detaiWebImg setHidden:YES];
+    [self.view addSubview:detaiWebImg];
+    
+    
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        
+//        [self.indicator startAnimating];
+        
+    
+        NSLog(@"-->%@",self.webURLStr);
+        [detaiWebImg loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:self.webURLStr]]];
+       
+        dispatch_async(dispatch_get_main_queue(), ^{
+            //更新UI操作
+            //.....
+//            [self.indicator stopAnimating];
+//            [self.indicator removeFromSuperview];
+          
+        });
+        
+    });
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:self.nameStr];
+    
+   
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

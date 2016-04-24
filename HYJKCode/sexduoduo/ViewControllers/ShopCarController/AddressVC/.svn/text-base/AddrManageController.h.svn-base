@@ -1,0 +1,22 @@
+//
+//  AddrManageController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-8-22.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  地址管理 点击cell可去编辑页面
+
+#import <UIKit/UIKit.h>
+#import "AddrCell.h"
+#import "AddrViewController.h"
+
+@interface AddrManageController : UIViewController<UITableViewDataSource,UITableViewDelegate,UIAlertViewDelegate>
+{
+    int currentPage;
+}
+
+@property (strong, nonatomic) NSMutableArray *addrArray;
+@property (strong, nonatomic) UITableView *addrTableView;
+
+@property (strong, nonatomic) NSString *receiveIdStr;
+@end

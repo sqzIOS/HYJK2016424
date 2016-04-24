@@ -1,0 +1,220 @@
+//
+//  SDMySexHealthVC.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/25.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDMySexHealthVC.h"
+#import "ListItemControl.h"
+#import "MyDoctorVC.h"
+#import "HistoryVC.h"
+#import "SHMyWalletVC.h"
+#import "SHMyFocusVC.h"
+@interface SDMySexHealthVC ()
+{
+    UIView *_bgView;
+    UIView *_pathOneBg;
+    UIView *_pathThreeBg;
+    
+    CGFloat CellHeight;
+}
+@end
+
+@implementation SDMySexHealthVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view.
+    
+    CellHeight = 44;
+    
+    
+    [self setTopNavView];
+    self.view.backgroundColor = RGBCOLOR(246, 246, 252);
+    
+    
+    _bgView = [[UIScrollView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y)];
+    _bgView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:_bgView];
+    
+    
+    
+    
+    if(ISLOGIN)
+    {
+        if (ISDOCTOR) {
+            [self createPathThree];
+        }else
+        {
+            [self createPathOne];
+        }
+    }
+    
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    
+    [navView setTitleStr:@"我的性健康"];
+    
+    
+}
+
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+- (void)createPathOne{
+    _pathOneBg = [[UIView alloc] initWithFrame:CGRectMake(0,  GTFixHeightFlaotIpad(8), SCREEN_WIDTH, GTFixHeightFlaotIpad(CellHeight) * 3)];
+    _pathOneBg.backgroundColor = [UIColor whiteColor];
+    [_bgView addSubview:_pathOneBg];
+    
+    //我的医师
+    ListItemControl *doctorCtl = [[ListItemControl alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, GTFixHeightFlaotIpad(CellHeight))
+                                                                 imgUrl:@"ic_myDoctor"
+                                                                  title:@"我的医师"
+                                                          hideAccessory:YES
+                                                           cellLocation:CellLocation_Top];
+    [doctorCtl addTarget:self action:@selector(doctorCtlAction) forControlEvents:UIControlEventTouchUpInside];
+    [_pathOneBg addSubview:doctorCtl];
+    
+    //提问历史
+    ListItemControl *historyCtl = [[ListItemControl alloc] initWithFrame:CGRectMake(0, doctorCtl.bottom, SCREEN_WIDTH, GTFixHeightFlaotIpad(CellHeight))
+                                                                  imgUrl:@"ic_question"
+                                                                   title:@"提问历史"
+                                                           hideAccessory:YES
+                                                            cellLocation:CellLocation_Middle];
+    [historyCtl addTarget:self action:@selector(historyCtlAction) forControlEvents:UIControlEventTouchUpInside];
+    [_pathOneBg addSubview:historyCtl];
+    
+    //我的关注
+    ListItemControl *focusCtl = [[ListItemControl alloc] initWithFrame:CGRectMake(0, historyCtl.bottom, SCREEN_WIDTH, GTFixHeightFlaotIpad(CellHeight))
+                                                                imgUrl:@"ic_star"
+                                                                 title:@"我的关注"
+                                                         hideAccessory:YES
+                                                          cellLocation:CellLocation_Middle];
+    [focusCtl addTarget:self action:@selector(focusCtlAction) forControlEvents:UIControlEventTouchUpInside];
+    [_pathOneBg addSubview:focusCtl];
+    
+  
+    
+}
+/**
+ *  用户是医师的时候
+ */
+- (void)createPathThree{
+    _pathThreeBg = [[UIView alloc] initWithFrame:CGRectMake(0,  GTFixHeightFlaotIpad(8), SCREEN_WIDTH, GTFixHeightFlaotIpad(CellHeight) * 2)];
+    _pathThreeBg.backgroundColor = [UIColor whiteColor];
+    [_bgView addSubview:_pathThreeBg];
+    
+    //我的多币
+    ListItemControl *coinCtl = [[ListItemControl alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, GTFixHeightFlaotIpad(CellHeight))
+                                                               imgUrl:@"ic_money"
+                                                                title:@"我的钱包"
+                                                        hideAccessory:YES
+                                                         cellLocation:CellLocation_Top];
+    [coinCtl addTarget:self action:@selector(coinCtlAction) forControlEvents:UIControlEventTouchUpInside];
+    [_pathThreeBg addSubview:coinCtl];
+    
+    //我的关注
+    ListItemControl *focusCtl = [[ListItemControl alloc] initWithFrame:CGRectMake(0, coinCtl.bottom, SCREEN_WIDTH, GTFixHeightFlaotIpad(CellHeight))
+                                                                imgUrl:@"ic_star"
+                                                                 title:@"我的关注"
+                                                         hideAccessory:YES
+                                                          cellLocation:CellLocation_Middle];
+    [focusCtl addTarget:self action:@selector(focusCtlAction) forControlEvents:UIControlEventTouchUpInside];
+    [_pathThreeBg addSubview:focusCtl];
+    
+}
+
+
+#pragma mark - 个人信息修改
+- (void)doctorCtlAction{
+    if (ISLOGIN)
+    {
+        MyDoctorVC *myDoctorVC = [[MyDoctorVC alloc] init];
+        [self.navigationController pushViewController:myDoctorVC animated:YES];
+    }
+    else
+    {
+        LoginViewController *loginVC = [[LoginViewController alloc] init];
+        [self.navigationController pushViewController:loginVC animated:YES];
+    }
+}
+- (void)historyCtlAction{
+    if (ISLOGIN)
+    {
+        HistoryVC *historyVC = [HistoryVC new];
+        [self.navigationController pushViewController:historyVC animated:YES];
+    }
+    else
+    {
+        LoginViewController *loginVC = [[LoginViewController alloc] init];
+        [self.navigationController pushViewController:loginVC animated:YES];
+    }
+}
+/**
+ *  我的钱包
+ */
+- (void)coinCtlAction{
+    if (ISLOGIN)
+    {
+        SHMyWalletVC *vc = [[SHMyWalletVC alloc] init];
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+    else
+    {
+        LoginViewController *loginVC = [[LoginViewController alloc] init];
+        [self.navigationController pushViewController:loginVC animated:YES];
+    }
+}
+/**
+ *  我的关注
+ */
+- (void)focusCtlAction{
+    if (ISLOGIN)
+    {
+        SHMyFocusVC *vc = [[SHMyFocusVC alloc] init];
+        [self.navigationController pushViewController:vc animated:YES];
+    }
+    else
+    {
+        LoginViewController *loginVC = [[LoginViewController alloc] init];
+        [self.navigationController pushViewController:loginVC animated:YES];
+    }
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

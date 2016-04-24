@@ -1,0 +1,193 @@
+//
+//  SDSetTimeBuyGoodsTableViewCell.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/1.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDSetTimeBuyGoodsTableViewCell.h"
+
+@implementation SDSetTimeBuyGoodsTableViewCell
+
+-(instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier Controller:(UIViewController *)vc {
+    
+    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+        
+        self.selectionStyle = UITableViewCellSelectionStyleNone;
+        
+        self.mainVC = vc;
+        
+        [self initView];
+    }
+    
+    return self;
+}
+
+- (void)initView {
+    //商品图片
+    self.goodsImageView = [[UIImageView alloc] initWithFrame:CGRectMake(QZMake(10), QZMake(10), QZMake(100), QZMake(100))];
+//    self.goodsImageView.image = [UIImage imageNamed:@"bg.png"];
+    [self.contentView addSubview:self.goodsImageView];
+    
+    //商品名称
+    self.goodsNameLab = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.goodsNameLab.numberOfLines = 2;
+    self.goodsNameLab.font = FONT_WITH_SIZE(14);
+    self.goodsNameLab.textColor = RGBCOLOR16(0x616161);
+    [self.contentView addSubview:self.goodsNameLab];
+    
+    //抢购价格
+    self.goodsNowPriceLab = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.goodsNowPriceLab.font = FONT_WITH_SIZE(17);
+    self.goodsNowPriceLab.textColor = RGBCOLOR16(0xfc7a24);
+    [self.contentView addSubview:self.goodsNowPriceLab];
+    
+    //原价
+    self.goodsOldPriceLab = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.goodsOldPriceLab.textColor = RGBCOLOR16(0xa5a5a5);
+    self.goodsOldPriceLab.font = FONT_WITH_SIZE(11);
+    [self.contentView addSubview:self.goodsOldPriceLab];
+    
+    //抢购btn
+    self.sibmitBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    [self.contentView addSubview:self.sibmitBtn];
+    
+    //已抢购比率
+    self.buyedRatio = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.buyedRatio.font = FONT_WITH_SIZE(11);
+    self.buyedRatio.textColor = RGBCOLOR16(0xa5a5a5);
+    [self.contentView addSubview:self.buyedRatio];
+    
+    //已抢购数量
+    self.buyedNum = [[UILabel alloc] initWithFrame:CGRectZero];
+    self.buyedNum.font = FONT_WITH_SIZE(11);
+    self.buyedNum.textColor = RGBCOLOR16(0xa5a5a5);
+    self.buyedNum.textAlignment = NSTextAlignmentRight;
+    [self.contentView addSubview:self.buyedNum];
+    
+    //进度条
+    self.tempView = [[UIView alloc] initWithFrame:CGRectZero];
+    self.tempView.layer.borderWidth = QZMake(1);
+    self.tempView.layer.borderColor = [RGBCOLOR16(0xe1a9ff) CGColor];
+    self.tempView.layer.cornerRadius = 3.;
+    self.tempView.layer.masksToBounds = YES;
+    [self.contentView addSubview:self.tempView];
+    
+    self.progressLab = [[UILabel alloc] initWithFrame:CGRectZero];
+    [self.tempView addSubview:self.progressLab];
+    self.progressLab.backgroundColor = NAV_MoreBg_COLOR;
+    
+    //分割线
+    UILabel *line = [[UILabel alloc] initWithFrame:CGRectMake(QZMake(10), QZMake(119.5), SCREEN_WIDTH - QZMake(20), QZMake(0.5))];
+    line.backgroundColor = RGBCOLOR16(0xeaeaea);
+    [self.contentView addSubview:line];
+}
+
+//赋值
+- (void)theDataWith:(SDGoodsModel *)model {
+    
+    self.model = model;
+    
+    [self.goodsImageView sd_setImageWithURL:[NSURL URLWithString:model.bigGoodsImagePath] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    
+    //商品名称
+    NSString *str = model.goodsName;
+    CGSize size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(14) withSize:CGSizeMake(SCREEN_WIDTH - _goodsImageView.right - QZMake(20), MAXFLOAT)];
+    
+    CGSize size2 = [NSString getTextMultilineContent:@"商品名称" withFont:FONT_WITH_SIZE(14) withSize:CGSizeMake(SCREEN_WIDTH - _goodsImageView.right - QZMake(20), MAXFLOAT)];
+    
+    self.goodsNameLab.frame = CGRectMake(_goodsImageView.right + QZMake(10), _goodsImageView.top, SCREEN_WIDTH - _goodsImageView.right - QZMake(20), size2.height);
+    if (size.height > size2.height) {
+        self.goodsNameLab.height = size2.height * 2;
+    }
+    self.goodsNameLab.text = str;
+    
+    //已抢购比率
+    double sellNum = [model.sellNum intValue];
+    double limitNum = [model.limitNum intValue];
+    double currentRatio = 100;
+    if (limitNum > 0) {
+        currentRatio = (sellNum / limitNum * 100);
+    }
+    if (currentRatio >= 99 && currentRatio < 100) {
+        currentRatio = 99;
+    }
+    str = [NSString stringWithFormat:@"已抢购%.0f%%",currentRatio];
+    size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(11) withSize:CGSizeMake(SCREEN_WIDTH - _goodsImageView.right - QZMake(20), MAXFLOAT)];
+    self.buyedRatio.frame = CGRectMake(_goodsNameLab.left, QZMake(120 - 13) - size.height, size.width, size.height);
+    self.buyedRatio.text = str;
+    
+    //抢购价格
+    str = [NSString stringWithFormat:@"¥ %@",model.goods_price];
+    size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(17) withSize:CGSizeMake(SCREEN_WIDTH - _goodsImageView.right - QZMake(20), MAXFLOAT)];
+    self.goodsNowPriceLab.frame = CGRectMake(_goodsNameLab.left, _buyedRatio.top - QZMake(17) - size.height, size.width, size.height);
+    self.goodsNowPriceLab.text = str;
+    
+    //原价
+    str = [NSString stringWithFormat:@"¥ %@",model.marketPrice];
+    size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(11) withSize:CGSizeMake(SCREEN_WIDTH - _goodsImageView.right - QZMake(20), MAXFLOAT)];
+    self.goodsOldPriceLab.frame = CGRectMake(_goodsNowPriceLab.right + QZMake(5), _goodsNowPriceLab.bottom - size.height, size.width, size.height);
+    self.goodsOldPriceLab.text = str;
+    
+    UILabel *line = [[UILabel alloc] initWithFrame:CGRectMake(0, _goodsOldPriceLab.height/2.-QZMake(0.25), _goodsOldPriceLab.width, QZMake(0.5))];
+    line.backgroundColor = _goodsOldPriceLab.textColor;
+    [self.goodsOldPriceLab addSubview:line];
+    
+    //
+    self.sibmitBtn.frame = CGRectMake(SCREEN_WIDTH - QZMake(80), _goodsNameLab.bottom + QZMake(8), QZMake(70), QZMake(35));
+    self.sibmitBtn.centerY = self.goodsNowPriceLab.centerY;
+    [self.sibmitBtn removeTarget:self action:@selector(btnAction:) forControlEvents:UIControlEventTouchUpInside];
+    if ([model.currentStr isEqualToString:@"即将开场"])
+        [self.sibmitBtn setImage:[UIImage imageNamed:@"btn_not-beginning"] forState:UIControlStateNormal];
+    else
+        if ((limitNum - sellNum) > 0) {
+            [self.sibmitBtn setImage:[UIImage imageNamed:@"btn_immediately-grab"] forState:UIControlStateNormal];
+            [self.sibmitBtn addTarget:self action:@selector(btnAction:) forControlEvents:UIControlEventTouchUpInside
+             ];
+        }
+        else
+            [self.sibmitBtn setImage:[UIImage imageNamed:@"btn_grab-the-light"] forState:UIControlStateNormal];
+    
+    //进度条
+    self.tempView.frame = CGRectMake(_buyedRatio.right + QZMake(5), _buyedRatio.top, QZMake(90), QZMake(6));
+    self.tempView.centerY = _buyedRatio.centerY;
+    
+    float width = 0;
+    if (limitNum > 0) {
+        width = (limitNum - sellNum) / limitNum * QZMake(90);
+    }
+    self.progressLab.frame = CGRectMake(0, 0, QZMake(width), _tempView.height);
+    
+    //
+    str = [NSString stringWithFormat:@"剩余%d件",(int)limitNum - (int)sellNum];
+    size = [NSString getTextMultilineContent:str withFont:FONT_WITH_SIZE(11) withSize:CGSizeMake(SCREEN_WIDTH - _goodsImageView.right - QZMake(20), MAXFLOAT)];
+    self.buyedNum.frame = CGRectMake(_sibmitBtn.left, _buyedRatio.top, size.width, size.height);
+    self.buyedNum.text = str;
+    
+    
+}
+
+- (void)btnAction:(UIButton *)sender {
+    
+    if (_model) {
+        
+        GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+        ctrVc.hidesBottomBarWhenPushed = YES;
+        ctrVc.goodsIdStr = _model.goodsId;
+        ctrVc.classifyIdStr = _model.goodsCategoryId;
+        [self.mainVC.navigationController pushViewController:ctrVc animated:YES];
+    }
+}
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+@end

@@ -1,0 +1,138 @@
+//
+//  SDUserManager.m
+//  sexduoduo
+//
+//  Created by showm on 15/11/19.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDUserManager.h"
+#import "GeTuiSdk.h"
+@implementation SDUserManager
+
++(void)userLogOut
+{
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults removeObjectForKey:@"isLogin"];
+    [defaults removeObjectForKey:@"userName"];
+    [defaults removeObjectForKey:@"password"];
+
+    [defaults removeObjectForKey:@"userSex"];
+    [defaults removeObjectForKey:@"userId"];
+    [defaults removeObjectForKey:@"isDoctor"];
+    [defaults removeObjectForKey:@"doctorId"];
+    
+    [defaults removeObjectForKey:@"nickname"];
+
+    [defaults synchronize];
+    
+    // 退出登录时  删除本地收藏 -用于判断哪些收藏了
+    NSMutableArray *goodsArray = [NSMutableArray arrayWithCapacity:0];
+    [[AppSet shareInstance] setCollectArray:goodsArray];
+    [[AppSet shareInstance] saveCollectGoodsData];
+    
+    
+    // 清空本地保存的一个地址
+    NSMutableArray *addArray = [NSMutableArray array];
+    [[AppSet shareInstance] setUserAddrArry:addArray];
+    [[AppSet shareInstance] saveAddr];
+    
+    //论坛消息数目
+    NSDictionary *dic=@{@"messageNum":@"0"};
+    [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_BBSMESSAGE object:nil userInfo:dic];
+    
+    //购物车
+    [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_SHOPCARMESSAGE object:nil userInfo:dic];
+    NSMutableArray *arr=[NSMutableArray array];
+    [[ShopCarObj shareInstance] setShopCarDataArray:arr];
+    
+    //退出环信
+    [[EaseMob sharedInstance].chatManager asyncLogoffWithUnbindDeviceToken:YES completion:^(NSDictionary *info, EMError *error) {
+        if (!error && info) {
+            NSLog(@"退出成功");
+        }
+    } onQueue:nil];
+    
+    // 设置自动登录
+    [[EaseMob sharedInstance].chatManager setIsAutoLoginEnabled:NO];
+    
+    
+    // 个推 解绑用户别名
+    [GeTuiSdk unbindAlias:[NSString stringWithFormat:@"%@",USERID]];
+    
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"updateMyCenterView" object:nil];
+    
+}
+
++(void)userLoginOperation
+{
+    NSMutableArray *addArray = [NSMutableArray array];
+    [[AppSet shareInstance] setUserAddrArry:addArray];
+    [[AppSet shareInstance] saveAddr];
+    
+    // 登录环信 登录或者注册后 之前有保存账号和密码
+    if (USERNAME && PASSWORD) {
+        [[EaseMob sharedInstance].chatManager asyncLoginWithUsername:USERNAME password:PASSWORD completion:^(NSDictionary *loginInfo, EMError *error) {
+            if (!error && loginInfo) {
+                NSLog(@"登陆成功");
+                
+                // 设置自动登录
+                [[EaseMob sharedInstance].chatManager setIsAutoLoginEnabled:YES];
+            }
+        } onQueue:nil];
+    }
+    
+    // 刷新收藏
+    [self refreshCollectList];
+    
+    
+    
+    //个推 绑定别名
+    [GeTuiSdk bindAlias:[NSString stringWithFormat:@"%@",USERID] ];
+}
+
+#pragma mark  刷新收藏
++(void)refreshCollectList
+{
+    if ([[[AppSet shareInstance] collectArray] count] < 1) {
+        
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        params = @{@"UID":[defaults objectForKey:@"userId"],@"pageSizeApp":@"110",@"pageApp":[NSString stringWithFormat:@"%d",1]};
+        
+        // 登录后重新同步收藏列表
+        [[MKHttpServiceEngine shareMyInstance] requestCollectListWithDic:params completionHandler:^(id responseObject) {
+            NSDictionary *responseDic = responseObject;
+            
+            NSLog(@"arry-->%@",responseDic);
+            
+            NSMutableArray *goodsArray = [NSMutableArray arrayWithCapacity:0];
+            if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+                [goodsArray removeAllObjects];
+                
+                [goodsArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+                
+                
+                for (NSDictionary *dic in goodsArray) {
+                    if (![[[AppSet shareInstance] collectArray] containsObject:[dic objectForKey:@"id"]]) {
+                        NSMutableArray *arry = [NSMutableArray arrayWithArray:[[AppSet shareInstance] collectArray]];
+                        [arry addObject:[dic objectForKey:@"id"]];
+                        [[AppSet shareInstance] setCollectArray:arry];
+                        [[AppSet shareInstance] saveCollectGoodsData];
+                    }
+                }
+            }
+        } errorHandler:^(NSError *error) {
+            
+            NSLog(@"error-->%@",error);
+            
+        }];
+        
+    
+        
+    }
+}
+@end

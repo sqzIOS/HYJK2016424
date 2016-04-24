@@ -1,0 +1,363 @@
+//
+//  ThemeActivityViewController.m
+//  sexduoduo
+//
+//  Created by dsz on 15-2-2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "ThemeActivityViewController.h"
+#import "UIImage+QzColorAtPixel.h"
+@interface ThemeActivityViewController ()
+{
+    NSMutableArray *btnArr;
+    
+}
+@end
+
+@implementation ThemeActivityViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.view.backgroundColor = WHITE_COLOR;
+    
+    [self setTopNavView];
+    [self initScView];
+    
+    self.bottonView.frame=CGRectMake(0, SCREEN_HEIGHT, SCREEN_WIDTH, 41);
+    self.bottonView.userInteractionEnabled=YES;
+    [self.view addSubview:self.bottonView];
+    
+    btnArr = [[NSMutableArray alloc] init];
+    [btnArr addObject:self.btn1];
+    [btnArr addObject:self.btn2];
+    [btnArr addObject:self.btn3];
+    [btnArr addObject:self.btn4];
+    [btnArr addObject:self.btn5];
+    [btnArr addObject:self.btn6];
+    
+    [btnArr addObject:self.btn7];
+    [btnArr addObject:self.btn8];
+    [btnArr addObject:self.btn9];
+    [btnArr addObject:self.btn10];
+    [btnArr addObject:self.btn11];
+    [btnArr addObject:self.btn12];
+    
+    [btnArr addObject:self.btn13];
+    [btnArr addObject:self.btn14];
+    [btnArr addObject:self.btn15];
+    [btnArr addObject:self.btn16];
+    [btnArr addObject:self.btn17];
+    [btnArr addObject:self.btn18];
+    
+    [btnArr addObject:self.btn19];
+    [btnArr addObject:self.btn20];
+    [btnArr addObject:self.btn21];
+    [btnArr addObject:self.btn22];
+    [btnArr addObject:self.btn23];
+    [btnArr addObject:self.btn24];
+    
+    
+    self.homeGoodsArray =[[NSMutableArray alloc] init];
+   
+    
+    
+    self.bgImageView1.image=nil;
+    self.bgImageView2.image=nil;
+    self.bgImageView3.image=nil;
+    [self.bottomBtn1 setBackgroundImage:nil forState:0];
+    [self.bottomBtn2 setBackgroundImage:nil forState:0];
+    [self.bottomBtn3 setBackgroundImage:nil forState:0];
+    
+    [self.btn1 setBackgroundImage:nil forState:0];
+    [self.btn2 setBackgroundImage:nil forState:0];
+    [self.btn3 setBackgroundImage:nil forState:0];
+    [self.btn4 setBackgroundImage:nil forState:0];
+    [self.btn5 setBackgroundImage:nil forState:0];
+    [self.btn6 setBackgroundImage:nil forState:0];
+    
+    
+    
+    [self requestThemeActivityData];
+    
+
+}
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"活动专区"];
+    if (self.nameStr) {
+        [navView setTitleStr:self.nameStr];
+    }
+    
+}
+//返回
+-(void)toBackView
+{
+    if ([self.navigationController respondsToSelector:@selector(popViewControllerAnimated:)]) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+    
+}
+-(void)initScView
+{
+    [self.view addSubview:self.scView];
+    
+    self.scView.frame=CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y);
+    self.scView.contentSize=CGSizeMake(SCREEN_WIDTH, 2197);
+    self.scView.delegate=self;
+    
+}
+
+
+
+
+
+
+
+- (IBAction)scToTopBtn1:(id)sender {
+    [self.scView scrollRectToVisible:CGRectMake(0, 465-80, SCREEN_WIDTH, 1) animated:YES];
+    
+}
+
+- (IBAction)scToTopBtn2:(id)sender {
+    [self.scView scrollRectToVisible:CGRectMake(0, 945+43, SCREEN_WIDTH, 1) animated:YES];
+    
+}
+
+- (IBAction)scToTopBtn3:(id)sender {
+    [self.scView scrollRectToVisible:CGRectMake(0, 1548+43, SCREEN_WIDTH, 1) animated:YES];
+    
+}
+
+- (IBAction)scToTopBtn4:(id)sender {
+    
+    [self.scView scrollRectToVisible:CGRectMake(0, 0, SCREEN_WIDTH, 1) animated:YES];
+}
+
+
+
+
+
+-(void)requestThemeActivityData
+{
+    // 分类
+    NSDictionary *params = [[NSDictionary alloc]init];
+    params = @{@"showAdress":@"8"};
+    
+    [[MKHttpServiceEngine shareMyInstance] requestThemeActivityWithDic:params completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray主题活动分类及商品-->%@",responseDic);
+        NSLog(@"responseArray主题活动分类及商品");
+        
+        if ([[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            [self.homeGoodsArray removeAllObjects];
+            [self.homeGoodsArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+
+            [self setGoodsViewData:self.homeGoodsArray];
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+
+    }];
+
+}
+-(void)setGoodsViewData:(NSArray *)dataArray
+{
+    
+    
+    if(dataArray.count>18)
+       [self.bgImageView1 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[18][@"guardPath"]] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+         
+           
+           CGSize size=image.size;
+            NSLog(@"第一张图片 %@",NSStringFromCGSize(size));
+           
+           
+           UIColor *color=[image colorAtPixel:CGPointMake(size.width-5, size.height-5)];
+           self.bodyColorView1.backgroundColor=color;
+       }];
+    
+    if(dataArray.count>19)
+        [self.bgImageView2 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[19][@"guardPath"]] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+            NSLog(@"第二张图片");
+            
+            CGSize size=image.size;
+            NSLog(@"图片 %@",NSStringFromCGSize(size));
+            
+            UIColor *color=[image colorAtPixel:CGPointMake(size.width-5, size.height-5)];
+            self.bodyColorView2.backgroundColor=color;
+            
+        }];
+    
+    if(dataArray.count>20)
+        [self.bgImageView3 sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[20][@"guardPath"]] placeholderImage:nil completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
+            NSLog(@"第三张图片");
+            CGSize size=image.size;
+            NSLog(@"图片 %@",NSStringFromCGSize(size));
+            
+            UIColor *color=[image colorAtPixel:CGPointMake(size.width-5, size.height-5)];
+            self.bodyColorView3.backgroundColor=color;
+        }];
+    
+    
+    if (dataArray.count>21)
+        [self.bottomBtn1 sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:dataArray[21][@"guardPath"]] forState:UIControlStateNormal];
+    if (dataArray.count>22)
+        [self.bottomBtn2 sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:dataArray[22][@"guardPath"]] forState:UIControlStateNormal];
+    if (dataArray.count>23)
+        [self.bottomBtn3 sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:dataArray[23][@"guardPath"]] forState:UIControlStateNormal];
+    
+    if(dataArray.count > 4)
+    {
+        [self.bottomBtn4 sd_setBackgroundImageWithURL:[PublicMethod imgWithUrl:dataArray[4][@"guardPath"]] forState:UIControlStateNormal];
+    }
+    
+    
+    
+    for (int i=0; i<btnArr.count; i++) {
+        
+        UIButton *btn= btnArr[i];
+        
+        [btn sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[i][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        
+         btn.tag=10001+i;
+        [btn addTarget:self action:@selector(productBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+    }
+    
+    
+    
+}
+
+
+-(void)productBtnClick:(UIButton *)sender
+{
+    if (self.homeGoodsArray.count>0) {
+        // 统计 计数事件
+        [MobClick event:[NSString stringWithFormat:@"ThemeActivity_%d",(int)sender.tag-10000]];
+        
+        if ([self.homeGoodsArray[sender.tag-10001][@"gdCategory"] intValue]==1) {  // 商品
+            GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.goodsIdStr = [NSString stringWithFormat:@"%@",[[self.homeGoodsArray objectAtIndex:sender.tag-10001] objectForKey:@"homeId"]];
+            //        ctrVc.classifyIdStr = [NSString stringWithFormat:@"%@",[[taotaoArray objectAtIndex:0] objectForKey:@"goodsCategoryId"]];
+            [self.navigationController pushViewController:ctrVc animated:YES];
+            
+            
+        }else if([self.homeGoodsArray[sender.tag-10001][@"gdCategory"] intValue]==2){//分类
+            
+            GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            
+            if (1) {
+                ctrVc.isHiddenSort=YES;
+                ctrVc.disPlayTwo = YES;
+                ctrVc.classifyId = self.homeGoodsArray[sender.tag-10001][@"homeId"];
+                ctrVc.titleStr = self.homeGoodsArray[sender.tag-10001][@"name"];
+                ctrVc.requestType = classifyType;
+                
+            }else{
+                ctrVc.disPlayOne = YES;
+                ctrVc.classifyStr = self.homeGoodsArray[sender.tag-10001][@"homeId"];
+                ctrVc.titleStr = self.homeGoodsArray[sender.tag-10001][@"name"];
+                ctrVc.requestType = homeViewType;
+                
+            }
+            [self.navigationController pushViewController:ctrVc animated:YES];
+            
+        }else if([self.homeGoodsArray[sender.tag-10001][@"gdCategory"] intValue]==3)//论坛帖子
+        {
+            
+            BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+            //论坛主题id
+            controller.forumId = self.homeGoodsArray[sender.tag-10001][@"introduction"];
+            controller.topicId = self.homeGoodsArray[sender.tag-10001][@"homeId"];
+            controller.hidesBottomBarWhenPushed = YES;
+            [self.navigationController pushViewController:controller animated:YES];
+            
+        }else if([self.homeGoodsArray[sender.tag-10001][@"gdCategory"] intValue]==4)//专区活动
+        {
+            GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.disPlayOne = YES;
+            ctrVc.classifyStr = self.homeGoodsArray[sender.tag-10001][@"homeId"];
+            ctrVc.titleStr = self.homeGoodsArray[sender.tag-10001][@"name"];
+            ctrVc.requestType = homeViewType;
+            [self.navigationController pushViewController:ctrVc animated:YES];
+            
+        }
+        
+//        else if([self.homeGoodsArray[sender.tag-10001][@"gdCategory"] intValue]==5)//论坛板块
+//        {
+//            BBSListViewController *controller = [[BBSListViewController alloc] initWithNibName:@"BBSListViewController" bundle:[NSBundle mainBundle]];
+//            controller.forumId=self.homeGoodsArray[sender.tag-10001][@"introduction"];
+//            controller.forumImage=sender.imageView.image;
+//            controller.nameString=self.homeGoodsArray[sender.tag-10001][@"name"];
+//            controller.detailString=self.homeGoodsArray[sender.tag-10001][@"homeId"];
+//            controller.hidesBottomBarWhenPushed = YES;
+//            controller.titleStr = self.homeGoodsArray[sender.tag-10001][@"name"];
+//            [self.navigationController pushViewController: controller animated:YES];
+//        }
+        
+        
+    }
+    
+}
+int _lastPosition;    //A variable define in headfile
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    int currentPostion = scrollView.contentOffset.y;
+    NSLog(@"%d",currentPostion);
+    if (currentPostion<100 || currentPostion>scrollView.contentSize.height) {
+        return;
+    }
+    if (currentPostion - _lastPosition > 25) {
+        _lastPosition = currentPostion;
+        NSLog(@"ScrollUp now");
+        
+        [UIView animateWithDuration:0.3 animations:^{
+            self.bottonView.frame=CGRectMake(0, SCREEN_HEIGHT, SCREEN_WIDTH, 41);
+        }];
+    }
+    else if (_lastPosition - currentPostion > 25)
+    {
+        _lastPosition = currentPostion;
+        NSLog(@"ScrollDown now");
+        
+        [UIView animateWithDuration:0.3 animations:^{
+            self.bottonView.frame=CGRectMake(0, SCREEN_HEIGHT-41, SCREEN_WIDTH, 41);
+        }];
+    }
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

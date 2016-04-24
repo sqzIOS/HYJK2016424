@@ -1,0 +1,37 @@
+//
+//  SDNearPeopleTableViewCell.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "SDNearPeopleModel.h"
+
+@interface SDNearPeopleTableViewCell : UITableViewCell
+
+@property (nonatomic, strong) UIImageView *headImageView;
+
+@property (nonatomic, strong) UIImageView *sexImageView;
+
+@property (nonatomic, strong) UILabel *nickNameLab;
+
+@property (nonatomic, strong) UIImageView *levelImageView;
+//@property (nonatomic, strong) UILabel *levelLab;
+
+@property (nonatomic, strong) UILabel *levelLabName;
+
+@property (nonatomic, strong) UILabel *ageLab;
+
+@property (nonatomic, strong) UILabel *addressLab;
+
+@property (nonatomic, strong) UIImageView *timeImgV;    
+
+@property (nonatomic, strong) UILabel *distanceLab;    //距离
+
+@property (nonatomic, strong) UILabel *timeLab;
+
+- (void)theDataWith:(SDNearPeopleModel *)model;
+
+@end

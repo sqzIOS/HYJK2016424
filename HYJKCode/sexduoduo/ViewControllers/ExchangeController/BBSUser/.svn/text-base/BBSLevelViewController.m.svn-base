@@ -1,0 +1,325 @@
+//
+//  BBSLevelViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-11-11.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSLevelViewController.h"
+#import "MCProgressBarView.h"
+#import "MyBBSListViewController.h"
+@interface BBSLevelViewController ()<UITableViewDataSource,UITableViewDelegate>
+
+@end
+
+@implementation BBSLevelViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+-(void)dealloc
+{
+    
+}
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    self.listAry = [NSArray arrayWithObjects:@"",@"",@"",@"",@"每日回帖",@"每日签到",@"每日发帖",@"分享帖子",@"帖子加精", nil];
+    [self setTopNavView];
+    [self initMySetTableV];
+    
+    // 用户信息请求
+    [self requestExchangeUserInfo];
+}
+
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"我的等级"];
+    
+
+    
+    
+}
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+-(void)initMySetTableV
+{
+    self.setTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y)];
+    self.setTableView.dataSource = self;
+    self.setTableView.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.setTableView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.setTableView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.setTableView];
+    
+   
+    UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    footView.backgroundColor = [UIColor lightGrayColor];
+    self.setTableView.tableFooterView = footView;
+    
+    
+    
+    
+}
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return self.listAry.count;
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.row == 0 || indexPath.row==3 ) {
+        return 20;
+    }else if(indexPath.row == 1)
+    {
+        return 90;
+    }
+    return 45;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"ClassifyCell";
+    //    UITableViewCell *cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    UITableViewCell *cell=nil;
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+    }
+    
+    // 辅助按钮
+//    if (indexPath.row == 0|| indexPath.row == 2 || indexPath.row == 3) {
+//        
+//        cell.accessoryType = UITableViewCellAccessoryNone;
+//    }else
+//    {
+//        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+//    }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+ 
+    
+    
+    
+    // 单元格1  个人介绍
+    if (indexPath.row==1) {
+        
+        UIImageView *leftImage=FastCreatImageView(CGRectMake(10, 10, 60, 60), [PublicMethod getHeaderImage]);
+        [cell addSubview:leftImage];
+        leftImage.layer.borderColor=[UIColor grayColor].CGColor;
+        leftImage.layer.borderWidth=1;
+        leftImage.layer.cornerRadius=30;
+        leftImage.layer.masksToBounds=YES;
+        
+        
+        UILabel *upLab=FastCreatLabel(CGRectMake(90, 20, 210, 20), [UIColor grayColor], [UIFont systemFontOfSize:18], [UIColor clearColor],NSTextAlignmentLeft);
+        upLab.text=@"***";
+        if (self.userInfo && self.userInfo[@"nickname"] && ![self.userInfo[@"nickname"] isKindOfClass:[NSNull class]]) {
+            upLab.text=[NSString stringWithFormat:@"%@",self.userInfo[@"nickname"]];
+        }
+        [cell addSubview:upLab];
+        
+        UILabel *downLab=FastCreatLabel(CGRectMake(90, 45, 210, 20), [UIColor greenColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentLeft);
+        downLab.text=@"LV8 金刚不坏";
+        if (self.userInfo) {
+            NSString *str=[NSString stringWithFormat:@"LV%@ %@",self.userInfo[@"groupId"],self.userInfo[@"groupName"]];
+            downLab.text = str;
+        }
+        [cell addSubview:downLab];
+        
+        
+        if (self.userInfo && ![self.userInfo[@"sex"] boolValue]) {// 女一个颜色
+            downLab.textColor=UICOLOR_RGB(251, 135, 158);
+        }else{ // 男一个颜色
+            
+            downLab.textColor=UICOLOR_RGB(86, 217, 250);
+        }
+    }
+    // 单元格2 经验值
+    if (indexPath.row==2) {
+        UILabel *leftLab=FastCreatLabel(CGRectMake(12, 0, 140, 20), [UIColor grayColor], [UIFont systemFontOfSize:10], [UIColor clearColor],NSTextAlignmentLeft);
+        leftLab.text=@"距离LV8还差19经验";
+        if (self.userInfo) {
+            NSString *str=[NSString stringWithFormat:@"距离LV%d还差%d经验",[self.userInfo[@"groupId"] intValue]+1,[self.userInfo[@"nextgroupPoint"] intValue]- [self.userInfo[@"point"] intValue]];
+            leftLab.text=str;
+        }
+        
+        [cell addSubview:leftLab];
+        
+        UILabel *rightLab=FastCreatLabel(CGRectMake(SCREEN_WIDTH/2.-20, 0, SCREEN_WIDTH/2., 20), [UIColor grayColor], [UIFont systemFontOfSize:10], [UIColor clearColor],NSTextAlignmentRight);
+        rightLab.text=@"下一级:获得新头衔:混世魔王";
+        if (self.userInfo) {
+            NSString *str=[NSString stringWithFormat:@"下一级:获得新头衔:%@",self.userInfo[@"nextgroupName"]];
+            rightLab.text=str;
+        }
+        [cell addSubview:rightLab];
+        
+        
+        
+        
+        UIImage *bgImage=nil;
+        UIImage *fgImage=nil;
+        if (self.userInfo && ![self.userInfo[@"sex"] boolValue]) {//女
+            bgImage=UIImageByName(@"progress-bg-w");
+            fgImage=UIImageByName(@"progress-fg-w");
+            
+        }else{//男
+            
+            bgImage=UIImageByName(@"progress-bg");
+            fgImage=UIImageByName(@"progress-fg");
+        }
+        // 进度条
+        UIImage * backgroundImage = [bgImage resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
+        UIImage * foregroundImage = [fgImage resizableImageWithCapInsets:UIEdgeInsetsMake(0, 10, 0, 10)];
+        MCProgressBarView *_progressBarView = [[MCProgressBarView alloc] initWithFrame:CGRectMake(10, 20, SCREEN_WIDTH-20, 20)
+                                                                       backgroundImage:backgroundImage
+                                                                       foregroundImage:foregroundImage];
+        [cell addSubview:_progressBarView];
+        
+        _progressBarView.progress = 0.0;
+        if (self.userInfo && [self.userInfo[@"nextgroupPoint"] floatValue]>0) {
+            _progressBarView.progress = ([self.userInfo[@"point"] intValue]- [self.userInfo[@"groupPoint"] intValue])/([self.userInfo[@"nextgroupPoint"] floatValue]- [self.userInfo[@"groupPoint"] floatValue]);
+        }
+    }
+    
+    if (indexPath.row>=4) {
+        cell.textLabel.text = [self.listAry objectAtIndex:indexPath.row];
+        cell.textLabel.font = [UIFont systemFontOfSize:14.0];
+        cell.textLabel.textColor=[UIColor grayColor];
+        
+        UILabel *centerLab=FastCreatLabel(CGRectMake(140, 10, 100, 25), NAV_RED_COLOR, [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentCenter);
+        centerLab.centerX = SCREEN_WIDTH/2.;
+        centerLab.text=@"经验10";
+        [cell addSubview:centerLab];
+        
+        UILabel *rightLab=FastCreatLabel(CGRectMake(SCREEN_WIDTH-20-75, 10, 75, 25), [UIColor grayColor], [UIFont systemFontOfSize:14], [UIColor clearColor],NSTextAlignmentRight);
+        rightLab.text=@"0/10";
+        [cell addSubview:rightLab];
+        switch (indexPath.row-3) {
+            case 1:
+            {
+                centerLab.text=@"经验1";
+                rightLab.text=@"10";
+            }
+                break;
+            case 2:
+            {
+                centerLab.text=@"经验10";
+                rightLab.text=@"1";
+            }
+                break;
+            case 3:
+            {
+                centerLab.text=@"经验2";
+                rightLab.text=@"10";
+            }
+                break;
+            case 4:
+            {
+                centerLab.text=@"经验3";
+                rightLab.text=@"5";
+            }
+                break;
+            case 5:
+            {
+                centerLab.text=@"经验10";
+                rightLab.text=@"无上限";
+            }
+                break;
+            default:
+                break;
+        }
+        
+    }
+    
+    
+    // left图片
+    if (indexPath.row >= 4 && indexPath.row<=8) {
+        [cell.imageView setImage:[UIImage imageNamed:[NSString stringWithFormat:@"BBSUserLevel_%d.png",(int)indexPath.row - 3]]];
+    }
+    
+    // 背景颜色
+    if (indexPath.row == 0 || indexPath.row == 3 ) {
+        cell.backgroundColor = [UIColor colorWithRed:244/255.f green:244/255.f blue:244/255.f alpha:1.0];
+        [cell.imageView setImage:nil];
+    }else
+    {
+        cell.backgroundColor = [UIColor whiteColor];
+    }
+    
+    return cell;
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+   
+    
+}
+#pragma mark 网络请求
+-(void)requestExchangeUserInfo
+{
+    [[MKHttpExchangeDemo shareMyInstance] requestExchangeUserInfoCompletionHandler:^(id responseObject) {
+        
+        NSDictionary *dic=(NSDictionary *)responseObject;
+        NSLog(@"请求论坛用户中心=%@",dic);
+        if ([dic[@"success"] intValue]==1) {
+            
+            self.userInfo=[dic[@"datasource"] objectAtIndex:0];
+            [self.setTableView reloadData];
+        }
+    } errorHandler:^(NSError *error) {
+        
+    }];
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

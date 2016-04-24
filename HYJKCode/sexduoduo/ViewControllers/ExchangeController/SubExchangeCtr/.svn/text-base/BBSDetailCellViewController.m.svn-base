@@ -1,0 +1,760 @@
+//
+//  BBSDetailCellViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-8-25.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSDetailCellViewController.h"
+#import "MJRefresh.h"
+#import "QzMessageToolBar.h"
+@interface BBSDetailCellViewController ()<UITextFieldDelegate,UIGestureRecognizerDelegate,QzMessageToolBarDelegate>
+{
+    UITableView *tbView;
+
+    
+    BOOL isHaveNextPage;
+}
+
+@property(nonatomic , strong)QzMessageToolBar *chatToolBar;// 聊天 toolBar
+
+@end
+
+@implementation BBSDetailCellViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+-(void)dealloc
+{
+
+
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"回帖详情"];
+    
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+//回复帖子
+-(void)replyBBSAction
+{
+    
+}
+
+-(void)initToolBar
+{
+    
+    self.chatToolBar.frame = CGRectMake(0, SCREEN_HEIGHT-40-OFFSET_Y, SCREEN_WIDTH, 40);
+    [self.view addSubview:self.chatToolBar];
+    
+    return;
+}
+
+-(void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    
+    [opration cancel];
+    opration=nil;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    
+    
+    [self setTopNavView];
+    
+//    [self initTbView];
+//    
+//    [self initToolBar];
+    
+    pageIndex=1;
+    //下载内容
+    self.bbsDataArr=[[NSMutableArray alloc]init];
+    [self requestBBSData];
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    
+    
+}
+
+
+- (QzMessageToolBar *)chatToolBar
+{
+    if (_chatToolBar == nil) {
+        _chatToolBar = [[QzMessageToolBar alloc] initWithFrame:CGRectMake(0, SCREEN_HEIGHT - [QzMessageToolBar defaultHeight], SCREEN_WIDTH, [QzMessageToolBar defaultHeight])];
+        _chatToolBar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin;
+        _chatToolBar.delegate = self;
+    }
+    
+    return _chatToolBar;
+}
+
+-(void)initTbView
+{
+    if(tbView)
+    {
+        [tbView removeFromSuperview];
+        tbView=nil;
+    }
+    
+    
+    tbView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, SCREEN_HEIGHT - STAR_Y -40)];
+    tbView.dataSource = self;
+    tbView.delegate = self;
+//    if (IOS7_OR_LATER) {
+//        [tbView setSeparatorInset: UIEdgeInsetsMake(0, 51, 0, 0)];
+//    }
+    tbView.separatorColor=[UIColor clearColor];
+    tbView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:tbView];
+    
+
+    
+    
+    //head 存放楼主的评论
+    UIView *headView=[[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 100)];
+    headView.backgroundColor=WHITE_COLOR;
+    
+    //头像
+    UIImageView *headerView=[[UIImageView alloc]initWithFrame:CGRectMake(5, 5, 40, 40)];
+    headerView.backgroundColor=[UIColor whiteColor];
+    headerView.image=[UIImage imageNamed:@"iconLogo"];
+    headerView.layer.cornerRadius=5;
+    headerView.layer.masksToBounds = YES;
+    [headView addSubview:headerView];
+    
+//    UIImage *headImage=nil;
+//    if (![dic[@"sex"] isKindOfClass:[NSNull class]]) {
+//        
+//        if ([dic[@"sex"] isEqualToString:@"0"]) {
+//            headImage=UIImageByName(@"morentouxiangWoman.png");
+//        }else{
+//            headImage=UIImageByName(@"morentouxiangMan.png");
+//            
+//        }
+//    }else
+//        headImage=UIImageByName(@"morentouxiangMan.png");
+//    
+//    headerView.image=headImage;
+    //链接地址 的头像
+//    [headerView sd_setImageWithURL:[NSURL URLWithString:dic[@"headImage"]] placeholderImage:headImage];
+    
+    
+    
+    
+    UILabel *nameLab=[[UILabel alloc]initWithFrame:CGRectMake(50, 5, 300, 20)];
+    nameLab.backgroundColor=[UIColor clearColor];
+    
+    NSString *nameStr=@"***";
+    if (self.detailDic[@"nickname"] && ![self.detailDic[@"nickname"] isKindOfClass:[NSNull class]] ) {
+        nameStr=self.detailDic[@"nickname"];
+    }
+    
+    if ([self.detailDic[@"isShowName"] isEqualToString:@"1"]) {
+        nameStr = @"匿名";
+    }
+    nameLab.text=nameStr;
+    nameLab.font=[UIFont systemFontOfSize:15];
+    nameLab.textColor=[UIColor darkGrayColor];
+    [headView addSubview:nameLab];
+    
+    // 性别位置
+    UIImageView *userSexImageView=[[UIImageView alloc]initWithImage:[UIImage imageNamed:@"BBSList_Man.png"]];
+//    userSexImageView.frame=CGRectMake(50, 25+20, 22, 19);
+    userSexImageView.frame=CGRectMake(45-22, 45-19, 22, 19);
+    
+    UIImage *headImage=nil;
+    if (![self.detailDic[@"sex"] isKindOfClass:[NSNull class]]) {
+        if ([self.detailDic[@"sex"] isEqualToString:@"0"]) {
+            userSexImageView.image=UIImageByName(@"BBSList_Woman.png");
+            headImage=UIImageByName(@"morentouxiangWoman.png");
+        }else{
+            userSexImageView.image=UIImageByName(@"BBSList_Man.png");
+            headImage=UIImageByName(@"morentouxiangMan.png");
+        }
+    }else headImage=UIImageByName(@"morentouxiangMan.png");
+    headerView.image=headImage;
+    
+    // 链接地址 的头像
+    [headerView sd_setImageWithURL:[NSURL URLWithString:self.detailDic[@"headImage"]] placeholderImage:headImage];
+    
+    [headView addSubview:userSexImageView];
+    
+    // 计算名称长度
+//    CGSize nameLabelsize = [nameStr sizeWithFont:[UIFont systemFontOfSize:16] constrainedToSize:CGSizeMake(210,21) lineBreakMode:NSLineBreakByCharWrapping];
+//    userSexImageView.frame=CGRectMake(CGRectGetMinX(nameLab.frame)+nameLabelsize.width, CGRectGetMinY(nameLab.frame), 22, 19);
+    
+    // 积分等级
+    UIImageView *bbsdengji=[[UIImageView alloc]initWithImage:[UIImage imageNamed:@"BBS_dengji_1.png"]];
+    bbsdengji.frame=CGRectMake(50, 5+20+2, 25*3/4., 20*3/4.);
+    [headView addSubview:bbsdengji];
+    
+    if (self.detailDic[@"groupId"]) {
+        NSString *imageName=[NSString stringWithFormat:@"BBS_dengji_%@",self.detailDic[@"groupId"]];
+        bbsdengji.image=UIImageByName(imageName);
+    }
+    
+    // 等级头衔文字
+    if (self.detailDic[@"groupName"]) {
+        UILabel *dengJiLab=FastCreatLabel(CGRectMake(50+25, 5+20, 300, 20), [UIColor lightGrayColor], [UIFont systemFontOfSize:13], [UIColor clearColor], NSTextAlignmentLeft);
+        dengJiLab.text=self.detailDic[@"groupName"];
+        [headView addSubview:dengJiLab];
+        
+        if (self.detailDic[@"sex"] && [self.detailDic[@"sex"] isEqualToString:@"0"]) {// 女一个颜色
+            dengJiLab.textColor=UICOLOR_RGB(251, 135, 158);
+        }else{ // 男一个颜色
+            
+            dengJiLab.textColor=UICOLOR_RGB(86, 217, 250);
+        }
+    }
+    
+    // 计算等级头衔长度
+    CGSize dengJiLabelsize = [self.detailDic[@"groupName"] sizeWithFont:[UIFont systemFontOfSize:16] constrainedToSize:CGSizeMake(300,20) lineBreakMode:NSLineBreakByCharWrapping];
+    
+    // 时间
+    UILabel *timeLab=[[UILabel alloc]initWithFrame:CGRectMake(50+25 +dengJiLabelsize.width+5, 5+20, 300, 20)];
+    timeLab.backgroundColor=[UIColor clearColor];
+    timeLab.text=[PublicMethod intervalSinceNow:self.detailDic[@"createTime"]];
+    timeLab.font=[UIFont systemFontOfSize:13];
+    timeLab.textColor=[UIColor lightGrayColor];
+    [headView addSubview:timeLab];
+    
+//    UILabel *timeLab=[[UILabel alloc]initWithFrame:CGRectMake(50, 25, 300, 20)];
+//    timeLab.backgroundColor=[UIColor clearColor];
+//    timeLab.text=@"8小时前";
+//    timeLab.font=[UIFont systemFontOfSize:13];
+//    timeLab.textColor=[UIColor lightGrayColor];
+//    [headView addSubview:timeLab];
+    
+    UILabel *contentLab=[[UILabel alloc]initWithFrame:CGRectMake(50, 50, 270, 20)];
+    contentLab.backgroundColor=[UIColor clearColor];
+    contentLab.textColor=[UIColor blackColor];
+    contentLab.numberOfLines=0;
+    contentLab.font=[UIFont systemFontOfSize:17];
+//    contentLab.text=@"额的评论内容";
+    contentLab.text=self.detailDic[@"content"];
+    [headView addSubview:contentLab];
+    
+    //调整view的高度
+    
+    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    [paragraphStyle setLineSpacing:5];//调整行间距
+    
+    NSString *contentString=@"";
+    if (self.detailDic[@"content"]) {
+        contentString=self.detailDic[@"content"];
+    }
+   
+    NSMutableAttributedString *str = [[NSMutableAttributedString alloc] initWithString:contentString];
+    [str addAttribute:NSParagraphStyleAttributeName value:paragraphStyle range:NSMakeRange(0, [contentString length])];
+    
+    contentLab.attributedText = str;
+    [contentLab sizeToFit];
+    
+   headView.frame=CGRectMake(0, 0, SCREEN_WIDTH, CGRectGetMaxY(contentLab.frame)+5);
+    
+    
+//    CGSize labelsize = [contentLab.text sizeWithFont:contentLab.font constrainedToSize:CGSizeMake(270,200) lineBreakMode:NSLineBreakByCharWrapping];
+//    CGRect contentLabFrame=contentLab.frame;
+//    contentLab.frame=CGRectMake(contentLabFrame.origin.x, contentLabFrame.origin.y, 270, labelsize.height);
+//    
+//    headView.frame=CGRectMake(0, 0, SCREEN_WIDTH, CGRectGetMaxY(contentLab.frame)+5);
+    
+    //画白线
+    UIImageView *line1=[[UIImageView alloc]initWithFrame:CGRectMake(51, CGRectGetHeight(headView.frame)-0.5, SCREEN_WIDTH-51, 0.5)];
+    line1.backgroundColor=[UIColor lightGrayColor];
+    [headView addSubview:line1];
+    
+    
+    tbView.tableHeaderView=headView;
+    
+    
+    
+    
+    
+    
+    
+
+    
+    // 1.下拉刷新
+    
+    [tbView addHeaderWithTarget:self action:@selector(headerRereshing)];
+    
+    
+    // 2.上拉加载更多(进入刷新状态就会调用self的footerRereshing)
+    [tbView addFooterWithTarget:self action:@selector(footerRereshing)];
+    
+    // 设置文字(也可以不设置,默认的文字在MJRefreshConst中修改)
+    
+    tbView.footerPullToRefreshText = @"上拉可以加载更多数据了";
+    tbView.footerReleaseToRefreshText = @"松开马上加载更多数据了";
+    tbView.footerRefreshingText = @"正在帮你加载中...";
+}
+
+-(void)headerRereshing
+{
+    
+    [self requestBBSData];
+//    [self performSelector:@selector(hearderRereshingEnd) withObject:nil afterDelay:1];
+}
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [tbView headerEndRefreshing];
+}
+
+
+
+
+-(void)footerRereshing
+{
+    if (isHaveNextPage) {
+        [self getMoreBBSData ];
+    }else{
+        // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+        [tbView footerEndRefreshing];
+        self.promptLab.text=@"已加载到最后";
+        [self showPromptLab];
+    }
+}
+
+
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return self.bbsDataArr.count;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString *contentStr=@"";
+    NSString *secondaryContent=@"";
+    if (self.bbsDataArr[indexPath.row][@"content"]) {
+        secondaryContent=self.bbsDataArr[indexPath.row][@"content"];
+    }
+    
+    NSString *secondaryName=@"***";
+    if (self.bbsDataArr[indexPath.row][@"nickname"]) {
+        secondaryName=self.bbsDataArr[indexPath.row][@"nickname"];
+    }
+    
+    contentStr=[NSString stringWithFormat:@"%@：%@",secondaryName,secondaryContent];
+    CGSize labelsize = [contentStr sizeWithFont:[UIFont systemFontOfSize:14] constrainedToSize:CGSizeMake(250,2000) lineBreakMode:NSLineBreakByCharWrapping];
+//    return 10+labelsize.height+15;
+    return 10+labelsize.height+21;
+    
+
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"BBSDetailCell";
+    UITableViewCell *cell = (UITableViewCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:CellIdentifier];
+       
+        
+        UILabel *huifu1=[[UILabel alloc]initWithFrame:CGRectMake(51, 5 , SCREEN_WIDTH-51, 30)];
+        huifu1.text=@"用户昵称：二级回复的内容";
+        huifu1.font=[UIFont systemFontOfSize:14];
+        [huifu1 setBackgroundColor:CLEAR_COLOR];
+        huifu1.numberOfLines=0;
+        huifu1.tag=1000;
+        [cell addSubview:huifu1];
+        
+        UIImageView *line1=[[UIImageView alloc]initWithFrame:CGRectMake(51, 40-0.5, SCREEN_WIDTH-51, 0.5)];
+        line1.tag=1001;
+        line1.backgroundColor=[UIColor lightGrayColor];
+        [cell addSubview:line1];
+        
+        UILabel *timeLab=[[UILabel alloc]initWithFrame:CGRectMake(51, 65-30 , SCREEN_WIDTH-20-51,21)];
+        timeLab.text=@"五天前";
+        timeLab.font=[UIFont systemFontOfSize:10];
+        timeLab.textColor=[UIColor lightGrayColor];
+        timeLab.textAlignment=NSTextAlignmentRight;
+        [timeLab setBackgroundColor:CLEAR_COLOR];
+        timeLab.tag=1002;
+        [cell addSubview:timeLab];
+    }
+    
+    cell.contentView.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    
+    UILabel *huifu1=(UILabel *)[cell viewWithTag:1000];
+    huifu1.text=[NSString stringWithFormat:@"回复：%d",(int)indexPath.section];
+    
+    NSString *secondaryContent=@"";
+    if (self.bbsDataArr[indexPath.row][@"content"]) {
+        secondaryContent=self.bbsDataArr[indexPath.row][@"content"];
+    }
+    
+    NSString *secondaryName=@"***";
+    if (self.bbsDataArr[indexPath.row][@"nickname"] && ![self.bbsDataArr[indexPath.row][@"nickname"] isKindOfClass:[NSNull class]]) {
+        secondaryName=[NSString stringWithFormat:@"%@",self.bbsDataArr[indexPath.row][@"nickname"]];
+    }
+    NSString *timeStr=@"";
+    timeStr=[NSString stringWithFormat:@"%@",[PublicMethod intervalSinceNow:self.bbsDataArr[indexPath.row][@"createTime"]]];
+
+    NSString *contentAll=[NSString stringWithFormat:@"%@：%@",secondaryName,secondaryContent];
+    
+    //用户名加颜色
+    NSMutableAttributedString *str7 = [[NSMutableAttributedString alloc] initWithString:contentAll];
+    [str7 addAttribute:NSForegroundColorAttributeName value:ColorSecondName range:NSMakeRange(0,secondaryName.length+1)];
+    huifu1.attributedText = str7;
+    
+    
+    CGSize labelsize = [contentAll sizeWithFont:[UIFont systemFontOfSize:14] constrainedToSize:CGSizeMake(250,2000) lineBreakMode:NSLineBreakByCharWrapping];
+    huifu1.frame=CGRectMake(51, 10 , 250, labelsize.height+2);
+    
+    UILabel *timeLab=(UILabel *)[cell viewWithTag:1002];
+    timeLab.text=timeStr;
+    timeLab.frame=CGRectMake(51, 10+labelsize.height  , SCREEN_WIDTH-20-51, 21);
+    
+    
+    UIImageView *line1=(UIImageView *)[cell viewWithTag:1001];
+    line1.frame=CGRectMake(51, 10+labelsize.height+21-0.5, SCREEN_WIDTH-51, 0.5);
+    return cell;
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+
+    
+    if ([self.chatToolBar.inputTextView isFirstResponder]) {
+
+        [self.chatToolBar endEditing:YES];
+    }else
+    {
+        [self.chatToolBar.inputTextView becomeFirstResponder];
+        
+        NSString *secondaryName=@"***";
+        if (self.bbsDataArr[indexPath.row][@"nickname"]) {
+            secondaryName=self.bbsDataArr[indexPath.row][@"nickname"];
+        }
+        self.chatToolBar.inputTextView.text=[NSString stringWithFormat:@"回复 %@：",secondaryName];
+    }
+    
+    
+}
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag==111) {
+        if (buttonIndex==1) {
+            [PublicMethod gotoLoginWithVC:self];
+
+        }
+    }
+}
+
+#pragma mark -
+-(void)sendBtnActionWithText:(NSString *)text
+{
+        
+        [ShareFunction showHUD];
+        
+        NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+        
+        NSString *contentStr=[NSString stringWithFormat:@"%@",text];
+        
+        if (self.forumId) {
+            [tempDic setObject:contentStr forKey:@"content"];
+            NSLog(@"self.detailDic=%@",self.detailDic);
+            [tempDic setObject:self.forumId forKey:@"forumId"];
+            [tempDic setObject:self.postId forKey:@"postId"];
+            [tempDic setObject:self.detailDic[@"postTypeId"]  forKey:@"postTypeId"];
+            [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+            /*
+             传入参数：postTypeId、forumId、postId、content、userId
+             */
+            
+            NSLog(@"发送评论=%@",tempDic);
+            [[MKHttpExchangeDemo shareMyInstance] requestAppSecondaryReplyWithDic:tempDic completionHandler:^(id responseObject) {
+                NSDictionary *responseDic=responseObject;
+                NSLog(@"回复--%@   --》%@",responseDic,responseDic[@"message"]);
+                
+                if ([responseDic[@"success"] intValue]==1) {
+
+                    NSDictionary *dic=[responseDic[@"datasource"] lastObject];
+                    
+                    NSString *text1=nil;
+                    NSString *text2=nil;
+                    NSString *text3=nil;
+                    text1=responseDic[@"message"];
+                    if([dic[@"replyPoint"] intValue]>0)
+                    {
+                        text2=[NSString stringWithFormat:@"经验+%@",dic[@"replyPoint"]];
+                    }
+                    
+                    if([dic[@"replyPrestige"] intValue]>0)
+                    {
+                        text2=[NSString stringWithFormat:@"积分+%@",dic[@"replyPrestige"]];
+                    }
+                    
+                    [ShareFunction hiddenHUD];
+                    [ShareFunction showToastWithText1:text1 andText2:text2 andText3:text3 inSuperview:self.view.window];
+                }else{
+                    [ShareFunction hiddenHUD];
+                    [ShareFunction showAlertWithText:responseDic[@"message"]];
+                    
+                }
+                
+                
+                //重新请求
+                [self requestBBSData ];
+            } errorHandler:^(NSError *error) {
+                [ShareFunction hiddenHUD];
+            }];
+        }else{
+            [ShareFunction hiddenHUD];
+            
+            NSLog(@"没有forumId");
+        }
+    
+}
+
+#pragma mark - 手势
+
+-(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch
+{
+    if ([NSStringFromClass([touch.view class]) isEqualToString:@"UITableViewCellContentView"]) {
+        return NO;
+    }
+    
+    return YES;
+}
+-(void)tap:(UIGestureRecognizer *)gesture
+{
+    
+    [self.view removeGestureRecognizer:gesture];
+    [self.chatToolBar endEditing:YES];
+    
+}
+#pragma mark - 发送消息相关 chatToolBarDelegate
+
+-(void)inputTextViewDidBeginEditing:(XHMessageTextView *)messageInputTextView
+{
+    //添加手势事件
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tap:)];
+    tap.numberOfTapsRequired = 1;
+    tap.delegate=self;
+    [self.view addGestureRecognizer:tap];
+    
+    
+}
+-(void)didSendText:(NSString *)text
+{
+    [self.chatToolBar endEditing:YES];
+    
+    if (!ISLOGIN) {//未登录
+        UIAlertView *alert=[[UIAlertView alloc]initWithTitle:@"提示" message:@"您尚未登录,是否去登录" delegate:self cancelButtonTitle:@"否" otherButtonTitles:@"是", nil];
+        alert.tag=111;
+        [alert show];
+        return;
+    }
+    
+    [self sendBtnActionWithText:text];
+}
+
+
+
+
+
+
+#pragma mark - 
+
+-(void)requestBBSData
+{
+    pageIndex=1;
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:@"10" forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:self.postId forKey:@"postId"];
+    
+    if (ISLOGIN) {
+         [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+    }
+    
+    opration=[[MKHttpExchangeDemo shareMyInstance] requestAppSecondaryInfoWithDic:tempDic completionHandler:^(id responseObject)
+     {
+         NSDictionary *responseDic = responseObject;
+         NSLog(@"二次回复--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+         
+         //贴子回复内容 加入数组
+         NSArray *datasource=[responseDic objectForKey:@"datasource"];
+         if (datasource) {
+             [self.bbsDataArr removeAllObjects];
+             
+             [PublicMethod formatRequestDataForAndroid:datasource toArray:self.bbsDataArr];
+             
+             //删除第一条数据 因为它是详情
+             if (self.bbsDataArr.count>0) {
+                 
+                 self.detailDic=self.bbsDataArr[0];// 第一条详情数据 存下来
+                 [self.bbsDataArr removeObjectAtIndex:0];
+                 
+                 
+                 // 过滤审核不过的帖子
+                 NSMutableArray *tempArr=[[NSMutableArray alloc]initWithArray:self.bbsDataArr];
+                 [self.bbsDataArr removeAllObjects];
+                 for (int i=0;i<tempArr.count; i++) {
+                     if ([tempArr[i][@"status"] isEqualToString:@"0"]) {
+                         [self.bbsDataArr addObject:tempArr[i]];
+                     }
+                 }
+                 
+                 
+                 if(tbView==nil){
+                     [self initTbView];
+                     [self initToolBar];
+                     
+                 }else
+                     [tbView reloadData];
+                 
+                 
+             }
+             
+             [tbView scrollRectToVisible:CGRectMake(0, 0, SCREEN_WIDTH, 1) animated:YES];
+             
+             [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+             
+             
+         }
+         
+         [self hearderRereshingEnd];
+     } errorHandler:^(NSError *error) {
+         [self hearderRereshingEnd];
+     }];
+}
+
+-(void)getMoreBBSData
+{
+    pageIndex++;
+    
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:@"10" forKey:@"pageSize"];
+    [tempDic setObject:[NSString stringWithFormat:@"%d",(int)pageIndex] forKey:@"pageNo"];
+    [tempDic setObject:self.postId forKey:@"postId"];
+
+    
+    opration=[[MKHttpExchangeDemo shareMyInstance] requestAppSecondaryInfoWithDic:tempDic completionHandler:^(id responseObject)
+     {
+         NSDictionary *responseDic = responseObject;
+         NSLog(@"二次回复more--<>>%@--%@",responseDic,[responseDic objectForKey:@"message"]);
+         
+         //贴子回复内容 加入数组
+         NSArray *datasource=[responseDic objectForKey:@"datasource"];
+         if (datasource) {
+            
+             [PublicMethod formatRequestDataForAndroid:datasource toArray:self.bbsDataArr];
+             
+             
+             // 过滤审核不过的帖子
+             NSMutableArray *tempArr=[[NSMutableArray alloc]initWithArray:self.bbsDataArr];
+             [self.bbsDataArr removeAllObjects];
+             for (int i=0;i<tempArr.count; i++) {
+                 if ([tempArr[i][@"status"] isEqualToString:@"0"]) {
+                     [self.bbsDataArr addObject:tempArr[i]];
+                 }
+             }
+             
+             
+             [tbView reloadData];
+             [self JudgePageNumAndToalPage:responseDic[@"datasource"]];
+             
+             // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+             [tbView footerEndRefreshing];
+             
+         }
+     } errorHandler:^(NSError *error) {
+         // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+         [tbView footerEndRefreshing];
+     }];
+}
+
+//添加触底刷新
+-(void)JudgePageNumAndToalPage:(NSArray *)dataSource
+{
+
+
+    if ([dataSource count] >9) {
+        isHaveNextPage=YES;
+    }else
+    {
+        isHaveNextPage=NO;
+    }
+}
+
+
+
+
+#pragma mark -
+
+//显示提示
+-(void)showPromptLab
+{
+    [self.view addSubview:self.promptLab];
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:0.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:^(BOOL finished) {
+        [self.promptLab removeFromSuperview];
+    }];
+    
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

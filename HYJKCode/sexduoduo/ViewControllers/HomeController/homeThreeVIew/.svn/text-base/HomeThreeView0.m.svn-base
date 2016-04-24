@@ -1,0 +1,214 @@
+//
+//  HomeThreeView0.m
+//  sexduoduo
+//
+//  Created by showm on 15/7/6.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeThreeView0.h"
+#import "SDTimeBuyModelManager.h"
+@implementation HomeThreeView0
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+-(instancetype)init
+{
+    if (self=[super init]) {
+        self.frame=CGRectMake(0, 0, SCREEN_WIDTH, 80);
+        
+        
+        self.btn1 = [UIButton buttonWithType:0];
+        self.btn1.tag = 0;
+        [self.btn1 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn1 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn1];
+        
+        
+        self.btn2 = [UIButton buttonWithType:0];
+        self.btn2.tag = 1;
+        [self.btn2 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn2 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn2];
+        
+        self.btn3 = [UIButton buttonWithType:0];
+        self.btn3.tag = 2;
+        [self.btn3 setImage:[UIImage imageNamed:@"bg"] forState:UIControlStateNormal];
+        [self.btn3 addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [self addSubview:self.btn3];
+        
+        
+        self.btn1.frame = CGRectMake(MAKEOF5(5), MAKEOF5(1), MAKEOF5(152), MAKEOF5(98));
+        self.btn2.frame = CGRectMake(0, self.btn1.top, MAKEOF5(152), MAKEOF5(98));
+        self.btn2.right = SCREEN_WIDTH - MAKEOF5(5);
+        self.btn3.frame = CGRectMake(MAKEOF5(5), self.btn1.bottom + MAKEOF5(4), MAKEOF5(310), MAKEOF5(82));
+        
+    }
+    return self;
+}
+
+-(CGFloat)getViewHeight
+{
+    return self.btn3.bottom +MAKEOF5(2);
+}
+
+
+-(void)reset
+{
+  
+    
+    self.btnNum=3;
+    self.dataArray=[[NSMutableArray alloc]init];
+   
+    self.btn1.layer.cornerRadius = 3.5;
+    self.btn1.layer.borderColor = btnBorderColor;
+    self.btn1.layer.borderWidth = 0.5;
+
+    
+    self.btn2.layer.cornerRadius = 3.5;
+    self.btn2.layer.borderColor = btnBorderColor;
+    self.btn2.layer.borderWidth = 0.5;
+    
+    self.btn3.layer.cornerRadius = 3.5;
+    self.btn3.layer.borderColor = btnBorderColor;
+    self.btn3.layer.borderWidth = 0.5;
+    
+    self.btn1.clipsToBounds=YES;
+    self.btn2.clipsToBounds=YES;
+    self.btn3.clipsToBounds=YES;
+    
+    self.countLabel = [[UILabel alloc] initWithFrame:CGRectMake(11, MAKEOF5(50), 130, 21)];
+    self.countLabel.backgroundColor = [UIColor clearColor];
+    self.countLabel.font = [UIFont systemFontOfSize:12.0];
+    self.countLabel.textColor = [UIColor lightGrayColor];
+    [self.btn3 addSubview:self.countLabel];
+    
+//    [self timeCount];
+    
+    [[SDTimeBuyModelManager sharedInstance] requestTimeList];
+    [[SDTimeBuyModelManager sharedInstance] qzAddObserverBlockForKeyPath:@"self.dataArray" block:^(__weak id obj, id oldVal, id newVal) {
+        
+        NSLog(@"%@ %@",oldVal,newVal);
+        if ([newVal isKindOfClass:[NSArray class]] ) {
+            NSArray *tempArray = newVal;
+            if (tempArray.count>0) {
+                SDSetTimeModel * model=tempArray[0];
+                self.countLabel.text = model.label;
+            }
+        }
+        
+    }];
+}
+
+
+
+
+
+
+- (IBAction)btnClick:(id)sender {
+    
+    UIButton *btn=sender;
+    NSLog(@"homeView  indexNum=%d 点击按钮%d btnNum=%d",self.indexNum,(int)btn.tag,self.btnNum);
+    NSString *str=[NSString stringWithFormat:@"ModuleNew_%d_%d",self.indexNum+1,(int)btn.tag+1];
+    // 统计 计数事件
+    [MobClick event:str];
+    
+    if (btn.tag<self.dataArray.count) {
+        NSDictionary *dic=self.dataArray[btn.tag];
+        
+        [self judgeJumpToSubControllerWithDic:dic];
+    }
+    
+}
+
+//倒计时  服务器返回时间差-》倒计时时间
+-(void)timeCount
+{
+    __block int timeout = [PublicMethod timeDistance24];//倒计时时间
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    dispatch_source_t _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,queue);
+    dispatch_source_set_timer(_timer,dispatch_walltime(NULL, 0),1.0*NSEC_PER_SEC, 0); //每秒执行
+    dispatch_source_set_event_handler(_timer, ^{
+        if(timeout<=0){ //倒计时结束，关闭
+            dispatch_source_cancel(_timer);
+            //            dispatch_release(_timer);
+            self.countDownStr = [NSString stringWithFormat:@"%d时%d分%d秒",0,0,0];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                //设置界面的按钮显示 根据自己需求设置
+                self.countLabel.text = self.countDownStr;
+                
+                [self timeCount];
+                
+            });
+            
+        }else{
+            //            int minutes = timeout / 60;
+            //            int seconds = timeout % 60;
+            //            NSString *strTime = [NSString stringWithFormat:@"%d分%.2d秒后重新获取验证码",minutes, seconds];
+            int days = timeout/(60*60*24);
+            int hours = timeout/(60*60)%24 + days * 24;
+            int minutes = timeout /60%60;
+            int seconds = timeout % 60;
+            self.countDownStr = [NSString stringWithFormat:@"%d时%d分%d秒",hours,minutes, seconds];
+            //            self.countDown--;
+            //        [self.tableView reloadData];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                //设置界面的按钮显示 根据自己需求设置
+                self.countLabel.text = self.countDownStr;
+            });
+            timeout--;
+            
+        }
+    });
+    dispatch_resume(_timer);
+}
+-(void)setDataArray:(NSMutableArray *)dataArray
+{
+    
+    _dataArray=dataArray;
+    
+    
+    for (int i=0; i<self.btnNum; i++) {
+        
+        if (i>=dataArray.count) {
+            return;
+        }
+        
+        UIButton *btn;
+        switch (i) {
+            case 0:
+                btn=self.btn1;
+                break;
+            case 1:
+                btn=self.btn2;
+                break;
+            case 2:
+                btn=self.btn3;
+                break;
+                
+            default:
+                break;
+        }
+        
+        if (judgeUrlIsHave(dataArray[i],@"newLogoPath")) {
+            
+            [btn sd_setImageWithURL:[NSURL URLWithString:dataArray[i][@"newLogoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }else{
+            [btn sd_setImageWithURL:[PublicMethod imgWithUrl:dataArray[i][@"logoPath"]] forState:UIControlStateNormal placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }
+        
+        
+    }
+}
+
+
+@end
+
+

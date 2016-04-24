@@ -1,0 +1,31 @@
+//
+//  SDInteractiveRecordVC.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  打赏我的，或者 喜欢我的
+
+#import <UIKit/UIKit.h>
+
+typedef enum {
+    
+    rewardType = 0,
+    
+    likeType,
+    
+    messageType
+    
+}SDInteractiveRecordType;
+
+@interface SDInteractiveRecordVC : UIViewController
+
+@property (nonatomic) SDInteractiveRecordType type;
+
+@property (strong, nonatomic) IBOutlet UIView *loadFailedView;
+
+@property (nonatomic, assign) BOOL isNextPage;                      //是否有下一页
+
+- (instancetype)initWithType:(SDInteractiveRecordType)type;
+
+@end

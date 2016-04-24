@@ -1,0 +1,29 @@
+//
+//  SDMessageToMeModel.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/14.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDMessageToMeModel.h"
+
+@implementation SDMessageToMeModel
+
+- (NSDictionary *)propertyMapDic {
+    
+    return @{
+             @"avatar":@"avatar",
+             @"content":@"content",
+             @"fromNickname":@"fromNickname",
+             @"fromUserId":@"fromUserId",
+             @"fromUserName":@"fromUserName",
+             @"groupId":@"groupId",
+             @"groupName":@"groupName",
+             @"releaseTime":@"releaseTime",
+             @"sex":@"sex",
+             @"type":@"type"
+             };
+}
+
+@end

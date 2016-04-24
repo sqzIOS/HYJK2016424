@@ -1,0 +1,697 @@
+//
+//  MyInfoViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-7-1.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "MyInfoViewController.h"
+
+@interface MyInfoViewController ()
+{
+    BOOL isFirstAppear;
+}
+@end
+
+@implementation MyInfoViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    
+    if (!isFirstAppear) {//非第一次的时候进入
+        [self requestUserInfo];
+    }
+    isFirstAppear=NO;
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+    self.view.width = SCREEN_WIDTH;
+    
+    
+    [self initMyInfoView];
+    
+    
+    [self requestUserInfo];
+    isFirstAppear=YES;
+}
+
+-(void)initMyInfoView
+{
+    //性别
+    if ([[UserDefaults objectForKey:@"userSex"] isEqualToString:@"男"]) {
+        self.sexLab.textColor = [UIColor blueColor];
+        self.sexLab.text =@"男";
+    }else
+    {
+        self.sexLab.textColor = [UIColor redColor];
+        self.sexLab.text =@"女";
+    }
+    
+    //昵称
+    self.userNameLab.text = NICKNAME;
+    
+    if ([UserDefaults objectForKey:@"isLogin"])
+    {
+        self.logOutBtn.hidden = NO;
+    }else
+        self.logOutBtn.hidden = YES;
+    self.logOutBtn.layer.cornerRadius = 3.5;
+    self.logOutBtn.backgroundColor = NAV_MoreBg_COLOR;
+    
+    [self.userHeaderImg.layer setCornerRadius:CGRectGetHeight([self.userHeaderImg bounds]) / 2.];
+    self.userHeaderImg.layer.masksToBounds = YES;
+    //然后再给图层添加一个有色的边框，类似qq空间头像那样
+    self.userHeaderImg.layer.borderWidth = 1.0;
+    self.userHeaderImg.layer.borderColor = [[UIColor whiteColor] CGColor];
+    
+
+    //头像
+    self.userHeaderImg.image=[PublicMethod getHeaderImage];
+    
+    
+    UIView *lineFir = [[UIView alloc] initWithFrame:CGRectMake(20, 70, SCREEN_WIDTH, 0.5)];
+    lineFir.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [self.myInfoView addSubview:lineFir];
+    
+    UIView *lineSec = [[UIView alloc] initWithFrame:CGRectMake(20, 110, SCREEN_WIDTH, 0.5)];
+    lineSec.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [self.myInfoView addSubview:lineSec];
+    
+    UIView *lineThr = [[UIView alloc] initWithFrame:CGRectMake(20, 150, SCREEN_WIDTH, 0.5)];
+    lineThr.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [self.myInfoView addSubview:lineThr];
+    
+    UIView *lineFor = [[UIView alloc] initWithFrame:CGRectMake(20, 190, SCREEN_WIDTH, 0.5)];
+    lineFor.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [self.myInfoView addSubview:lineFor];
+    
+    UIView *lineFive = [[UIView alloc] initWithFrame:CGRectMake(20, 230, SCREEN_WIDTH, 0.5)];
+    lineFive.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [self.myInfoView addSubview:lineFive];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"个人资料"];
+    
+
+}
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+//退出登录
+- (IBAction)logOutAction:(id)sender {
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"确定退出?" message:@"退出后，将无法下单，发帖，评论等！" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"退出", nil];
+    [alert show];
+}
+
+- (IBAction)nicknameChangeAction:(id)sender {
+    
+    ChangeNicknameViewController *ctrVC = [[ChangeNicknameViewController alloc] initWithNibName:@"ChangeNicknameViewController" bundle:[NSBundle mainBundle]];
+    ctrVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:ctrVC animated:YES];
+    
+}
+
+- (IBAction)sexChangeAction:(id)sender {
+    self.sexActionSheet = [[UIActionSheet alloc]
+                          initWithTitle:nil
+                          delegate:self
+                          cancelButtonTitle:@"取消"
+                          destructiveButtonTitle:nil
+                          otherButtonTitles: @"男", @"女",nil];
+    
+    [self.sexActionSheet showInView:self.view];
+}
+- (IBAction)toChangePWView:(id)sender {
+    ChangePWViewController *ctrVC = [[ChangePWViewController alloc] initWithNibName:@"ChangePWViewController" bundle:[NSBundle mainBundle]];
+    ctrVC.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:ctrVC animated:YES];
+}
+- (IBAction)addManageView:(id)sender {
+    AddrManageController *controller = [[AddrManageController alloc] initWithNibName:@"AddrManageController" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    [self.navigationController pushViewController:controller animated:YES];
+}
+
+-(IBAction)editAction:(id)sender
+{
+    self.myActionSheet = [[UIActionSheet alloc]
+                          initWithTitle:nil
+                          delegate:self
+                          cancelButtonTitle:@"取消"
+                          destructiveButtonTitle:nil
+                          otherButtonTitles: @"打开照相机", @"从手机相册获取",nil];
+    
+    [self.myActionSheet showInView:self.view];
+}
+#pragma mark - alert
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == 101) {
+        switch (buttonIndex) {
+            case 0:
+                
+                break;
+            case 1:
+            {
+                //保存照片
+                [PublicMethod saveImage:selectImage WithName:USERID];
+                [self sendInfo];
+
+            }
+                break;
+                
+            default:
+                break;
+        }
+
+    }else
+    {
+        switch (buttonIndex) {
+            case 0:
+                
+                break;
+            case 1:
+            {
+                
+                
+                
+                
+                
+                self.logOutBtn.hidden = YES;
+                
+                [self toBackView];
+            }
+                break;
+                
+            default:
+                break;
+        }
+
+    }
+}
+
+#pragma mark - 请求用户信息
+-(void)requestUserInfo
+{
+    [[MKHttpServiceEngine shareMyInstance] requestUserInfocompletionHandler:^(id responseObject) {
+        NSDictionary *responseDic=responseObject;
+        NSLog(@"--%@-用户信息->%@",responseDic,responseDic[@"message"]);
+        
+        if (responseDic[@"datasource"] && [responseDic[@"datasource"] count]>0) {
+            NSDictionary *infoDic=responseDic[@"datasource"][0];
+            
+            // 性别
+            if (![infoDic[@"gender"] isKindOfClass:[NSNull class]]) {
+                if ([infoDic[@"gender"] isEqualToString:@"male"]) {
+                    //性别处理
+                    self.sexLab.text = @"男";
+                    self.sexLab.textColor = [UIColor blueColor];
+                    [UserDefaults setObject:@"男" forKey:@"userSex"];
+                    
+                }else if ([infoDic[@"gender"] isEqualToString:@"female"])
+                {
+                    //性别处理
+                    self.sexLab.text = @"女";
+                    self.sexLab.textColor = [UIColor redColor];
+                    [UserDefaults setObject:@"女" forKey:@"userSex"];
+                    
+                }
+            }else{
+                //性别处理
+                self.sexLab.text = @"男";
+                self.sexLab.textColor = [UIColor blueColor];
+                [UserDefaults setObject:@"男" forKey:@"userSex"];
+            }
+            
+            // 昵称
+            if (![infoDic[@"nickname"] isKindOfClass:[NSNull class]]) {
+                self.userNameLab.text=infoDic[@"nickname"];
+                [UserDefaults setObject:infoDic[@"nickname"] forKey:@"nickname"];
+            }
+            
+            if (isFirstAppear) {
+                // 头像地址
+                if (infoDic[@"head_image"] ){
+                    
+                    //下载头像并保存本地
+                    NSString *headURL=[PublicMethod formatBBSHeadeImageWithImageStr:infoDic[@"head_image"]];
+                    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                        UIImage *image=[PublicMethod downloadImageWithURL:headURL];
+                        
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            NSLog(@"下载头像结束");
+                            if (image) {
+                                [PublicMethod saveImage:image WithName:USERID];
+                                self.userHeaderImg.image=image;
+                            }
+                            
+                        });
+                        
+                    });
+                }
+                    
+            }
+            
+            
+            //头像处理  还没有网络地址
+            self.userHeaderImg.image=[PublicMethod getHeaderImage];
+        }
+    } errorHandler:^(NSError *error) {
+        
+    }];
+}
+
+
+
+
+
+#pragma mark 改变用户信息
+-(void)requestToChangeUserInfoWithSex:(NSString *)SexStr
+{
+    NSMutableDictionary *dic=[[NSMutableDictionary alloc]initWithCapacity:0];
+    [dic setObject:USERID forKey:@"usernameId"];
+    [dic setObject:SexStr forKey:@"gender"];
+    [dic setObject:@"" forKey:@"email"];
+    [dic setObject:@"" forKey:@"name"];
+//    [dic setObject:@"" forKey:@"nickname"];
+    [dic setObject:@"" forKey:@"birth"];
+    [dic setObject:@"" forKey:@"areaStore"];
+    [dic setObject:@"" forKey:@"address"];
+    [dic setObject:@"" forKey:@"zipCode"];
+    [dic setObject:@"" forKey:@"phone"];
+    [dic setObject:@"" forKey:@"mobile"];
+    
+    //打印一个链接
+    NSArray *arr=dic.allKeys;
+    NSMutableString *urlstr=[NSMutableString stringWithFormat:@"http://www.xingduoduo.com/shopxx/shop/member!updateProfile.action?"];
+    for (int i=0; i<arr.count; i++) {
+        if (i==0) {
+            [urlstr appendString:[NSString stringWithFormat:@"%@=%@",arr[i],dic[arr[i]]]];
+        }else
+        {
+             [urlstr appendString:[NSString stringWithFormat:@"&%@=%@",arr[i],dic[arr[i]]]];
+        }
+    }
+    NSLog(@"urlDic=%@",urlstr);
+    
+    [[MKHttpServiceEngine shareMyInstance] changeUserInfo:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic=responseObject;
+        NSLog(@"--%@ --->%@",responseDic,responseDic[@"message"]);
+    } errorHandler:^(NSError *error) {
+        
+    }];
+
+}
+
+#pragma mark - photo
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (actionSheet == self.myActionSheet) {
+        //呼出的菜单按钮点击后的响应
+        if (buttonIndex == self.myActionSheet.cancelButtonIndex)
+        {
+            NSLog(@"取消");
+        }
+        switch (buttonIndex)
+        {
+            case 0:  //打开照相机拍照
+                [self takePhoto];
+                break;
+                
+            case 1:  //打开本地相册
+                [self LocalPhoto];
+                break;
+        }
+
+    }else if (actionSheet == self.sexActionSheet)
+    {
+        switch (buttonIndex)
+        {
+            case 0:  //男
+            {
+                self.sexLab.text = @"男";
+                self.sexLab.textColor = [UIColor blueColor];
+                [UserDefaults setValue:@"男" forKey:@"userSex"];
+                [self requestToChangeUserInfoWithSex:@"男"];
+            }
+               
+                break;
+                
+            case 1:  //女
+            {
+                self.sexLab.text = @"女";
+                self.sexLab.textColor = [UIColor redColor];
+                 [UserDefaults setValue:@"男" forKey:@"userSex"];
+                [self requestToChangeUserInfoWithSex:@"女"];
+            }
+                
+                break;
+        }
+
+    }
+}
+
+
+
+//开始拍照
+-(void)takePhoto
+{
+    UIImagePickerControllerSourceType sourceType = UIImagePickerControllerSourceTypeCamera;
+    if ([UIImagePickerController isSourceTypeAvailable: UIImagePickerControllerSourceTypeCamera])
+    {
+        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+        picker.delegate = self;
+        //设置拍照后的图片可被编辑
+        picker.allowsEditing = YES;
+        picker.sourceType = sourceType;
+        [self presentModalViewController:picker animated:YES];
+    }else
+    {
+        NSLog(@"模拟其中无法打开照相机,请在真机中使用");
+    }
+}
+
+//打开本地相册
+-(void)LocalPhoto
+{
+    UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+    
+    picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    picker.delegate = self;
+    picker.navigationBar.barStyle = UIBarStyleDefault;
+
+    /*
+     UIBarStyleDefault          = 0,
+     UIBarStyleBlack            = 1,
+     
+     UIBarStyleBlackOpaque      = 1, // Deprecated. Use UIBarStyleBlack
+     UIBarStyleBlackTranslucent
+     */
+    picker.navigationBarHidden = NO;
+    //设置选择后的图片可被编辑
+    picker.allowsEditing = YES;
+    [self presentModalViewController:picker animated:YES];
+}
+
+-(void)imagePickerController:(UIImagePickerController *)picker didFinishPickingImage:(UIImage *)image editingInfo:(NSDictionary *)editingInfo
+{
+    
+    
+ 
+        //关闭相册界面
+        [picker dismissModalViewControllerAnimated:YES];
+        selectImage=image;
+        
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"提示" message:@"确定修改头像 ?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定",nil];
+        alert.tag = 101;
+        [alert show];
+        
+    
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker
+{
+    NSLog(@"您取消了选择图片");
+    [picker dismissModalViewControllerAnimated:YES];
+}
+
+- (NSString *)documentFolderPath
+{
+    return [NSHomeDirectory() stringByAppendingPathComponent:@"Documents"];
+    
+    
+}
+-(void)sendInfo
+{
+    NSLog(@"图片的路径是：%@", [self documentFolderPath]);
+    NSFileManager* fm=[NSFileManager defaultManager];
+    NSArray *files = [fm subpathsAtPath: [self documentFolderPath] ];
+    NSLog(@"图片files%@",files);
+    
+   
+    NSArray  *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES);
+    NSString *docDir = [paths objectAtIndex:0];
+    NSString *filePath = [docDir stringByAppendingPathComponent:@"headImage.png"];
+    NSLog(@"salesImage ::%@",filePath);
+    NSData *data = [NSData dataWithContentsOfFile:UserHeadImageFileName];
+    UIImage *img = [[UIImage alloc] initWithData:data];
+    
+    self.userHeaderImg.image = img;
+    
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setValue:filePath forKey:@"userHeaderImg"];
+    
+    [defaults synchronize];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"updateMyCenterView" object:nil];
+    
+    
+    // 上传 头像
+    NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+    [tempDic setObject:USERID forKey:@"usernameIdhead"];
+    NSMutableArray *imageArr=[[NSMutableArray alloc]init];
+    [imageArr addObject:img];
+    //方法1
+    //方法2
+    [self uploadImageDic:tempDic andImages:imageArr andFilePath:filePath];
+    
+}
+//上传头像
+-(void)uploadImageDic:(NSDictionary *)keysDic andImages:(NSArray *)imgArr andFilePath:(NSString *)filePath
+{
+    MKNetworkEngine *engine = [[MKNetworkEngine alloc] initWithHostName:SHOPIP customHeaderFields:nil];
+    
+    MKNetworkOperation *op = [engine operationWithPath:@"/shopxx/shop/member!fileUpload.action" params:keysDic httpMethod:@"POST"];
+    [op addData:UIImagePNGRepresentation(imgArr[0]) forKey:@"myFile" mimeType:@"image/png" fileName:@"myFileFileName.png"];
+
+    
+    [op addCompletionHandler:^(MKNetworkOperation *operation) {
+        NSLog(@"上传头像-->>%@", [operation responseString]);
+        NSDictionary *dic=[AFHTTPClient jsonTurnToDictionary:operation.responseData];
+        NSLog(@"上传头像dic-->>%@", dic);
+        
+        if (JudgeSuccess(dic)) {
+            if (JudgeDatasourceHaveArrayData(dic)) {
+                NSDictionary *infoDic=[dic[DATASOURCE] firstObject];
+                
+                //头像地址
+                NSString *headURL=[PublicMethod formatBBSHeadeImageWithImageStr:infoDic[@"imageurl"]];
+                [UserDefaults setObject:headURL forKey:@"userHeadImageURL"];
+            }
+            
+        }
+        
+        [UIApplication sharedApplication].networkActivityIndicatorVisible=NO;
+
+    }errorHandler:^(MKNetworkOperation *errorOp, NSError* err) {
+        NSLog(@"MKNetwork request error : %@", [err localizedDescription]);
+    }];
+    [engine enqueueOperation:op];
+}
+
+//处理图片上传
+-(NSDictionary *)uploadImagesWithKeys:(NSDictionary *)keysDic andImages:(NSArray *)imgArr
+{
+    NSLog(@"keysdic=%@",keysDic);
+    NSString *stringURL = [NSString stringWithFormat:@"http://www.xingduoduo.com/shopxx/shop/member!fileUpload.action"];
+    NSLog(@"%@",stringURL);
+    /**
+     *  0.约定分隔符  结束符
+     */
+    NSString *TWITTERFON_FORM_BOUNDARY = @"AaB03x";
+    NSString *MPboundary = [[NSString alloc]initWithFormat:@"--%@", TWITTERFON_FORM_BOUNDARY];
+    NSString *endMPboundary = [[NSString alloc]initWithFormat:@"%@--", MPboundary];
+    NSString *changeLine = @"\r\n";
+    
+    
+    /**
+     *  1.声明myRequestData，用来放入http body
+     */
+    NSMutableData *requestBody = [NSMutableData data];
+    NSMutableString *paramentString = [[NSMutableString alloc]init];
+    
+    /**
+     *  2.拼装参数
+     */
+    NSArray *keys = [keysDic allKeys];
+    for(int i = 0;i < [keys count]; i++) {
+        // 得到当前key
+        NSString *key = [keys objectAtIndex:i];
+        if (![key isEqualToString:@"method"])
+        {
+            // 添加分界线，换行
+            [paramentString appendFormat:@"%@\r\n", MPboundary];
+            // 添加字段名称，换2行
+            [paramentString appendFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key];
+            // 添加字段的值
+            [paramentString appendFormat:@"%@\r\n", [keysDic objectForKey:key]];
+        }
+    }
+    // 添加分界线，换行
+    [paramentString appendFormat:@"%@\r\n", MPboundary];
+    
+    NSLog(@"paramentString=%@",paramentString);
+    //把字符串转为 data加到body中
+    [requestBody appendData:[paramentString dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    //3.拼装图片
+    
+    for (int i = 0; i < imgArr.count; i ++) {
+        NSData* data;
+        UIImage *image = [imgArr objectAtIndex:i] ;
+        //判断图片是不是png格式的文件
+        if (UIImagePNGRepresentation(image)) {
+            //返回为png图像。
+            data = UIImagePNGRepresentation(image);
+        }
+        else {
+            //返回为JPEG图像。
+            data = UIImageJPEGRepresentation(image, 1.0);
+        }
+        // 先写分隔符  再换行
+        NSMutableString *imageString = [[NSMutableString alloc] initWithFormat:@"%@\r\n", MPboundary];
+        // ------写图片名 文件名  要协商
+        [imageString appendFormat:@"Content-Disposition:form-data;name=\"%@\";filename=\"%@\"\r\n",
+         
+        [NSString stringWithFormat:@"myFile"],//参数名
+        [NSString stringWithFormat:@"%@",@"myFileFileName"]];
+        // 换行
+        //[imageString appendString:@"\r\n"];
+        
+        //------图片类型要和后台协商
+        [imageString appendFormat:@"Content-Type: image/png\r\n\r\n"];
+        
+        
+        // 把图片名和文件名写入body（imageString中已经包含了换行）
+        [requestBody appendData:[imageString dataUsingEncoding:NSUTF8StringEncoding]];
+        
+        // 把图片的二进制码流写入body
+        [requestBody appendData:data];
+        
+        // 继续换行
+        [requestBody appendData:[changeLine dataUsingEncoding:NSUTF8StringEncoding]];
+    }
+    
+    // 声明结束符：--AaB03x--
+    NSString *end=[[NSString alloc]initWithFormat:@"\r\n%@", endMPboundary];
+    
+    // 加入结束符--AaB03x--
+    [requestBody appendData:[end dataUsingEncoding:NSUTF8StringEncoding]];
+    
+    
+    
+    
+    // 根据url初始化request
+    NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:stringURL]
+                                                           cachePolicy:0
+                                                       timeoutInterval:60];
+    
+    // 设置HTTPHeader中Content-Type的值
+    NSString *content=[[NSString alloc]initWithFormat:@"multipart/form-data; boundary=%@",
+                       TWITTERFON_FORM_BOUNDARY];
+    // 设置HTTPHeader
+    [request setValue:content forHTTPHeaderField:@"Content-Type"];
+    
+    // 设置Content-Length
+    [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)[requestBody length]] forHTTPHeaderField:@"Content-Length"];
+    //设置http body
+    [request setHTTPBody:requestBody];
+    //http method
+    [request setHTTPMethod:@"POST"];
+    
+    //定义
+    NSHTTPURLResponse* urlResponse = nil;
+    NSError *error = [[NSError alloc] init];
+    //同步提交:POST提交并等待返回值（同步），返回值是NSData类型。
+    NSData *responseData = [NSURLConnection sendSynchronousRequest:request returningResponse:&urlResponse error:&error];
+
+    if (responseData)
+    {
+        NSString *str= [[NSString alloc] initWithData:responseData  encoding:NSUTF8StringEncoding];
+        NSLog(@"上传图片返回数据str=%@",str);
+
+    }
+    else
+    {
+        NSLog(@"改头像出错");
+    }
+    
+    
+    return nil;
+    
+}
+
+
+//压缩图片
+-(UIImage*)imageWithImage:(UIImage*)image
+             scaledToSize:(CGSize)newSize;
+{
+    UIGraphicsBeginImageContext( newSize );
+    [image drawInRect:CGRectMake(0,0,newSize.width,newSize.height)];
+    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return newImage;
+}
+
+- (UIImage *)scaleImage:(UIImage *)image toScale:(float)scaleSize
+{
+    UIGraphicsBeginImageContext(CGSizeMake(image.size.width*scaleSize,image.size.height*scaleSize));
+    [image drawInRect:CGRectMake(0, 0, image.size.width * scaleSize, image.size.height *scaleSize)];
+    UIImage *scaledImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return scaledImage;
+}
+
+- (UIImage *)reSizeImage:(UIImage *)image toSize:(CGSize)reSize
+{
+    UIGraphicsBeginImageContext(CGSizeMake(reSize.width, reSize.height));
+    [image drawInRect:CGRectMake(0, 0, reSize.width, reSize.height)];
+    UIImage *reSizeImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return reSizeImage;
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

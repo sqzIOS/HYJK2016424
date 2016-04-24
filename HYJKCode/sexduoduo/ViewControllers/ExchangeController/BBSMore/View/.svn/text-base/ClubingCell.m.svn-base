@@ -1,0 +1,119 @@
+//
+//  ClubingCell.m
+//  
+//
+//  Created by apple on 15/12/10.
+//
+//
+
+#import "ClubingCell.h"
+#import "ClubingForumModel.h"
+#import "ShareFunction.h"
+#import "UIImageView+WebCache.h"
+#import "SDClubModelManager.h"
+@interface ClubingCell ()
+
+@property (nonatomic,weak) UIImageView *iconView;
+@property (nonatomic,weak) UILabel *titleLabel;
+@property (nonatomic,weak) UILabel *desLabel;
+@property (nonatomic,weak) UIButton *associatedBtn;
+
+
+@end
+
+@implementation ClubingCell
+
++ (instancetype)clubingCellWithModel:(ClubingForumModel *)model inTableView:(UITableView *)tableView
+{
+    NSString *ID = @"cell";
+    ClubingCell *cell = [tableView dequeueReusableCellWithIdentifier:ID];
+    if (cell == nil) {
+        cell = [[ClubingCell alloc] init];
+        
+        [cell setContent];
+        
+        cell.model = model;
+    }
+    return cell;
+}
+
+- (void)setContent
+{
+    // 图标
+    UIImageView *iconView = [[UIImageView alloc] init];
+    self.iconView = iconView;
+    iconView.frame = CGRectMake(QZMake(10), QZMake(10),QZMake(70), QZMake(70));
+    [self.contentView addSubview:iconView];
+    
+    // title
+    UILabel *titleLabel = [[UILabel alloc] init];
+    titleLabel.frame = CGRectMake(CGRectGetMaxX(self.iconView.frame) + QZMake(20), CGRectGetMinY(self.iconView.frame) + QZMake(3), QZMake(200), QZMake(25));
+    [self.contentView addSubview:titleLabel];
+    titleLabel.textColor = RGBCOLOR(97, 97, 97);
+    titleLabel.font = [UIFont systemFontOfSize:QZMake(17)];
+    self.titleLabel = titleLabel;
+    
+    // 详细信息
+    UILabel *desLabel = [[UILabel alloc] init];
+    desLabel.frame = CGRectMake(CGRectGetMaxX(self.iconView.frame) + QZMake(20), CGRectGetMaxY(self.titleLabel.frame), QZMake(210), QZMake(45));
+    desLabel.textColor = RGBCOLOR(165, 165, 165);
+    desLabel.numberOfLines = 2;
+    desLabel.font = [UIFont systemFontOfSize:QZMake(12)];
+    self.desLabel = desLabel;
+    [self.contentView addSubview:desLabel];
+    
+    // 是否关注
+    UIButton *associatedBtn = [[UIButton alloc] init];
+    associatedBtn.frame = CGRectMake(CGRectGetMaxX(self.desLabel.frame) + QZMake(20), CGRectGetMinY(self.iconView.frame) + QZMake(20), QZMake(30), QZMake(30));
+    [self.contentView addSubview:associatedBtn];
+    [associatedBtn setImage:[UIImage imageNamed:@"BBSHomeAdd"] forState:UIControlStateNormal];
+    [associatedBtn setImage:[UIImage imageNamed:@"BBSHomeMin"] forState:UIControlStateSelected];
+    [associatedBtn addTarget:self action:@selector(associatedBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    self.associatedBtn = associatedBtn;
+}
+
+- (NSString *)host
+{
+    if (_host == nil) {
+        _host = @"http://bbs.xingduoduo.com:8080";
+    }
+    return _host;
+}
+
+- (void)setModel:(ClubingForumModel *)model
+{
+    _model = model;
+    // 图标
+    NSString *logoUrl = [NSString stringWithFormat:@"%@%@",self.host,model.logo];
+    NSURL *url = [NSURL URLWithString:logoUrl];
+    [self.iconView sd_setImageWithURL:url placeholderImage:nil];
+    
+    // title
+    self.titleLabel.text = model.title;
+    
+    // 详细信息
+    self.desLabel.text = model.des;
+    
+    // 关注按钮状态
+    if (model.associated) {
+        self.associatedBtn.selected = YES;
+    } else {
+        self.associatedBtn.selected = NO;
+    }
+}
+- (void)associatedBtnClick:(UIButton *)associatedBtn
+{
+    
+    if (ISLOGIN) {
+        associatedBtn.selected = !associatedBtn.selected;
+        self.model.associated = associatedBtn.selected;
+    }
+    
+    if ([self.delegate respondsToSelector:@selector(clubingCellAssociatedBtnClickInCell:)]) {
+        [self.delegate clubingCellAssociatedBtnClickInCell:self];
+    }
+}
+
+
+
+@end

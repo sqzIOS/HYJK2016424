@@ -1,0 +1,27 @@
+//
+//  AddrViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-7-15.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  地址编辑页面  
+
+#import <UIKit/UIKit.h>
+#import "HZAreaPickerView.h"
+
+@interface AddrViewController : UIViewController<UITextFieldDelegate,HZAreaPickerDelegate,UITextViewDelegate>
+
+@property (weak, nonatomic) IBOutlet UIScrollView *addScrollView;
+@property (strong, nonatomic) HZAreaPickerView *locatePicker;
+@property (strong, nonatomic) NSString *areaValue, *cityValue;
+
+@property (weak, nonatomic) IBOutlet UITextField *areaTextField;
+@property (weak, nonatomic) IBOutlet UITextField *userNameField;
+@property (weak, nonatomic) IBOutlet UITextField *phoneField;
+@property (weak, nonatomic) IBOutlet UITextField *postcodeField;
+@property (weak, nonatomic) IBOutlet UITextView *detailAddField;
+@property (strong, nonatomic) UILabel* promptLab;
+
+@property (strong, nonatomic) NSMutableDictionary *addDic;
+
+@end

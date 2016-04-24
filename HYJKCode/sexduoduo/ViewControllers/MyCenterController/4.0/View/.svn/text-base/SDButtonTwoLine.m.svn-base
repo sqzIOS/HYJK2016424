@@ -1,0 +1,55 @@
+//
+//  SDButtonTwoLine.m
+//  sexduoduo
+//
+//  Created by showm on 15/10/26.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDButtonTwoLine.h"
+
+@implementation SDButtonTwoLine
+//@synthesize imgView,titleLab;
+-(instancetype)initWithImage:(UIImage *)image andTitle:(NSString *)title andFrame:(CGRect)frame
+{
+    if (self = [super initWithFrame:frame]) {
+        
+        UIImage *imge=image;
+        _imgView=[[UIImageView alloc] initWithImage:imge];
+        _imgView.frame = CGRectMake(0, 0, imge.size.width, imge.size.height);
+        _imgView.top = 0;
+        _imgView.centerX= self.width/2.;
+        [self addSubview:_imgView];
+        
+        
+        _titleLab = [[UILabel alloc] initWithFrame:CGRectMake(0, _imgView.bottom, self.width, self.height - _imgView.height)];
+        _titleLab.textAlignment = NSTextAlignmentCenter;
+        _titleLab.font = FONT_WITH_SIZE(10);
+        _titleLab.textColor = GRAY_COLOR;
+        [self addSubview:_titleLab];
+        
+        if (title) {
+            _titleLab.text = title;
+        }
+        
+        
+        
+    }
+    
+    return self;
+
+}
+
+
+-(UIImageView *)imgView
+{
+    if (_imgView==nil) {
+        
+        
+        
+    }
+    
+    return _imgView;
+}
+
+@end

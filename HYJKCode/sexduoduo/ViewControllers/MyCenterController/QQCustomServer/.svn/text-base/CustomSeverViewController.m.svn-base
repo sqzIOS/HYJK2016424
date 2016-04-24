@@ -1,0 +1,250 @@
+//
+//  CustomSeverViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-12-1.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "CustomSeverViewController.h"
+#import "QQInterface.h"
+#import "CustomSeverCell.h"
+@interface CustomSeverViewController ()<UITableViewDataSource,UITableViewDelegate,QQApiInterfaceDelegate>
+{
+    NSString *qqQun;
+    NSString *qqQunKey;
+    BOOL isHiddenQun;
+}
+@end
+
+@implementation CustomSeverViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+        
+        [self judgeUmengOnline];
+    }
+    return self;
+}
+-(void)judgeUmengOnline
+{
+    
+   
+    NSString* keFuInfo = [MobClick getConfigParams:@"QQ_KeFu"];
+    if (keFuInfo) {
+        NSLog(@"%@",[ShareFunction dictionaryWithJsonString:keFuInfo]);
+        NSArray *array=(NSArray *)[ShareFunction dictionaryWithJsonString:keFuInfo];
+        if (array.count>0) {
+            
+            self.listAry=[[NSMutableArray alloc] init];
+            self.qqListAry =[[NSMutableArray alloc] init];
+            
+            for (NSMutableDictionary *dic in array) {
+                
+                [self.listAry addObject:dic[@"nickname"]];
+                [self.qqListAry addObject:dic[@"qq"]];
+                
+            }
+        }
+        
+        
+    }else{
+    
+        self.listAry = [[NSMutableArray alloc]initWithObjects:@"性多多小秘书-魅力女王【白天】",@"性多多小秘书-性感宝贝【白天】",@"性多多管家-多多少爷【白天】",@"性多多小秘书-精灵小妹",@"性多多小秘书-小萌主",nil];
+        self.qqListAry=[[NSMutableArray alloc]initWithObjects:@"1954849408",@"2723660794",@"3141149181",@"3059874398",@"2353273294",nil];
+        
+    }
+    
+    
+    NSString *keFuqqQun=[MobClick getConfigParams:@"QQ_Qun"];
+    
+    if (keFuqqQun) {
+        NSDictionary *dic=[ShareFunction dictionaryWithJsonString:keFuqqQun];
+        
+        NSLog(@"dic=%@",dic);
+        qqQun=dic[@"qqQun"];
+        qqQunKey = dic[@"qqQunKey"];
+        
+        if (dic[@"isHiddenQun"] && [dic[@"isHiddenQun"] isEqualToString:@"1"]) {
+            isHiddenQun=YES;
+        }
+    }else
+    {
+        qqQun=@"111803870";
+        qqQunKey=@"76608f9a59bb8f96526c8d32800b4fe749bfd85763e3cafbd966840aaa58dfd4";
+        
+    }
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [self setTopNavView];
+    
+    
+    
+    
+    [self initMyCenterTableV];
+    
+    
+    UIButton *addQun = [UIButton buttonWithType:UIButtonTypeCustom];
+    addQun.frame = CGRectMake(150, SCREEN_HEIGHT-80, 140, 54);
+    [addQun setImage:[UIImage imageNamed:@"qqQun"] forState:UIControlStateNormal];
+    [addQun addTarget:self action:@selector(addQQqunBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    addQun.backgroundColor=CLEAR_COLOR;
+    addQun.hidden= isHiddenQun ;
+    [self.view addSubview:addQun];
+    
+    
+     [[QQInterface shareInstance] getQQUinOnlineStatuesWithArray:self.qqListAry delegate:self];
+}
+#pragma mark qq在线状态 代理
+-(void)isOnlineResponse:(NSDictionary *)response
+{
+    NSLog(@"qq在线状态请求的 回调 =%@",response);
+    self.isQQOnlineArray=[[NSMutableArray alloc]init];
+    
+    if(response && [[response allKeys] count]==self.qqListAry.count)
+    {
+        for (int i=0; i<self.qqListAry.count; i++) {
+            if ([response[self.qqListAry[i]] isEqualToString:@"YES"]) {
+                [self.isQQOnlineArray addObject:@"1"];
+            }else [self.isQQOnlineArray addObject:@"0"];
+            
+        }
+    }
+    NSLog(@"%@",self.isQQOnlineArray);
+    [self.mycenterTableV reloadData];
+}
+
+-(void)onReq:(QQBaseReq *)req{}
+-(void)onResp:(QQBaseResp *)resp{}
+
+#pragma mark -
+-(BOOL)addQQqunBtnClick:(id)sender
+{
+    NSString *urlStr = [NSString stringWithFormat:@"mqqapi://card/show_pslcard?src_type=internal&version=1&uin=%@&key=%@&card_type=group&source=external",qqQun,qqQunKey];
+    NSURL *url = [NSURL URLWithString:urlStr];
+    if([[UIApplication sharedApplication] canOpenURL:url]){
+        [[UIApplication sharedApplication] openURL:url];
+        return YES;
+    }
+    else return NO;
+
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"QQ在线客服"];
+    
+
+    
+    
+}
+//返回
+-(void)toBackView
+{
+    if ([self.navigationController respondsToSelector:@selector(popViewControllerAnimated:)]) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }
+    
+}
+
+-(void)initMyCenterTableV
+{
+    self.mycenterTableV = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y - OFFSET_Y)];
+    self.mycenterTableV.dataSource = self;
+    self.mycenterTableV.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.mycenterTableV setSeparatorInset:UIEdgeInsetsZero];
+        UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0.5)];
+        line.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+        self.mycenterTableV.tableFooterView = line;
+    }
+    self.mycenterTableV.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.mycenterTableV];
+    
+}
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return self.listAry.count;
+    
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 50;
+}
+
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"CustomSeverCell";
+    CustomSeverCell *cell = (CustomSeverCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"CustomSeverCell" owner:self options:nil] lastObject];
+   
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    }
+    
+    cell.backgroundColor = [UIColor clearColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    [cell configCellWithNameArray:self.listAry andQQArray:self.qqListAry  andIsOnlineArray:self.isQQOnlineArray  indexRow:(int)indexPath.row];
+    
+    return cell;
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+    if ([[QQInterface shareInstance] isQZoneAuthValid]) {
+        NSLog(@"已登录qq");
+        [[QQInterface shareInstance] onOpenWPA:self.qqListAry[indexPath.row]];
+
+    }else
+        [[QQInterface shareInstance] login];
+    
+       
+    
+}
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

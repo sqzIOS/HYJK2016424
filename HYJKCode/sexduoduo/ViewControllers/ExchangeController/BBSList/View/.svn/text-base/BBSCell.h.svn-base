@@ -1,0 +1,67 @@
+//
+//  BBSCell.h
+//  sexduoduo
+//
+//  Created by Showm on 14-7-30.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@protocol BBSCellProtocol <NSObject>
+
+-(void)didNotLogin;
+
+@end
+
+@interface BBSCell : UITableViewCell
+
+{
+    NSMutableArray *dataArray;
+    NSInteger dataIndex;
+    NSMutableDictionary *dataDic;
+}
+
+@property (strong, nonatomic) IBOutlet UIImageView *headImageView;
+@property (strong, nonatomic) IBOutlet UILabel *userNameLab;
+@property (strong, nonatomic) IBOutlet UILabel *timeLab;
+@property (strong, nonatomic) IBOutlet UIImageView *userSexImageView;
+@property (strong, nonatomic) IBOutlet UILabel *titleLab;
+@property (strong, nonatomic) IBOutlet UILabel *detailLab;
+
+@property (strong, nonatomic) IBOutlet UIImageView *zanImage;
+@property (strong, nonatomic) IBOutlet UILabel *zanNumLab;
+@property (strong, nonatomic) IBOutlet UIButton *zanBtn;
+
+
+@property (strong, nonatomic) IBOutlet UIButton *jingHuaBtn;
+@property (strong, nonatomic) IBOutlet UIButton *tuijianBtn;
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *imageView1;
+@property (strong, nonatomic) IBOutlet UIImageView *imageView2;
+@property (strong, nonatomic) IBOutlet UIImageView *imageView3;
+@property (strong, nonatomic) IBOutlet UILabel *ImageNumLab;
+
+@property (strong, nonatomic) IBOutlet UILabel *commentNumLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *statusLab;
+
+@property (strong, nonatomic) IBOutlet UIImageView *BanzhuLogo;
+
+
+//评论的用户头像
+@property (weak, nonatomic) IBOutlet UIImageView *usersHead1;
+@property (weak, nonatomic) IBOutlet UIImageView *usersHead2;
+@property (weak, nonatomic) IBOutlet UIImageView *usersHead3;
+
+@property (weak, nonatomic) IBOutlet UIImageView *moreUserHead;
+
+
+
+
+@property (assign, nonatomic) id<BBSCellProtocol>controlDelegate;
+
+-(void)configCellWithArray:(NSMutableArray *)arry indexRow:(int)row;
+
+@end

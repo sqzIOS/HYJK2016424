@@ -1,0 +1,25 @@
+//
+//  SDUserCenterVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/11/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  个人主页
+
+#import <UIKit/UIKit.h>
+
+typedef enum {
+
+    FromCenter = 0, //来自我的
+    FromOther       //来自其他
+}SDUserCenter;
+
+@interface SDUserCenterVC : UIViewController
+
+@property (nonatomic, strong) NSString *userId;
+
+@property (nonatomic) SDUserCenter type;
+
+- (instancetype)initWithType:(SDUserCenter)type UserId:(NSString *)userId;
+
+@end

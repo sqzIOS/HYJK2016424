@@ -1,0 +1,18 @@
+//
+//  SDCommentVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/12/31.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  评价页面
+
+#import <UIKit/UIKit.h>
+#import "SDMainVC.h"
+@interface SDCommentVC : SDMainVC
+
+@property (strong , nonatomic) NSMutableArray *commentArray;
+@property (strong , nonatomic) UITableView *commentTableView;
+
+@property (strong, nonatomic) NSString *goodsId;//商品ID
+
+@end

@@ -1,0 +1,29 @@
+//
+//  SHMainVC.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/13.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+/**
+ *含有tbview的 上下拉刷新 和 页码
+ *
+ */
+#import "SHRootVC.h"
+
+@interface SHMainVC : SHRootVC
+{
+    //该项目后台 总页码没有用 始终为1 蛋疼 ；所以每次比较下载数据数是否==pageNum 来判断是否还有下一页
+    //    NSInteger totalPage;//总页码 此处无用
+
+    NSInteger pageIndex;//当前请求页码
+    NSInteger pageNum;// 每次请求的 数目
+    BOOL isHaveNextPage;//是否有下一页
+}
+
+//@property(nonatomic, strong)UITableView *tableView;
+
+//判断是否有下一页
+-(void)judgeIsHaveNextPageWithDownDataNum:(NSInteger )dataNum;
+
+@end

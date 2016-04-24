@@ -1,0 +1,1113 @@
+//
+//  ShopCarController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-7-28.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "ShopCarController.h"
+
+@interface ShopCarController ()
+
+@end
+
+@implementation ShopCarController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willKeyboardShow:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willKeyboardHide:) name:UIKeyboardWillHideNotification object:nil];
+    
+    
+    self.selectRow = -1;
+    self.goodsDataArray = [NSMutableArray arrayWithCapacity:0];
+    self.orderDataArray = [NSMutableArray arrayWithCapacity:0];
+    self.goodsDic = [[NSMutableDictionary alloc] init];
+    
+    
+    
+    
+    
+    
+    [self setTopNavView];
+    [self initGoodsView];
+    _isShowEdit = NO;
+    
+    
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    currentPage = 1;
+    NSDictionary *params = [[NSDictionary alloc]init];
+    if (ISLOGIN) {
+        params = @{@"userId":[defaults objectForKey:@"userId"],@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"50"};
+    }else
+        params = @{@"userId":@"",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"50",@"imiestatus":@"0",@"imie":DEVICEUUID};
+    
+    [self requestShopCarListWithDic:params];
+
+    
+    
+    self.goToShopBtn.titleLabel.font = [UIFont systemFontOfSize:14.0];
+    self.goToShopBtn.layer.cornerRadius = 5;
+    self.goToShopBtn.layer.borderColor = NAV_RED_COLOR.CGColor;
+    self.goToShopBtn.backgroundColor=CLEAR_COLOR;
+    self.goToShopBtn.layer.borderWidth = 0.5;
+    [self.goToShopBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateNormal];
+    
+    
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    [self viewToShopCar];
+
+}
+-(void)viewDidDisappear:(BOOL)animated
+{
+ 
+}
+
+//购物车页面
+-(void)viewToShopCar
+{
+    _shopCarDataArray=nil;
+    _shopCarDataArray=[NSMutableArray arrayWithArray:[[ShopCarObj shareInstance] shopCarDataArray]];
+    
+    self.orderDataArray=[NSMutableArray array];
+    [self selectAllOrNotAction];
+    
+    [self.goodsTableView reloadData];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"购物车"];
+    
+    
+    
+    
+    rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightBtn.frame = CGRectMake(SCREEN_WIDTH - 55, 30 , 45, 25);
+    //    [rightBtn setTitle:@"next" forState:UIControlStateNormal];
+    //    [rightBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    //    [rightBtn setImage:[UIImage imageNamed:@"search.png"] forState:UIControlStateNormal];
+    [rightBtn setTitle:@"编辑" forState:UIControlStateNormal];
+    [rightBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateNormal];
+    rightBtn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+    rightBtn.layer.cornerRadius = 11.5;
+    rightBtn.layer.borderColor = NAV_RED_COLOR.CGColor;
+    rightBtn.layer.borderWidth = 0.5;
+    [rightBtn addTarget:self action:@selector(editShopCar) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:rightBtn];
+    
+   
+}
+
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+//返回
+-(IBAction)toBackView:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+
+//初始shopcarView
+-(void)initGoodsView
+{
+
+    self.noGoodsView.frame =CGRectMake(0,STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT-STAR_Y);
+
+    
+    self.noGoodsView.hidden = YES;
+    [self.view addSubview:self.noGoodsView];
+    
+    self.goodsView.frame = CGRectMake(0, STAR_Y,SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y - OFFSET_Y);
+    [self.view addSubview:self.goodsView];
+    
+    
+    
+//    NSLog(@">>>-->%d--%f--",STAR_Y,[UIScreen mainScreen].applicationFrame.size.height);
+    
+    
+    self.goodsTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, self.goodsView.frame.size.height - 50)];
+    self.goodsTableView.dataSource = self;
+    self.goodsTableView.delegate = self;
+    self.goodsTableView.backgroundColor = [UIColor colorWithRed:255/255.f green:255/255.f blue:255/255.f alpha:0.5];
+    [self.goodsView addSubview:self.goodsTableView];
+    
+    if (IOS7_OR_LATER) {
+        [self.goodsTableView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    
+    
+    
+    // 1.下拉刷新
+    [self.goodsTableView addHeaderWithTarget:self action:@selector(headerRereshing)];
+    
+    
+    
+    UIView *bottomLine = [[UIView alloc] initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 0.5)];
+    if (IOS7_OR_LATER) {
+        bottomLine.backgroundColor = [UIColor blackColor];
+        bottomLine.alpha = 0.2;
+    }
+    self.goodsTableView.tableFooterView = bottomLine;
+    
+    [self initBottomView];
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    [self.goodsView addSubview:self.promptLab];
+    
+    self.indicator = [[UIActivityIndicatorView alloc] init];
+    self.indicator.center = self.view.center;
+    self.indicator.hidden = YES;
+    [self.goodsView addSubview:self.indicator];
+}
+
+-(void)headerRereshing
+{
+    
+//    [self.scrollView refrashData];
+    [self performSelector:@selector(hearderRereshingEnd) withObject:nil afterDelay:2];
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    currentPage = 1;
+    NSDictionary *params = [[NSDictionary alloc]init];
+    if (ISLOGIN) {
+        params = @{@"userId":[defaults objectForKey:@"userId"],@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"50"};
+    }else
+        params = @{@"userId":@"",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"50",@"imiestatus":@"0",@"imie":DEVICEUUID};
+    
+    
+    [self requestShopCarListWithDic:params];
+    
+}
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.goodsTableView headerEndRefreshing];
+}
+
+
+//底部结算按钮 总价格  等图
+-(void)initBottomView
+{
+    bottomImgView = [[UIView alloc] initWithFrame:CGRectMake(0, self.goodsView.frame.size.height - 50,SCREEN_WIDTH, 50)];
+    //    [bottomImgView setImage:[UIImage imageNamed:@"toPayBg.png"]];
+    [self.goodsView addSubview:bottomImgView];
+    
+    UIImageView *img = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 50)];
+    [img setImage:[UIImage imageNamed:@"toPayBg.png"]];
+    [bottomImgView addSubview:img];
+    
+    
+    totalPrice = [[UILabel alloc] initWithFrame:CGRectMake(45, 15, 180, 20)];
+    totalPrice.backgroundColor = [UIColor clearColor];
+    totalPrice.font = [UIFont systemFontOfSize:14.0];
+    totalPrice.textColor = [UIColor orangeColor];
+    [bottomImgView addSubview:totalPrice];
+    
+//    totalBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+//    totalBtn.frame = CGRectMake(10, 10, 30, 30);
+//    //    totalBtn.selected = YES;
+//    [totalBtn addTarget:self action:@selector(selectAllOrNotAction) forControlEvents:UIControlEventTouchUpInside];
+//    [totalBtn setImage:[UIImage imageNamed:@"minus.png"] forState:UIControlStateNormal];
+//    [totalBtn setImage:[UIImage imageNamed:@"goods_pre.png"] forState:UIControlStateSelected];
+//    [bottomImgView addSubview:totalBtn];
+    
+    UIButton *moneyBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    moneyBtn.frame = CGRectMake(10, 10, 30, 30);
+    //    totalBtn.selected = YES;
+    [moneyBtn addTarget:self action:@selector(selectAllOrNotAction) forControlEvents:UIControlEventTouchUpInside];
+    [moneyBtn setImage:[UIImage imageNamed:@"totalImg.png"] forState:UIControlStateNormal];
+    [bottomImgView addSubview:moneyBtn];
+    
+    buyBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    buyBtn.frame = CGRectMake(SCREEN_WIDTH -20 -70, 10, 70, 30);
+    buyBtn.backgroundColor = NAV_MoreBg_COLOR;
+    [buyBtn addTarget:self action:@selector(toSettleAccounts) forControlEvents:UIControlEventTouchUpInside];
+    buyBtn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+    [bottomImgView addSubview:buyBtn];
+    
+    delAllBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    delAllBtn.frame = CGRectMake(SCREEN_WIDTH - 10 -90, 10, 90, 30);
+    delAllBtn.backgroundColor = NAV_MoreBg_COLOR;
+    delAllBtn.hidden = YES;
+    [delAllBtn addTarget:self action:@selector(deleteAllGoodsData) forControlEvents:UIControlEventTouchUpInside];
+    delAllBtn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+    [bottomImgView addSubview:delAllBtn];
+    
+    [self updateBottomView];
+    
+}
+
+//商品全选 或 不选
+-(void)selectAllOrNotAction
+{
+    if (self.orderDataArray.count > 0) {
+        [self.orderDataArray removeAllObjects];
+    }else
+    {
+        // 未考虑已下架商品的情况
+//        [self.orderDataArray addObjectsFromArray:self.shopCarDataArray];
+        
+        // 考虑已下架商品的情况
+        for (int i=0; i<self.shopCarDataArray.count; i++) {
+            //没有下架
+            if ([self.shopCarDataArray[i][@"isMarketable"] intValue]==1) {
+                [self.orderDataArray addObject:self.shopCarDataArray[i]];
+            }
+        }
+        
+    }
+    
+//    [self updateBottomView];
+    [self.goodsTableView reloadData];
+}
+
+
+#pragma mark 去结算
+//去结算
+-(void)toSettleAccounts
+{
+    NSLog(@"settle accounts");
+//    NSLog(@"settle accounts，array=%@,arrayOver",self.orderDataArray);
+    SDOrderVC *controller = [[SDOrderVC alloc] initWithNibName:@"SDOrderVC" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    controller.orderDetailArray = self.orderDataArray;
+    [self.navigationController pushViewController:controller animated:YES];
+}
+
+-(void)deleteAllGoodsData
+{
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"确定删除这些商品?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    [alert show];
+    
+}
+
+
+#pragma mark  UIAlertViewDelegate
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+       if (alertView.tag == 110) {
+           
+           switch (buttonIndex) {
+               case 0:
+                   
+                   break;
+               case 1:
+               {
+                
+                   if ([self.orderDataArray containsObject:[self.shopCarDataArray objectAtIndex:_removeRow]]) {
+                       [self.orderDataArray removeObject:[self.shopCarDataArray objectAtIndex:_removeRow]];
+                   }
+                   
+                
+                   
+                   NSDictionary *params = [[NSDictionary alloc]init];
+                   
+                   params = @{@"cartItemId":[[self.shopCarDataArray objectAtIndex:_removeRow] objectForKey:@"cartItemId"]};
+                   
+                   
+                   [self requestDeleteGoodsFromShopCartWithDic:params];
+                   
+               }
+                   break;
+                   
+               default:
+                   break;
+           }
+
+
+    }else
+    {
+        switch (buttonIndex) {
+            case 0:
+                
+                break;
+            case 1:
+            {
+                
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                NSString *idStr = @"";
+                for (NSDictionary *dic in self.orderDataArray) {
+                    if ([idStr isEqualToString:@""]) {
+                        idStr = [NSString stringWithFormat:@"%@",[dic objectForKey:@"cartItemId"]];
+                    }else
+                    {
+                        idStr = [NSString stringWithFormat:@"%@,%@",idStr,[dic objectForKey:@"cartItemId"]];
+                    }
+                    
+                }
+                
+                params = @{@"cartItemId":idStr};
+                
+                [self requestDeleteGoodsFromShopCartWithDic:params];
+                
+                [self.orderDataArray removeAllObjects];
+                
+                
+                [self updateBottomView];
+                
+                [self editShopCar];
+            }
+                break;
+                
+            default:
+                break;
+        }
+
+    }
+}
+
+//刷新底部总价格 和 结算商品数
+-(void)updateBottomView
+{
+    NSArray *sortDescriptors = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"totalPrice" ascending:YES]];
+    NSMutableArray *arrayFir = [NSMutableArray arrayWithCapacity:0];
+    [arrayFir addObjectsFromArray:self.orderDataArray];
+    
+    NSMutableArray *arraySec = [NSMutableArray arrayWithCapacity:0];
+    [arraySec addObjectsFromArray:self.shopCarDataArray];
+    
+    [arrayFir sortUsingDescriptors:sortDescriptors];
+    //    [self.goodsDataArray sortUsingDescriptors:sortDescriptors];
+    [arraySec sortUsingDescriptors:sortDescriptors];
+    
+    if ([arrayFir isEqual:arraySec]) {
+        totalBtn.selected = YES;
+    }else
+    {
+        totalBtn.selected = NO;
+    }
+    
+    float price = 0;
+    for (NSDictionary *dic in self.orderDataArray) {
+        price = [[dic objectForKey:@"totalPrice"] floatValue] + price;
+    }
+    totalPrice.text = [NSString stringWithFormat:@"总价:￥%.2f",price];
+    
+    [buyBtn setTitle:[NSString stringWithFormat:@"结算(%d)",(int)self.orderDataArray.count] forState:UIControlStateNormal];
+    buyBtn.enabled = YES;
+    
+    [delAllBtn setTitle:[NSString stringWithFormat:@"批量删除(%d)",(int)self.orderDataArray.count] forState:UIControlStateNormal];
+    
+    if (self.orderDataArray.count < 1) {
+        totalPrice.textColor = [UIColor lightGrayColor];
+        buyBtn.enabled = NO;
+        buyBtn.backgroundColor = [UIColor lightGrayColor];
+        
+        delAllBtn.enabled = NO;
+        delAllBtn.backgroundColor = [UIColor lightGrayColor];
+    }else
+    {
+        totalPrice.textColor = [UIColor orangeColor];
+        buyBtn.enabled = YES;
+        buyBtn.backgroundColor = NAV_MoreBg_COLOR;
+        
+        delAllBtn.enabled = YES;
+        delAllBtn.backgroundColor = NAV_MoreBg_COLOR;
+    }
+    
+}
+
+
+
+
+
+//编辑商品数量方法
+- (void)editShopCar
+{
+    if (_isShowEdit) {
+        _isShowEdit = NO;
+        [rightBtn setTitle:@"编辑" forState:UIControlStateNormal];
+        [self.goodsTableView reloadData];
+        
+        [self.goodsTableView setContentOffset:CGPointMake(0, 0) animated:YES];
+        self.goodsTableView.scrollEnabled = YES;
+        
+        delAllBtn.hidden = YES;
+        buyBtn.hidden = NO;
+        
+        
+    }else
+    {
+        _isShowEdit = YES;
+        [rightBtn setTitle:@"完成" forState:UIControlStateNormal];
+        [self.goodsTableView reloadData];
+        
+        delAllBtn.hidden = NO;
+        buyBtn.hidden = YES;
+        
+        
+    }
+    
+    
+}
+
+
+//去逛逛
+//- (IBAction)toGoShoping:(id)sender {
+//    [[NSNotificationCenter defaultCenter] postNotificationName:@"ToGoToShoping" object:@"0"];
+//}
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+    //    return 5;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    return [self.shopCarDataArray count];
+    
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 90;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    
+    return 45;
+}
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    
+    UIView *topView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 45)];
+    topView.backgroundColor = [UIColor whiteColor];
+    
+    
+    totalBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    totalBtn.frame = CGRectMake(5, 5, 30, 30);
+    //    totalBtn.selected = YES;
+    [totalBtn addTarget:self action:@selector(selectAllOrNotAction) forControlEvents:UIControlEventTouchUpInside];
+    [totalBtn setImage:[UIImage imageNamed:@"goods_nor.png"] forState:UIControlStateNormal];
+    [totalBtn setImage:[UIImage imageNamed:@"goods_pre.png"] forState:UIControlStateSelected];
+    [topView addSubview:totalBtn];
+    
+    UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(40, 10, 40, 20)];
+    lab.text = @"全选";
+    lab.textColor = [UIColor redColor];
+    lab.font = [UIFont systemFontOfSize:14.0];
+    lab.backgroundColor = [UIColor clearColor];
+    [topView addSubview:lab];
+    
+    UILabel *goodsNumLab = [[UILabel alloc] initWithFrame:CGRectMake(SCREEN_WIDTH - 110, 10, 100, 20)];
+    goodsNumLab.text = [NSString stringWithFormat:@"共%zi件",self.orderDataArray.count];
+    goodsNumLab.textAlignment = NSTextAlignmentRight;
+    goodsNumLab.textColor = [UIColor darkGrayColor];
+    goodsNumLab.font = [UIFont systemFontOfSize:13.0];
+    goodsNumLab.backgroundColor = [UIColor clearColor];
+    [topView addSubview:goodsNumLab];
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 44.5, SCREEN_WIDTH, 0.5)];
+    line.backgroundColor = [UIColor colorWithRed:0/255.f green:0/255.f blue:0/255.f alpha:0.2];
+    [topView addSubview:line];
+    
+    [self updateBottomView];
+    
+    
+    return topView;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"ShopCarCell";
+    ShopCarCell *cell = (ShopCarCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"ShopCarCell" owner:self options:nil] lastObject];
+        
+        UIView *popV = [[UIView alloc]initWithFrame:CGRectMake(0, 0,SCREEN_WIDTH, 30)];
+        popV.backgroundColor = [UIColor colorWithRed:244/255.f green:244/255.f blue:244/255.f alpha:1.0];
+        UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [btn setTitle:@"保存" forState:UIControlStateNormal];
+        btn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+        //    [btn setBackgroundImage:[UIImage imageNamed:@"keyboard_down.png"] forState:UIControlStateNormal];
+        [btn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+        [btn addTarget:self action:@selector(goodsNumChoose:) forControlEvents:UIControlEventTouchUpInside];
+        btn.frame = CGRectMake(SCREEN_WIDTH-46, 0, 46, 30);
+        [popV addSubview:btn];
+        cell.goodsNumField.inputAccessoryView = popV;
+        
+        
+        cell.selectBtn.tag = indexPath.row;
+        [cell.selectBtn setImage:[UIImage imageNamed:@"goods_nor.png"] forState:UIControlStateNormal];
+        [cell.selectBtn setImage:[UIImage imageNamed:@"goods_pre.png"] forState:UIControlStateSelected];
+        [cell.selectBtn addTarget:self action:@selector(selectGoodsAction:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    
+    cell.backgroundColor = [UIColor whiteColor];
+    if (IOS7_OR_LATER) {
+        cell.separatorInset = UIEdgeInsetsZero;
+    }
+    
+    //    [cell configCellWithArray:nil];
+    
+    if (_isShowEdit && [self.shopCarDataArray[indexPath.row][@"isMarketable"] intValue]==1) {//编辑状态 且商品没有下架
+        cell.numEditView.hidden = NO;
+    }else
+    {
+        cell.numEditView.hidden = YES;
+    }
+    
+    cell.goodsNumField.delegate = self;
+    
+    
+    
+    cell.goodsNumField.accessibilityLanguage = [NSString stringWithFormat: @"%d",(int)indexPath.row];
+    [cell.goodsNumField addTarget:self action:@selector(goodsNumFieldValueChange:) forControlEvents:UIControlEventEditingChanged];
+    cell.minusBtn.accessibilityLanguage = [NSString stringWithFormat: @"%d",(int)indexPath.row];
+    cell.plusBtn.accessibilityLanguage = [NSString stringWithFormat: @"%d",(int)indexPath.row];
+    [cell.minusBtn addTarget:self action:@selector(minusGoodsNum:) forControlEvents:UIControlEventTouchUpInside];
+    [cell.plusBtn addTarget:self action:@selector(plusGoodsNum:) forControlEvents:UIControlEventTouchUpInside];
+    
+    if ([self.shopCarDataArray count] > 0) {
+        cell.goodsNumField.text = [NSString stringWithFormat:@"%@",[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"quanity"]];
+        cell.goodsNumLab.text = [NSString stringWithFormat:@"数量:%@",[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"quanity"]];
+        cell.goodsPriceLab.text = [NSString stringWithFormat:@"小计:%.2f",[[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"totalPrice"] floatValue] ];
+        cell.goodsTitleLab.text = [NSString stringWithFormat:@"%@",[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"productName"]];
+        
+        
+        
+        if (judgeUrlIsHave(self.shopCarDataArray[indexPath.row], @"newSmallGoodsImagePath")) {
+            [cell.goodsImgView sd_setImageWithURL:[NSURL URLWithString:[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"newSmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }else
+        {
+            [cell.goodsImgView sd_setImageWithURL:[PublicMethod imgWithUrl:[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        }
+        
+        
+        if (![[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"Specifications"] isKindOfClass:[NSNull class]]) {
+            cell.goodsColorLab.text = [NSString stringWithFormat:@"规格:%@",[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"Specifications"]];
+        }else
+        {
+            cell.goodsColorLab.text = @"规格:标准规格";
+        }
+        
+    }
+    
+    if ([self.orderDataArray containsObject:[self.shopCarDataArray objectAtIndex:indexPath.row]]) {
+        cell.selectBtn.selected = YES;
+    }else
+    {
+        cell.selectBtn.selected = NO;
+    }
+    
+    for (NSDictionary *dic in self.orderDataArray) {
+        if ([[dic objectForKey:@"isActivities"] boolValue] == 1) {
+            activityNum = activityNum + [[dic objectForKey:@"quanity"] intValue];
+        }
+    }
+    
+    if ([[[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"isActivities"] boolValue] == 1) {
+        cell.activityImg.hidden = NO;
+    }else
+    {
+        cell.activityImg.hidden = YES;
+    }
+
+    
+    
+    //已下架 图标显示 还有背景变灰色
+    if (self.shopCarDataArray[indexPath.row][@"isMarketable"] &&  [self.shopCarDataArray[indexPath.row][@"isMarketable"] intValue]==0 ) {
+        cell.iconOffLine.hidden=NO;
+        
+        cell.backgroundColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.1];
+    }else{
+        
+        cell.iconOffLine.hidden=YES;
+        cell.backgroundColor = [UIColor whiteColor];
+    }
+    
+    
+    return cell;
+    
+    
+    
+}
+
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    _removeRow = indexPath.row;
+    
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"确认删除这个商品?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    alert.tag = 110;
+    [alert show];
+}
+
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (_isShowEdit == NO) {
+        GoodsDetailTwoViewController *controller = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+        controller.hidesBottomBarWhenPushed = YES;
+        controller.goodsIdStr = [[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"goodId"];
+        controller.classifyIdStr = [[self.shopCarDataArray objectAtIndex:indexPath.row] objectForKey:@"categoryId"];
+        [self.navigationController pushViewController:controller animated:YES];
+    }
+    
+    
+}
+
+
+#pragma mark- UITEXTEFIELD detegate
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField
+{
+    [self.goodsTableView setContentOffset:CGPointMake(0, [textField.accessibilityLanguage intValue] * 90) animated:YES];
+    self.goodsTableView.scrollEnabled = NO;
+    
+    
+    self.goodsDic = [self.shopCarDataArray objectAtIndex:[textField.accessibilityLanguage intValue]];
+}
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+{
+    NSLog(@"-->>%@--%@",self.goodsDic,textField.text);
+    //    [goodsDic setValue:[NSString stringWithFormat:@"%@",textField.text] forKey:@"goodsNum"];
+    
+    return YES;
+}
+
+//- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath
+//{
+//    return YES;
+//}
+
+//- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
+//{
+//    return UITableViewCellEditingStyleDelete;
+//}
+
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [self.goodsTableView setContentOffset:CGPointMake(0, 0) animated:YES];
+    self.goodsTableView.scrollEnabled = YES;
+    [textField resignFirstResponder];
+    return YES;
+}
+
+//修改购买商品数量
+-(void)goodsNumChoose:(id)sender
+{
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    
+    
+    if (![_quantityStr isEqualToString: @""]) {
+        
+        params = @{@"productId":[self.goodsDic objectForKey:@"productId"],@"quantity":_quantityStr,@"cartItemId":[self.goodsDic objectForKey:@"cartItemId"]};
+        
+    
+        [self requestChangeShopCartWithDic:params];
+        
+    }else
+    {
+        if (ISLOGIN) {
+            params = @{@"userId":[defaults objectForKey:@"userId"],@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"100"};
+        }else
+            params = @{@"userId":@"",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"100",@"imiestatus":@"0",@"imie":DEVICEUUID};
+        
+        [self requestShopCarListWithDic:params];
+        
+    }
+    
+
+    
+    [self updateBottomView];
+
+    
+    
+}
+-(void)goodsNumFieldValueChange:(id)sender
+{
+    UITextField *goodNum = (UITextField *)sender;
+    if ([goodNum.text intValue] < 1) {
+//        goodNum.text = @"1";
+    }else if ([goodNum.text intValue] > 999)
+    {
+        goodNum.text = @"999";
+    }
+
+    //    NSLog(@"-->>>%@",self.goodsDic);
+    _quantityStr = goodNum.text;
+    
+
+}
+
+//减少商品数量
+-(void)minusGoodsNum:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    self.goodsDic = [self.shopCarDataArray objectAtIndex:[btn.accessibilityLanguage intValue]];
+    
+    NSString *goodsNumStr = [NSString stringWithFormat:@"%d",[[self.goodsDic objectForKey:@"quanity"] intValue] - 1];
+    if ([goodsNumStr intValue] < 1) {
+        goodsNumStr = @"1";
+    }
+
+   
+    NSDictionary *params = [[NSDictionary alloc]init];
+    params = @{@"productId":[self.goodsDic objectForKey:@"productId"],@"quantity":goodsNumStr,@"cartItemId":[self.goodsDic objectForKey:@"cartItemId"]};
+    
+    
+    
+    //    params = @{@"productId":@"ff8080814748d5a101475cc6604000c5"};
+    
+    [self requestChangeShopCartWithDic:params];
+    
+    [self updateBottomView];
+}
+//增加商品数量
+-(void)plusGoodsNum:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    //    self.goodsDic = [self.goodsDataArray objectAtIndex:[btn.accessibilityLanguage intValue]];
+    self.goodsDic = [self.shopCarDataArray objectAtIndex:[btn.accessibilityLanguage intValue]];
+    
+    
+    NSLog(@"-->>%@",self.goodsDic);
+    
+//    NSMutableDictionary *dic = [[NSMutableDictionary alloc] init];
+    
+    NSString *goodsNumStr = [NSString stringWithFormat:@"%d",[[self.goodsDic objectForKey:@"quanity"] intValue] + 1];
+    if ([goodsNumStr intValue] < 1) {
+        goodsNumStr = @"1";
+    }
+    
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"productId":[self.goodsDic objectForKey:@"productId"],@"quantity":goodsNumStr,@"cartItemId":[self.goodsDic objectForKey:@"cartItemId"]};
+   
+    
+    //    params = @{@"productId":@"ff8080814748d5a101475cc6604000c5"};
+    
+    [self requestChangeShopCartWithDic:params];
+    
+    [self updateBottomView];
+}
+
+-(void)selectGoodsAction:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    int index=(int)btn.tag;
+    
+    if (self.shopCarDataArray[index][@"isMarketable"] && [self.shopCarDataArray[index][@"isMarketable"] intValue]==0)//已下架
+    {
+        NSMutableDictionary *dic = [self.shopCarDataArray objectAtIndex:index];
+        if ([self.orderDataArray containsObject:dic]) {
+            [self.orderDataArray removeObject:dic];
+        }else
+        {
+//            [self.orderDataArray addObject:dic];
+        }
+        NSLog(@"order-->%@--%@",self.orderDataArray,self.goodsDataArray);
+        [self updateBottomView];
+        [self.goodsTableView reloadData];
+        
+    }else{
+    
+        NSMutableDictionary *dic = [self.shopCarDataArray objectAtIndex:index];
+        if ([self.orderDataArray containsObject:dic]) {
+            [self.orderDataArray removeObject:dic];
+        }else
+        {
+            [self.orderDataArray addObject:dic];
+        }
+        NSLog(@"order-->%@--%@",self.orderDataArray,self.goodsDataArray);
+        [self updateBottomView];
+        [self.goodsTableView reloadData];
+    }
+    
+    
+}
+
+//键盘显示 隐藏
+-(void)willKeyboardShow:(NSNotification *)notification
+{
+    
+}
+-(void)willKeyboardHide:(NSNotification *)notification
+{
+    [self.goodsTableView setContentOffset:CGPointMake(0, 0) animated:YES];
+    self.goodsTableView.scrollEnabled = YES;
+}
+
+//显示提示
+-(void)showPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:2.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:nil];
+}
+
+
+#pragma mark  ShopCarRequest  购物车
+
+-(void)requestShopCarListWithDic:(NSDictionary *)dic
+{
+    self.indicator.hidden = NO;
+    [self.indicator startAnimating];
+    
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestShopCarListWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"detaiDic-->%@",responseDic);
+        
+        
+        self.indicator.hidden = YES;
+        [self.indicator stopAnimating];
+        
+        //        self.promptLab.text = [[detaiArray firstObject] objectForKey:@"message"];
+        //        [self showPromptLab];
+        
+        if ([[responseDic objectForKey:@"success"] boolValue]) {
+            [_shopCarDataArray removeAllObjects];
+            _shopCarDataArray = [NSMutableArray arrayWithArray:[responseDic objectForKey:@"datasource"]] ;
+            
+            [[ShopCarObj shareInstance] setShopCarDataArray:_shopCarDataArray];
+
+            
+            // 未考虑已下架商品的情况
+            //            self.orderDataArray = [NSMutableArray arrayWithArray:_shopCarDataArray];
+            // 考虑已下架商品的情况
+            self.orderDataArray=[NSMutableArray array];
+            [self selectAllOrNotAction];
+            
+            
+            if (self.shopCarDataArray.count < 1) {
+                rightBtn.hidden = YES;
+                [self.goodsTableView removeFromSuperview];
+            }else
+            {
+                rightBtn.hidden = NO;
+            }
+            
+            
+            [self.goodsTableView reloadData];
+            
+            [self updateBottomView];
+            
+            self.goodsView.hidden = NO;
+            self.noGoodsView.hidden = YES;
+            
+        }else
+        {
+            [_shopCarDataArray removeAllObjects];
+            [[ShopCarObj shareInstance] setShopCarDataArray:_shopCarDataArray];
+            
+            if (_shopCarDataArray.count < 1) {
+                self.goodsView.hidden = YES;
+                self.noGoodsView.hidden = NO;
+            }else
+            {
+                self.promptLab.text = [responseDic objectForKey:@"message"];
+                [self showPromptLab];
+                
+                [self.goodsTableView reloadData];
+                
+                [self updateBottomView];
+            }
+            
+            if (self.shopCarDataArray.count < 1) {
+                rightBtn.hidden = YES;
+                [self.goodsTableView removeFromSuperview];
+            }else
+            {
+                rightBtn.hidden = NO;
+            }
+            
+            
+            
+        }
+        
+        
+        NSDictionary *dic=@{@"messageNum":[NSString stringWithFormat:@"%d",(int)self.shopCarDataArray.count]};
+        [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_SHOPCARMESSAGE object:nil userInfo:dic];
+        
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        self.indicator.hidden = YES;
+        [self.indicator stopAnimating];
+        
+        self.promptLab.text = @"请检查网络设置!";
+        [self showPromptLab];
+        
+    }];
+}
+
+
+//加入购物车
+-(void)requestAddGoodsToShopCarWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestAddGoodsToShopCarWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        if (ISLOGIN) {
+            params = @{@"userId":USERID,@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10"};
+        }else
+            params = @{@"userId":@"",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"imiestatus":@"0",@"imie":DEVICEUUID};
+        
+        
+        [self requestShopCarListWithDic:params];
+        
+        [self updateBottomView];
+        
+
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        self.promptLab.text = @"请检查网络设置!";
+        [self showPromptLab];
+        
+    }];
+}
+
+//删除购物车
+-(void)requestDeleteGoodsFromShopCartWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestDeleteGoodsFromShopCartWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+    
+        NSDictionary *params = [[NSDictionary alloc]init];
+        if (ISLOGIN) {
+            params = @{@"userId":USERID,@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10"};
+        }else
+            params = @{@"userId":@"",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"imiestatus":@"0",@"imie":DEVICEUUID};
+        
+        
+        [self requestShopCarListWithDic:params];
+        
+        if (![[responseDic objectForKey:@"message"] isKindOfClass:[NSNull class]]) {
+            self.promptLab.text = [NSString stringWithFormat:@"%@",[responseDic objectForKey:@"message"]];
+            [self showPromptLab];
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        self.promptLab.text = @"请检查网络设置!";
+        [self showPromptLab];
+        
+    }];
+}
+
+//修改购物车
+-(void)requestChangeShopCartWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestChangeShopCartWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        NSDictionary *params = [[NSDictionary alloc]init];
+        if (ISLOGIN) {
+             params = @{@"userId":[defaults objectForKey:@"userId"],@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10"};
+        }else
+             params = @{@"userId":@"",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"pageSizeApp":@"10",@"imiestatus":@"0",@"imie":DEVICEUUID};
+       
+        
+        [self requestShopCarListWithDic:params];
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 0) {
+            if (![[responseDic objectForKey:@"message"] isKindOfClass:[NSNull class]]) {
+                self.promptLab.text = [NSString stringWithFormat:@"%@",[responseDic objectForKey:@"message"]];
+                [self showPromptLab];
+            }
+        }
+        
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+        self.promptLab.text = @"请检查网络设置!";
+        [self showPromptLab];
+        
+    }];
+}
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

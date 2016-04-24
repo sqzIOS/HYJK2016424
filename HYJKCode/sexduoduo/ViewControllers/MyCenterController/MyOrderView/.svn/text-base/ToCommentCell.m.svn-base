@@ -1,0 +1,75 @@
+//
+//  ToCommentCell.m
+//  sexduoduo
+//
+//  Created by Showm on 14-9-3.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "ToCommentCell.h"
+
+@implementation ToCommentCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+    [self.starQuality setImagesDeselected:@"starBig0.png" partlySelected:@"starBig1.png" fullSelected:@"starBig2.png" andDelegate:self];
+	
+    [self.starAttitude setImagesDeselected:@"starBig0.png" partlySelected:@"starBig1.png" fullSelected:@"starBig2.png" andDelegate:self];
+	
+    [self.starSpeed setImagesDeselected:@"starBig0.png" partlySelected:@"starBig1.png" fullSelected:@"starBig2.png" andDelegate:self];
+	
+    
+    self.alertLab.textColor = NAV_RED_COLOR;
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+
+-(void)initCellWithDic:(NSDictionary *)dic
+{
+    [self.goodsImgView sd_setImageWithURL:[PublicMethod imgWithUrl:[dic objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+    self.goodsTitleLab.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"productName"]];
+    
+    self.goodsNumLab.text = [NSString stringWithFormat:@"数量:%@",[dic objectForKey:@"quanity"]];
+    self.goodsPriceLab.text = [NSString stringWithFormat:@"小计:%@",[dic objectForKey:@"totalPrice"]];
+    if ([[dic objectForKey:@"Specifications"] isKindOfClass:[NSNull class]]) {
+        self.goodsColorLab.text = @"规格:标准规格";
+    }else
+    {
+        self.goodsColorLab.text = [NSString stringWithFormat:@"规格:%@",[dic objectForKey:@"Specifications"]];
+    }
+    
+}
+
+-(void)ratingChanged:(float)newRating {
+	NSLog(@"%@",[NSString stringWithFormat:@"Rating is: %1.1f", newRating]);
+    self.quantityNum = [NSString stringWithFormat:@"%1.1f", newRating];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(endWriteComment:andViewIndex:)]) {
+        [self.delegate endWriteComment:self andViewIndex:1 ];
+    }
+}
+
+-(void)ratingAChanged:(float)newRating {
+	NSLog(@"%@",[NSString stringWithFormat:@"Rating is: %1.1f", newRating]);
+    self.attitudeNum = [NSString stringWithFormat:@"%1.1f", newRating];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(endWriteComment:andViewIndex:)]) {
+        [self.delegate endWriteComment:self andViewIndex:2 ];
+    }
+    
+}
+-(void)ratingBChanged:(float)newRating {
+	NSLog(@"%@",[NSString stringWithFormat:@"Rating is: %1.1f", newRating]);
+    self.speedNum = [NSString stringWithFormat:@"%1.1f", newRating];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(endWriteComment:andViewIndex:)]) {
+        [self.delegate endWriteComment:self andViewIndex:3 ];
+    }
+    
+}
+
+@end

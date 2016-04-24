@@ -1,0 +1,79 @@
+//
+//  SDBBSDetailBottomView.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/7.
+//  Copyright © 2015年 dbCode. All rights reserved.
+//
+
+#import "SDBBSDetailBottomView.h"
+
+@interface SDBBSDetailBottomView()
+{
+    
+}
+@end
+
+@implementation SDBBSDetailBottomView
+
+
+-(instancetype)initWithFrame:(CGRect)frame
+{
+    if (self =[super initWithFrame:frame]) {
+        
+        self.backgroundColor = WHITE_COLOR;
+        
+        UIImageView *line = [UIImageView qzImageViewLineWithX:0 withY:0 withWidth:SCREEN_WIDTH withHeight:1];
+        [self addSubview:line];
+        
+        
+        for (int i=0; i<3; i++) {
+            UIButton *btn = [UIButton buttonWithType:0];
+            
+            btn.frame = CGRectMake(SCREEN_WIDTH * i /3., 0, SCREEN_WIDTH/3., QZMake(40));
+            btn.centerY = self.height/2.;
+            NSString * imageName;
+            imageName = [NSString stringWithFormat:@"bbsDetail_bottomBtn%zi_1",i+1];
+
+            [btn setImage:UIImageByName(imageName) forState:UIControlStateNormal];
+            
+            imageName=[NSString stringWithFormat:@"bbsDetail_bottomBtn%zi",i+1];
+            [btn setImage:UIImageByName(imageName) forState:UIControlStateSelected];
+            btn.tag = 1000+i;
+            [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
+            [self addSubview:btn];
+            
+            
+            if(i==0)
+                self.bottomBtn1 = btn;
+            else if(i==1)
+                self.bottomBtn2 = btn;
+            else if(i==2)
+                self.bottomBtn3 = btn;
+        }
+        
+    }
+    
+    return self;
+}
+
+
+-(instancetype)init
+{
+    if (self =[super init]) {
+
+    }
+    return self;
+}
+
+
+-(void)btnClick:(UIButton *)sender
+{
+    // tag值 1000 1001 1002
+    if ([self.btnDelegate respondsToSelector:@selector(bottomBtnClick:)]) {
+        [self.btnDelegate bottomBtnClick:sender];
+    }
+    
+}
+
+@end

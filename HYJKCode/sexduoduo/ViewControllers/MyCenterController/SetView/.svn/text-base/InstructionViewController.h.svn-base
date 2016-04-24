@@ -1,0 +1,16 @@
+//
+//  InstructionViewController.h
+//  sexduoduo
+//
+//  Created by Showm on 14-9-4.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  使用条例
+
+#import <UIKit/UIKit.h>
+
+@interface InstructionViewController : UIViewController
+@property (weak, nonatomic) IBOutlet UIScrollView *imgScrollView;
+@property (weak, nonatomic) IBOutlet UIButton *userXieYiBtn;
+@property (weak, nonatomic) IBOutlet UIButton *userBaoZhangBtn;
+
+@end

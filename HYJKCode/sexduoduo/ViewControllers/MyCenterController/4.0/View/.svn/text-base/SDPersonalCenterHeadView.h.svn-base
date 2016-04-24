@@ -1,0 +1,45 @@
+//
+//  SDPersonalCenterHeadView.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/9.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "SDPersonalCenterModel.h"
+
+@class SDPersonalPhotoWall;
+
+typedef void(^SDPersonalCenterHeadBlock)(int num,NSString *toUserId);
+@interface SDPersonalCenterHeadView : UIView
+
+@property (nonatomic, strong) SDPersonalCenterModel *model;
+
+@property (nonatomic, copy) SDPersonalCenterHeadBlock headBlock;
+
+@property (nonatomic, strong) UIViewController *mainVC;
+
+@property (nonatomic, strong) NSString *title1;
+
+@property (nonatomic, strong) NSString *title2;
+
+@property (nonatomic, strong) NSString *title3;
+
+@property (nonatomic, assign) int type;
+
+@property (nonatomic, strong) SDPersonalPhotoWall *photeoWall;  //照片墙
+@property (nonatomic,weak) UIImageView *headImageView; // 头像
+@property (nonatomic,weak) UILabel *nickLab; // 昵称
+@property (nonatomic,weak) UIImageView *sexImageView; // 性别
+
+- (instancetype)initWithFrame:(CGRect)frame Model:(SDPersonalCenterModel *)model Controller:(UIViewController *)vc Type:(int)type;
+
+- (void)changeValue:(BOOL)isLike Num:(int)type;
+
+- (void)resetHeadViewWithphotoWallDataArry:(NSArray *)dataArry;
+
+- (void)resetHeadViewWithIcon:(UIImage *)icon;
+
+- (void)resetHeadViewWithNickname:(NSString *)nickname andSex:(NSString *)sex;
+@end

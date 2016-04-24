@@ -1,0 +1,18 @@
+//
+//  SDScreeningVC.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/7.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  自定义筛选
+
+#import <UIKit/UIKit.h>
+
+typedef void(^SDScreeningBlock)(NSString *sexStr, NSString *lastTimeStr);
+
+@interface SDScreeningVC : UIViewController
+
+@property (nonatomic, copy) SDScreeningBlock screeningBlock;
+
+
+@end

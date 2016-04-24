@@ -1,0 +1,167 @@
+//
+//  BBSDetailCell.m
+//  sexduoduo
+//
+//  Created by Showm on 14-8-14.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "BBSDetailCell.h"
+#import "MJPhotoBrowser.h"
+#import "MJPhoto.h"
+@implementation BBSDetailCell
+
+- (void)awakeFromNib
+{
+    // Initialization code
+}
+
+
+-(void)configCellWithArrayForNvShenDaoGou:(NSArray *)arry indexRow:(NSIndexPath *)indexPath
+{
+    self.cellIndexPath = indexPath;
+    NSInteger row=indexPath.row;
+    self.contentView.backgroundColor=[UIColor whiteColor];
+    NSDictionary *dic=arry[row];
+    
+    // 用户头像
+    self.headImage.layer.cornerRadius=5;
+    self.headImage.layer.masksToBounds = YES;
+    self.headImage.userInteractionEnabled=YES;
+    [self.headImage addGestureRecognizer:[[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(headViewTap:)]];
+    
+    // 用户名
+    NSString *nameStr=@"***";
+    if (dic[@"nickname"] && ![dic[@"nickname"] isKindOfClass:[NSNull class]] ) {
+        nameStr=dic[@"nickname"];
+    }
+    self.nameLab.text=nameStr;
+    
+    CGSize nameLabelsize = [nameStr sizeWithFont:self.nameLab.font constrainedToSize:CGSizeMake(235,21) lineBreakMode:NSLineBreakByCharWrapping];
+
+    // 积分等级
+    CGRect levelFrame=self.levelImageView.frame;
+    self.levelImageView.frame=CGRectMake(self.nameLab.frame.origin.x+nameLabelsize.width+5, levelFrame.origin.y, levelFrame.size.width,levelFrame.size.height);
+    
+    if (dic[@"groupId"]) {
+        NSString *imageName=[NSString stringWithFormat:@"BBS_dengji_%@",dic[@"groupId"]];
+        self.levelImageView.image=UIImageByName(imageName);
+    }
+    
+    CGRect levelLabFrame=self.levelNameLab.frame;
+    self.levelNameLab.frame=CGRectMake(CGRectGetMaxX( self.levelImageView.frame) +2, levelLabFrame.origin.y, levelLabFrame.size.width,levelLabFrame.size.height);
+    
+    // 等级头衔文字
+    if (dic[@"groupName"]) {
+        self.levelNameLab.text=dic[@"groupName"];
+        if (dic[@"sex"] && [dic[@"sex"] isEqualToString:@"0"]) {// 女一个颜色
+            self.levelNameLab.textColor=UICOLOR_RGB(251, 135, 158);
+        }else{ // 男一个颜色
+            self.levelNameLab.textColor=UICOLOR_RGB(86, 217, 250);
+        }
+    }
+    
+    
+    
+    UIImage *headImage=nil;
+    if (![dic[@"sex"] isKindOfClass:[NSNull class]]) {
+        if ([dic[@"sex"] isEqualToString:@"0"]) {
+            self.userSexImageView.image=UIImageByName(@"BBSList_Woman.png");
+            headImage=UIImageByName(@"morentouxiangWoman.png");
+        }else{
+            self.userSexImageView.image=UIImageByName(@"BBSList_Man.png");
+            headImage=UIImageByName(@"morentouxiangMan.png");
+            
+        }
+    }else headImage=UIImageByName(@"morentouxiangWoman.png");
+    
+    self.headImage.image=headImage;
+    //链接地址 的头像
+    [self.headImage sd_setImageWithURL:[NSURL URLWithString:dic[@"headImage"]] placeholderImage:headImage];
+    
+    // 时间
+    self.subTitle.text=[NSString stringWithFormat:@"第%@楼  %@",dic[@"indexCount"],[PublicMethod intervalSinceNow:dic[@"createTime"]]];
+    
+    // 主题
+    UIFont *font=[UIFont fontWithName:k_Font size:14];
+    self.contentLab.font=font;
+    self.contentLab.numberOfLines=0;
+//    NSString *contentStr=dic[@"content"];
+    NSString *contentStr=[dic[@"contentArr"] firstObject][@"content"];
+    self.contentLab.text=contentStr;
+    self.contentLab.textColor=[UIColor colorWithRed:0 green:0 blue:0 alpha:0.8];
+    
+    //1
+    CGSize labelsize = [contentStr sizeWithFont:[UIFont systemFontOfSize:14] constrainedToSize:CGSizeMake(250,2000) lineBreakMode:NSLineBreakByCharWrapping];
+    NSLog(@"row%zilabelsize=%@",row,NSStringFromCGSize(labelsize));
+    CGRect contentFrame=self.contentLab.frame;
+    self.contentLab.frame=CGRectMake(contentFrame.origin.x, contentFrame.origin.y, contentFrame.size.width, labelsize.height);
+
+    // line
+    UIImageView *line=nil;
+    
+    if(!IS_OFFBBSSecond  && dic[@"secondary"] && [dic[@"secondary"] lastObject] )
+    {
+        NSInteger num=[dic[@"secondaryCount"] integerValue];
+        
+        if (num>1) {
+            
+            line= [[UIImageView alloc]initWithFrame:CGRectMake(0, 56+self.contentLab.frame.size.height+12 +60,SCREEN_WIDTH, 0.5)];
+            
+        }else line= [[UIImageView alloc]initWithFrame:CGRectMake(0, 56+self.contentLab.frame.size.height+12 +30, SCREEN_WIDTH, 0.5)];
+
+    }else  line=[[UIImageView alloc]initWithFrame:CGRectMake(0, 56+self.contentLab.frame.size.height+12 , SCREEN_WIDTH, 0.5)];
+    
+    line.backgroundColor=[UIColor lightGrayColor];
+    line.tag=199;
+    [self addSubview:line];
+    
+    
+    if (dic[@"isAsscoiated"] && [dic[@"isAsscoiated"] intValue]==1) {
+        [self.zanBtn setImage:[UIImage imageNamed:@"icon_zan_s"] forState:UIControlStateNormal];
+    }else
+    {
+        [self.zanBtn setImage:[UIImage imageNamed:@"icon_zan_us"] forState:UIControlStateNormal];
+    }
+
+    
+}
+
+#pragma mark 放大头像
+-(void)headViewTap:(UITapGestureRecognizer *)tap
+{
+    if (IS_ShowBigHead) {
+        // 1.封装图片数据
+        NSMutableArray *photos = [NSMutableArray arrayWithCapacity:0];
+        
+        MJPhoto *photo = [[MJPhoto alloc] init];
+        photo.srcImageView =(UIImageView *) tap.view; // 来源于哪个UIImageView
+        [photos addObject:photo];
+        
+        
+        // 2.显示相册
+        MJPhotoBrowser *browser = [[MJPhotoBrowser alloc] init];
+        browser.currentPhotoIndex = 0; // 弹出相册时显示的第一张图片是？
+        browser.photos = photos; // 设置所有的图片
+        [browser show];
+    }
+   
+}
+
+- (IBAction)zanBtnClick:(id)sender {
+    
+    self.cellBlock(self.cellIndexPath);
+}
+
+
+
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated
+{
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+
+@end

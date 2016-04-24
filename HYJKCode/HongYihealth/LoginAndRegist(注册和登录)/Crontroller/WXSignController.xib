@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="15D21" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="WXSignController">
+            <connections>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4Oq-wp-ELC">
+                    <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Dh6-qS-wAi">
+                            <rect key="frame" x="10" y="260" width="300" height="180"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="180" id="Mow-S4-Ro0"/>
+                                <constraint firstAttribute="width" constant="300" id="zmG-aC-Yqb"/>
+                            </constraints>
+                            <state key="normal" title="Button" image="2.png">
+                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                            <connections>
+                                <action selector="secondBtnClick:" destination="-1" eventType="touchUpInside" id="hql-eR-nrr"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="RPK-yO-qVb">
+                            <rect key="frame" x="10" y="72" width="300" height="180"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="180" id="jLQ-ij-jfk"/>
+                                <constraint firstAttribute="width" constant="300" id="xBU-qL-KbU"/>
+                            </constraints>
+                            <state key="normal" title="Button" image="1.png">
+                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                            <connections>
+                                <action selector="firstBtnClick:forEvent:" destination="-1" eventType="touchUpInside" id="ElF-83-cer"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="Dh6-qS-wAi" firstAttribute="top" secondItem="RPK-yO-qVb" secondAttribute="bottom" constant="8" id="Cn0-RB-27Y"/>
+                        <constraint firstItem="Dh6-qS-wAi" firstAttribute="centerX" secondItem="RPK-yO-qVb" secondAttribute="centerX" id="Xp0-n0-ZuI"/>
+                        <constraint firstAttribute="centerX" secondItem="RPK-yO-qVb" secondAttribute="centerX" id="nRu-x2-3jP"/>
+                        <constraint firstAttribute="centerY" secondItem="RPK-yO-qVb" secondAttribute="centerY" constant="78" id="xTl-Jb-jdM"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="4Oq-wp-ELC" secondAttribute="trailing" id="IJd-IT-JK8"/>
+                <constraint firstAttribute="bottom" secondItem="4Oq-wp-ELC" secondAttribute="bottom" id="afG-51-skD"/>
+                <constraint firstItem="4Oq-wp-ELC" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="gaW-le-MdD"/>
+                <constraint firstItem="4Oq-wp-ELC" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="wDR-1T-cJK"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="402" y="336"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="1.png" width="592" height="382"/>
+        <image name="2.png" width="592" height="382"/>
+    </resources>
+</document>

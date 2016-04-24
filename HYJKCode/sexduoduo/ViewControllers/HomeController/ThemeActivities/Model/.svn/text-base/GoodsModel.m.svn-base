@@ -1,0 +1,32 @@
+//
+//  GoodsModel.m
+//  
+//
+//  Created by apple on 15/12/31.
+//
+//
+
+#import "GoodsModel.h"
+
+@implementation GoodsModel
+
+
+
++ (instancetype)goodsModelWithDict:(NSDictionary *)dict
+{
+    GoodsModel *model = [[GoodsModel alloc] init];
+    model.theNewLogoPath = dict[@"newLogoPath"];
+    model.guardPath = dict[@"guardPath"];
+    model.name = dict[@"name"];
+    model.showAddress = dict[@"showAddress"];
+    model.gdCategory = dict[@"gdCategory"];
+    model.logoPath = dict[@"logoPath"];
+    model.orderList = dict[@"orderList"];
+    model.homeId = dict[@"homeId"];
+    model.introduction = dict[@"introduction"];
+    model.theNewGuardPath = dict[@"newGuardPath"];
+    
+    return model;
+}
+
+@end

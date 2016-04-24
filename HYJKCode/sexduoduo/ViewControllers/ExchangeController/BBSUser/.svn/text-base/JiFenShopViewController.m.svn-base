@@ -1,0 +1,1210 @@
+//
+//  JiFenShopViewController.m
+//  sexduoduo
+//
+//  Created by sqz on 14-11-25.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "JiFenShopViewController.h"
+#import "JiFenGoodDetailViewController.h"
+@interface JiFenShopViewController ()
+
+@end
+
+@implementation JiFenShopViewController
+@synthesize classifyStr;
+
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+-(void)dealloc
+{
+    
+}
+
+-(void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    
+    [opration cancel];
+    [oprationMore cancel];
+    opration=nil;
+    oprationMore=nil;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    //    goodsDataArray = [NSMutableArray arrayWithArray:@[@"新潮套套",@"男性器具",@"女性器具",@"新品尝鲜",@"夜店战场",@"新潮套套",@"男性器具",@"女性器具",@"新品尝鲜",@"夜店战场",@"新潮套套",@"男性器具",@"女性器具"]];
+    goodsDataArray = [NSMutableArray arrayWithCapacity:0];
+    
+    currentPage = 1;
+    isAscSort = 1;
+    sortType = comprehensiveType;
+    
+    [self setTopNavView];
+    [self initGoodsTableView];
+    
+    if (self.requestType == searchGoodsType) {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"serachName":self.searchStr,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        [self requestSearchGoodsWithDic:params];
+        
+    }else if (self.requestType == homeViewType)// 首页过来的专区
+    {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+        
+        [self requestGoodListWithDic:params];
+        
+    }else if (self.requestType == classifyType)// 分类
+    {
+        if (sortType == comprehensiveType) {
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppByCompre.action"];
+        }
+    }else if (self.requestType == collectType)// 收藏
+    {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        if(ISLOGIN)
+        {
+            params = @{@"UID":USERID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        }else params = @{@"UID":@"",@"imiestatus":@"0",@"imie":DEVICEUUID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        
+        [self requestCollectListWithDic:params];
+    }
+    
+    
+}
+
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:_titleStr];
+    
+    
+}
+
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(void)initGoodsTableView
+{
+    self.goodsTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y,SCREEN_WIDTH, [UIScreen mainScreen].bounds.size.height - STAR_Y)];
+    self.goodsTableView.dataSource = self;
+    self.goodsTableView.delegate = self;
+    if (IOS7_OR_LATER) {
+        [self.goodsTableView setSeparatorInset:UIEdgeInsetsZero];
+    }
+    self.goodsTableView.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.goodsTableView];
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0.5)];
+    line.backgroundColor = [UIColor lightGrayColor];
+    self.goodsTableView.tableFooterView = line;
+    
+    
+    
+    
+    if ([self.titleStr isEqualToString:@"积分商城"]) {
+        self.goodsTableView.tableHeaderView=self.jiFenHeadView;
+    }
+    
+    
+    // 1.下拉刷新
+    
+    [self.goodsTableView addHeaderWithTarget:self action:@selector(headerRereshing)];
+    
+    
+    
+    //  update the last update date
+    //	[_refreshHeaderView refreshLastUpdatedDate];
+    
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:self.promptLab];
+    
+}
+
+
+-(void)headerRereshing
+{
+    
+//    [self.scrollView refrashData];
+    [self performSelector:@selector(hearderRereshingEnd) withObject:nil afterDelay:2];
+    
+    currentPage = 1;
+    if (self.requestType == searchGoodsType) {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"serachName":self.searchStr,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        [self requestSearchGoodsWithDic:params];
+        
+    }else if (self.requestType == homeViewType)
+    {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+        
+        [self requestGoodListWithDic:params];
+    }else if (self.requestType == classifyType)
+    {
+        if (sortType == comprehensiveType) {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppByCompre.action"];
+        }else if (sortType == salesType)
+        {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppByVolume.action"];
+        }else if (sortType == timeType)
+        {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppBycreateDate.action"];
+        }else if (sortType == priceType)
+        {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            if (isAscSort == 1) {
+                params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"asc"};
+            }else
+            {
+                params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            }
+            
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppBymarketPrice.action"];
+        }
+        
+    }else if (self.requestType == collectType)
+    {
+        currentPage = 1;
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        if (ISLOGIN) {
+            params = @{@"UID":USERID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        }else
+            params = @{@"UID":@"",@"imiestatus":@"0",@"imie":DEVICEUUID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        [self requestCollectListWithDic:params];
+    }
+    
+    
+
+}
+-(void)hearderRereshingEnd
+{
+    // (最好在刷新表格后调用)调用endRefreshing可以结束刷新状态
+    [self.goodsTableView headerEndRefreshing];
+}
+
+
+
+-(void)isDowmloadMore:(NSArray *)arry
+{
+    __weak typeof(self) weakSelf = self;
+    if ([arry count] > 9) {
+        //        self.goodsTableView.showsInfiniteScrolling=YES;
+        weakSelf.goodsTableView.infiniteScrollingView.enabled = YES;
+        
+        [self.goodsTableView addInfiniteScrollingWithActionHandler:^{
+            [weakSelf getMoreData];
+            [weakSelf.goodsTableView.infiniteScrollingView stopAnimating];
+        }];
+        
+    }else
+    {
+        if (self.goodsTableView.infiniteScrollingView != nil) {
+            //                [goodsTableView triggerInfiniteScrolling];
+            weakSelf.goodsTableView.infiniteScrollingView.enabled = NO;
+        }
+        //        self.promptLab.text = @"无更多数据";
+        //        [self showPromptLab];
+        //        self.goodsTableView.showsInfiniteScrolling=NO;
+    }
+}
+
+//                       加载更多商品
+-(void)getMoreData
+{
+    if (self.requestType == searchGoodsType) {
+        currentPage ++;
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"serachName":self.searchStr,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        [self requestSearchGoodsMoreWithDic:params];
+    }else if (self.requestType == homeViewType)
+    {
+        currentPage ++;
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+        
+        [self requestGoodListMoreWithDic:params];
+        
+    }else if (self.requestType == classifyType)
+    {
+        if (sortType == comprehensiveType) {
+            currentPage ++;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListMoreWithDic:params withSortPath:@"goods!getGoodsAppByCompre.action"];
+        }else if (sortType == salesType)
+        {
+            currentPage ++;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListMoreWithDic:params withSortPath:@"goods!getGoodsAppByVolume.action"];
+        }else if (sortType == timeType)
+        {
+            currentPage ++;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListMoreWithDic:params withSortPath:@"goods!getGoodsAppBycreateDate.action"];
+        }else if (sortType == priceType)
+        {
+            currentPage ++;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            if (isAscSort == 1) {
+                params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"asc"};
+            }else
+            {
+                params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            }
+            
+            
+            [self requestSortClassifyGoodsListMoreWithDic:params withSortPath:@"goods!getGoodsAppBymarketPrice.action"];
+        }
+        
+        
+    }else if (self.requestType == collectType)
+    {
+        currentPage ++;
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        if (ISLOGIN) {
+            params = @{@"UID":USERID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        }else params = @{@"UID":@"",@"imiestatus":@"0",@"imie":DEVICEUUID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        
+        [self requestCollectListMoreWithDic:params];
+    }
+    
+}
+
+
+- (IBAction)refreshDataAgain:(id)sender {
+    
+    currentPage = 1;
+    if (self.requestType == searchGoodsType) {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"serachName":self.searchStr,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        [self requestSearchGoodsWithDic:params];
+        
+    }else if (self.requestType == homeViewType)
+    {
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"sortType":self.classifyStr};
+        
+        [self requestGoodListWithDic:params];
+        
+    }else if (self.requestType == classifyType)
+    {
+        if (sortType == comprehensiveType) {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppByCompre.action"];
+        }else if (sortType == salesType)
+        {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppByVolume.action"];
+        }else if (sortType == timeType)
+        {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppBycreateDate.action"];
+        }else if (sortType == priceType)
+        {
+            currentPage = 1;
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            if (isAscSort == 1) {
+                params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"asc"};
+            }else
+            {
+                params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+            }
+            
+            
+            [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppBymarketPrice.action"];
+        }
+        
+    }else if (self.requestType == collectType)
+    {
+        currentPage = 1;
+        
+        NSDictionary *params = [[NSDictionary alloc]init];
+        
+        if (ISLOGIN) {
+            params = @{@"UID":USERID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        }else
+            params = @{@"UID":@"",@"imiestatus":@"0",@"imie":DEVICEUUID,@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage]};
+        
+        
+        
+        [self requestCollectListWithDic:params];
+    }
+    
+}
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+    //    return 5;
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    
+    NSLog(@"%zi",[goodsDataArray count]);
+    return ([goodsDataArray count] - 1)/2 + 1;
+    
+    
+    //    return 5;
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 195;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (_requestType == classifyType  && !self.isHiddenSort) {//是分类 且不隐藏
+        return 40;
+    }
+    //    else if (_requestType == homeViewType)
+    //    {
+    //        if (_theTopType == xianshiType) {
+    //            return 75;
+    //        }else if(_theTopType == xinpinType)
+    //        {
+    //            return 115;
+    //        }
+    //    }
+    return 0;
+}
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    
+    UIView *topView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 40)];
+    topView.backgroundColor = [UIColor whiteColor];
+    
+    if (_requestType == classifyType) {
+        
+        UIImageView *zhImg = [[UIImageView alloc] initWithFrame:CGRectMake(10, 6, 27, 27)];
+        [zhImg setImage:[UIImage imageNamed:@"comprehensiveSort.png"]];
+        [topView addSubview:zhImg];
+        
+        UIButton *zhBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        zhBtn.frame = CGRectMake(20, 0, 60, 40);
+        zhBtn.titleLabel.font = [UIFont systemFontOfSize:16.0];
+        [zhBtn setTitle:@"综合" forState:UIControlStateNormal];
+        [zhBtn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+        [zhBtn setTitleColor:[UIColor colorWithRed:230/255.f green:20/255.f blue:123/255.f alpha:1.0] forState:UIControlStateSelected];
+        [zhBtn addTarget:self action:@selector(zhBtnAction) forControlEvents:UIControlEventTouchUpInside];
+        [topView addSubview:zhBtn];
+        
+        UIImageView *xlImg = [[UIImageView alloc] initWithFrame:CGRectMake(90, 6, 27, 27)];
+        [xlImg setImage:[UIImage imageNamed:@"salesSort.png"]];
+        [topView addSubview:xlImg];
+        
+        UIButton *xlBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        xlBtn.frame = CGRectMake(100, 0, 60, 40);
+        xlBtn.titleLabel.font = [UIFont systemFontOfSize:16.0];
+        [xlBtn setTitle:@"销量" forState:UIControlStateNormal];
+        [xlBtn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+        [xlBtn setTitleColor:[UIColor colorWithRed:230/255.f green:20/255.f blue:123/255.f alpha:1.0] forState:UIControlStateSelected];
+        [xlBtn addTarget:self action:@selector(xlBtnAction) forControlEvents:UIControlEventTouchUpInside];
+        [topView addSubview:xlBtn];
+        
+        UIImageView *sjImg = [[UIImageView alloc] initWithFrame:CGRectMake(170, 6, 27, 27)];
+        [sjImg setImage:[UIImage imageNamed:@"historySearchSort.png"]];
+        [topView addSubview:sjImg];
+        
+        UIButton *sjBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        sjBtn.frame = CGRectMake(180, 0, 60, 40);
+        sjBtn.titleLabel.font = [UIFont systemFontOfSize:16.0];
+        [sjBtn setTitle:@"时间" forState:UIControlStateNormal];
+        [sjBtn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+        [sjBtn setTitleColor:[UIColor colorWithRed:230/255.f green:20/255.f blue:123/255.f alpha:1.0] forState:UIControlStateSelected];
+        [sjBtn addTarget:self action:@selector(sjBtnAction) forControlEvents:UIControlEventTouchUpInside];
+        [topView addSubview:sjBtn];
+        
+        UIImageView *jgImg = [[UIImageView alloc] initWithFrame:CGRectMake(250, 6, 27, 27)];
+        [jgImg setImage:[UIImage imageNamed:@"priceSort.png"]];
+        [topView addSubview:jgImg];
+        
+        UIButton *jgBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        jgBtn.frame = CGRectMake(260, 0, 60, 40);
+        jgBtn.titleLabel.font = [UIFont systemFontOfSize:16.0];
+        [jgBtn setTitle:@"价格" forState:UIControlStateNormal];
+        [jgBtn setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
+        [jgBtn setTitleColor:[UIColor colorWithRed:230/255.f green:20/255.f blue:123/255.f alpha:1.0] forState:UIControlStateSelected];
+        [jgBtn addTarget:self action:@selector(jgBtnAction) forControlEvents:UIControlEventTouchUpInside];
+        [topView addSubview:jgBtn];
+        
+        if (sortType == comprehensiveType) {
+            zhBtn.selected = YES;
+            xlBtn.selected = NO;
+            sjBtn.selected = NO;
+            jgBtn.selected = NO;
+        }else if (sortType == salesType){
+            zhBtn.selected = NO;
+            xlBtn.selected = YES;
+            sjBtn.selected = NO;
+            jgBtn.selected = NO;
+        }else if (sortType == timeType){
+            zhBtn.selected = NO;
+            xlBtn.selected = NO;
+            sjBtn.selected = YES;
+            jgBtn.selected = NO;
+        }else if (sortType == priceType){
+            zhBtn.selected = NO;
+            xlBtn.selected = NO;
+            sjBtn.selected = NO;
+            jgBtn.selected = YES;
+        }
+        
+        
+        UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 39.5, topView.frame.size.width, 0.5)];
+        line.backgroundColor = [UIColor lightGrayColor];
+        [topView addSubview:line];
+    }
+    //    else if (_requestType == homeViewType)
+    //    {
+    //        if (_theTopType == xianshiType) {
+    //            topView.frame = CGRectMake(0, 0, SCREEN_WIDTH, 75);
+    //
+    //            UIImageView *img = [[UIImageView alloc] initWithFrame:topView.frame];
+    //            [img setImage:[UIImage imageNamed:@"miaoshaBg.png"]];
+    //            [topView addSubview:img];
+    //
+    //        }else if(_theTopType == xinpinType)
+    //        {
+    //            topView.frame = CGRectMake(0, 0, SCREEN_WIDTH, 115);
+    //
+    //            UIImageView *img = [[UIImageView alloc] initWithFrame:topView.frame];
+    //            [img setImage:[UIImage imageNamed:@"xinpinBg.png"]];
+    //            [topView addSubview:img];
+    //        }
+    //    }
+    //
+    
+    
+    return topView;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    static NSString *CellIdentifier = @"JiFenShopCell";
+    JiFenShopCell *cell = (JiFenShopCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"JiFenShopCell" owner:self options:nil] lastObject];
+    }
+    
+    cell.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.delegate = self;
+    //    [cell configCellWithArray:nil];
+    
+    if ([goodsDataArray count]%2 == 0) {
+        NSArray *subArray = [goodsDataArray subarrayWithRange:NSMakeRange(indexPath.row*2 ,2)];
+        [cell configCellWithArray:subArray indexRow:indexPath.row];
+        
+    }else if([goodsDataArray count]%2 == 1)
+    {
+        if ( (indexPath.row + 1) * 2 < [goodsDataArray count]) {
+            NSArray *subArray = [goodsDataArray subarrayWithRange:NSMakeRange(indexPath.row * 2 ,2)];
+            [cell configCellWithArray:subArray indexRow:indexPath.row];
+        }else
+        {
+            NSArray *subArray = [goodsDataArray subarrayWithRange:NSMakeRange(indexPath.row*2 ,1)];
+            [cell configCellWithArray:subArray indexRow:indexPath.row];
+        }
+        
+    }
+    
+    
+    
+    
+    
+    return cell;
+    
+    
+    
+}
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    
+    //    ProductDetailsViewController *controller = [[ProductDetailsViewController alloc] initWithProductInfo:[goodsData objectAtIndex:indexPath.row]];
+    //    UINavigationController *navigationController = (UINavigationController*)[UIApplication sharedApplication].delegate.window.rootViewController;
+    //    [navigationController pushViewController: controller animated:YES];
+    
+}
+
+
+-(void)zhBtnAction
+{
+    sortType = comprehensiveType;
+    currentPage = 1;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+    
+    [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppByCompre.action"];
+    
+}
+-(void)xlBtnAction
+{
+    sortType = salesType;
+    currentPage = 1;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+    
+    [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppByVolume.action"];
+}
+-(void)sjBtnAction
+{
+    sortType = timeType;
+    currentPage = 1;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+    
+    [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppBycreateDate.action"];
+}
+-(void)jgBtnAction
+{
+    sortType = priceType;
+    currentPage = 1;
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    
+    if (isAscSort == 1) {
+        params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"desc"};
+        isAscSort = 0;
+    }else
+    {
+        params = @{@"pageSizeApp":@"10",@"pageApp":[NSString stringWithFormat:@"%d",currentPage],@"categoryId":self.classifyId,@"sorting":@"asc"};
+        isAscSort = 1;
+    }
+    
+    
+    [self requestSortClassifyGoodsListWithDic:params withSortPath:@"goods!getGoodsAppBymarketPrice.action"];
+}
+
+//显示提示
+-(void)showPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:1.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:nil];
+}
+
+
+#pragma mark -
+#pragma mark GoodsViewCellDelegate Methods
+-(void)goodsBtnClick:(NSUInteger)row
+{
+    //    NSLog(@"-->%@",[[goodsDataArray objectAtIndex:row] objectForKey:@"id"]);
+    JiFenGoodDetailViewController *ctrVc = [[JiFenGoodDetailViewController alloc] initWithNibName:@"JiFenGoodDetailViewController" bundle:nil];
+    ctrVc.hidesBottomBarWhenPushed = YES;
+    ctrVc.disPlayOne = self.disPlayOne;
+    ctrVc.disPlayTwo = self.disPlayTwo;
+    ctrVc.goodsIdStr = [[goodsDataArray objectAtIndex:row] objectForKey:@"id"];
+    ctrVc.classifyIdStr = [[goodsDataArray objectAtIndex:row] objectForKey:@"goodsCategoryId"];
+    [self.navigationController pushViewController:ctrVc animated:YES];
+    
+    
+    
+    
+}
+
+
+#pragma mark MKHttpRequestAction  GoodsList
+-(void)requestGoodListWithDic:(NSDictionary *)dic
+{
+    self.loadingView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    self.loadingView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.loadingView];
+    
+    self.noNetView.hidden = YES;
+    self.indicator.hidden = NO;
+    //    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [_indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    //    [self.loadingView addSubview:_indicator];
+    [self.indicator startAnimating];
+    
+    //    self.noNetView = [[UIView alloc] initWithFrame:CGRectMake(48, 92, 224, 254)];
+    //    [self.loadingView addSubview:self.noNetView];
+    self.noNetView.hidden = YES;
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestHomeGoodListWithWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1)
+        {
+            [goodsDataArray removeAllObjects];
+            
+            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            [self.goodsTableView reloadData];
+        }else
+        {
+            self.promptLab.text = @"数据获取失败";
+            [self showPromptLab];
+            
+            [self.goodsTableView removeFromSuperview];
+        }
+        
+        
+        NSLog(@"arry-->%@",goodsDataArray);
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+        [self.indicator stopAnimating];
+        [self.loadingView removeFromSuperview];
+        self.loadingView = nil;
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        [self.indicator stopAnimating];
+        self.indicator.hidden = YES;
+        self.noNetView.hidden = NO;
+        
+    }];
+    
+}
+
+-(void)requestGoodListMoreWithDic:(NSDictionary *)dic
+{
+    //    NSString *pathStr = [NSString stringWithFormat:@"shopxx/shop/%@",classifyStr];
+    
+    [[MKHttpServiceEngine shareMyInstance] requestHomeGoodListWithWithDic:dic completionHandler:^(id responseObject) {
+        
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            if ([goodsDataArray containsObject:[[responseDic objectForKey:@"datasource"] firstObject]]) {
+                //            [goodsDataArray removeObjectsInArray:[responseDic objectForKey:@"datasource"]];
+                //            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }else
+            {
+                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }
+            [self.goodsTableView reloadData];
+        }
+        
+        
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        
+        currentPage --;
+        
+    }];
+    
+}
+
+#pragma mark MKHttpRequestAction  searchGoods
+-(void)requestSearchGoodsWithDic:(NSDictionary *)dic
+{
+    self.loadingView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    self.loadingView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.loadingView];
+    
+    self.noNetView.hidden = YES;
+    self.indicator.hidden = NO;
+    //    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [_indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    //    [self.loadingView addSubview:_indicator];
+    [self.indicator startAnimating];
+    
+    //    self.noNetView = [[UIView alloc] initWithFrame:CGRectMake(48, 92, 224, 254)];
+    //    [self.loadingView addSubview:self.noNetView];
+    self.noNetView.hidden = YES;
+    
+    [[MKHttpServiceEngine shareMyInstance] requestSearchGoodsWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        
+        [goodsDataArray removeAllObjects];
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            [self.goodsTableView reloadData];
+        }else
+        {
+            self.promptLab.text = [responseDic objectForKey:@"message"];
+            [self showPromptLab];
+            [self.goodsTableView removeFromSuperview];
+        }
+        
+        
+        NSLog(@"arry-->%@",goodsDataArray);
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+        [self.indicator stopAnimating];
+        [self.loadingView removeFromSuperview];
+        self.loadingView = nil;
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        [self.indicator stopAnimating];
+        self.indicator.hidden = YES;
+        self.noNetView.hidden = NO;
+        
+    }];
+    
+}
+
+-(void)requestSearchGoodsMoreWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestSearchGoodsWithDic:dic completionHandler:^(id responseObject) {
+        
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            if ([goodsDataArray containsObject:[[responseDic objectForKey:@"datasource"] firstObject]]) {
+                //            [goodsDataArray removeObjectsInArray:[responseDic objectForKey:@"datasource"]];
+                //            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }else
+            {
+                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }
+            [self.goodsTableView reloadData];
+        }
+        
+        NSLog(@"arry-->%@",goodsDataArray);
+        
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        
+        currentPage --;
+        
+    }];
+    
+}
+
+#pragma mark MKHttpRequestAction  GoodsList
+-(void)requestClassifyGoodsListWithDic:(NSDictionary *)dic
+{
+    self.loadingView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    self.loadingView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.loadingView];
+    
+    self.noNetView.hidden = YES;
+    self.indicator.hidden = NO;
+    //    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [_indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    //    [self.loadingView addSubview:_indicator];
+    [self.indicator startAnimating];
+    self.noNetView.hidden = YES;
+    
+    [[MKHttpServiceEngine shareMyInstance] requestClassifyGoodsListWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            [goodsDataArray removeAllObjects];
+            
+            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            NSLog(@"arry-->%@",goodsDataArray);
+            [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+            
+            [self.goodsTableView reloadData];
+        }else
+        {
+            if (![[responseDic objectForKey:@"message"] isKindOfClass:[NSNull class]]) {
+                self.promptLab.text = [responseDic objectForKey:@"message"];
+                [self showPromptLab];
+            }else
+            {
+                self.promptLab.text = @"暂无商品";
+                [self showPromptLab];
+            }
+            
+            
+            [self.goodsTableView removeFromSuperview];
+        }
+        
+        
+        [self.indicator stopAnimating];
+        [self.loadingView removeFromSuperview];
+        self.loadingView = nil;
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        [self.indicator stopAnimating];
+        self.indicator.hidden = YES;
+        self.noNetView.hidden = NO;
+        
+    }];
+    
+}
+
+-(void)requestClassifyGoodsListMoreWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestClassifyGoodsListWithDic:dic completionHandler:^(id responseObject) {
+        
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            if ([goodsDataArray containsObject:[[responseDic objectForKey:@"datasource"] firstObject]]) {
+                //                [goodsDataArray removeObjectsInArray:[responseDic objectForKey:@"datasource"]];
+                //                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }else
+            {
+                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }
+            [self.goodsTableView reloadData];
+        }
+        
+        NSLog(@"arry-->%@",goodsDataArray);
+        
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        
+        currentPage --;
+        
+    }];
+    
+}
+
+#pragma mark MKHttpRequestAction  CollectGoodsList
+-(void)requestCollectListWithDic:(NSDictionary *)dic
+{
+    self.loadingView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    self.loadingView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.loadingView];
+    
+    self.noNetView.hidden = YES;
+    self.indicator.hidden = NO;
+    //    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [_indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    //    [self.loadingView addSubview:_indicator];
+    [self.indicator startAnimating];
+    self.noNetView.hidden = YES;
+    
+    [[MKHttpServiceEngine shareMyInstance] requestCollectListWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        
+        NSLog(@"arry-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            [goodsDataArray removeAllObjects];
+            
+            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            
+            [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+            
+            [self.goodsTableView reloadData];
+            
+            for (NSDictionary *dic in goodsDataArray) {
+                if (![[[AppSet shareInstance] collectArray] containsObject:[dic objectForKey:@"id"]]) {
+                    NSMutableArray *arry = [NSMutableArray arrayWithArray:[[AppSet shareInstance] collectArray]];
+                    [arry addObject:[dic objectForKey:@"id"]];
+                    [[AppSet shareInstance] setCollectArray:arry];
+                    [[AppSet shareInstance] saveCollectGoodsData];
+                }
+            }
+        }else
+        {
+            if ([[responseDic objectForKey:@"datasource"] count] < 1) {
+                self.promptLab.text = @"暂无收藏商品";
+                [self showPromptLab];
+            }
+            
+            
+            [self.goodsTableView removeFromSuperview];
+        }
+        
+        
+        [self.indicator stopAnimating];
+        [self.loadingView removeFromSuperview];
+        self.loadingView = nil;
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        [self.indicator stopAnimating];
+        self.indicator.hidden = YES;
+        self.noNetView.hidden = NO;
+        
+    }];
+    
+}
+
+-(void)requestCollectListMoreWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestCollectListWithDic:dic completionHandler:^(id responseObject) {
+        
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            if ([goodsDataArray containsObject:[[responseDic objectForKey:@"datasource"] firstObject]]) {
+                //                [goodsDataArray removeObjectsInArray:[responseDic objectForKey:@"datasource"]];
+                //                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }else
+            {
+                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }
+            [self.goodsTableView reloadData];
+        }
+        
+        NSLog(@"arry-->%@",goodsDataArray);
+        
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        
+        currentPage --;
+        
+    }];
+    
+}
+
+#pragma mark MKHttpRequestAction  SortGoodsList
+-(void)requestSortClassifyGoodsListWithDic:(NSDictionary *)dic  withSortPath:(NSString *)sortStr
+{
+    self.loadingView.frame = CGRectMake(0, STAR_Y, SCREEN_WIDTH, SCREEN_HEIGHT);
+    self.loadingView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.loadingView];
+    
+    self.noNetView.hidden = YES;
+    self.indicator.hidden = NO;
+    //    _indicator = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray];
+    [_indicator setCenter:CGPointMake(SCREEN_WIDTH/2., SCREEN_HEIGHT/2.)];
+    //    [self.loadingView addSubview:_indicator];
+    [self.indicator startAnimating];
+    self.noNetView.hidden = YES;
+    
+   opration = [[MKHttpServiceEngine shareMyInstance] requestSortGoodsListWithDic:dic withSortPath:sortStr completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arry-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            [goodsDataArray removeAllObjects];
+            
+            [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            
+            NSLog(@"arry-->%@",goodsDataArray);
+            [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+            
+            [self.goodsTableView reloadData];
+        }else
+        {
+            if (![[responseDic objectForKey:@"message"] isKindOfClass:[NSNull class]]) {
+                self.promptLab.text = [responseDic objectForKey:@"message"];
+                [self showPromptLab];
+            }else
+            {
+                self.promptLab.text = @"赞无数据";
+                [self showPromptLab];
+            }
+            
+            
+            [self.goodsTableView removeFromSuperview];
+        }
+        
+        
+        [self.indicator stopAnimating];
+        [self.loadingView removeFromSuperview];
+        self.loadingView = nil;
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        [self.indicator stopAnimating];
+        self.indicator.hidden = YES;
+        self.noNetView.hidden = NO;
+        
+    }];
+    
+}
+
+-(void)requestSortClassifyGoodsListMoreWithDic:(NSDictionary *)dic withSortPath:(NSString *)sortStr
+{
+    
+    oprationMore = [[MKHttpServiceEngine shareMyInstance] requestSortGoodsListWithDic:dic withSortPath:sortStr completionHandler:^(id responseObject) {
+        
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"arrys-->%@",responseDic);
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            if ([goodsDataArray containsObject:[[responseDic objectForKey:@"datasource"] firstObject]]) {
+                //                [goodsDataArray removeObjectsInArray:[responseDic objectForKey:@"datasource"]];
+                //                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }else
+            {
+                [goodsDataArray addObjectsFromArray:[responseDic objectForKey:@"datasource"]];
+            }
+            [self.goodsTableView reloadData];
+        }
+        
+        NSLog(@"arry-->%@",goodsDataArray);
+        
+        [self isDowmloadMore:[responseDic objectForKey:@"datasource"]];
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        
+        NSLog(@"error-->%@",error);
+        
+        currentPage --;
+        
+    }];
+    
+}
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

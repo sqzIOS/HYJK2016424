@@ -1,0 +1,51 @@
+//
+//  ClassifyViewController.h
+//  sexduoduo
+//
+//  Created by showm on 14-5-20.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "EGORefreshTableHeaderView.h"
+#import "UIScrollView+SVInfiniteScrolling.h"
+//#import "ZBarSDK.h"
+#import <AVFoundation/AVFoundation.h>
+#import "AppDelegate.h"
+#import "ClassifyCell.h"
+#import "SearchViewController.h"
+#import "FirClassifyCell.h"
+#import "ClassifyCellIndex0.h"
+
+#import "MJRefresh.h"
+
+#import "GoodsListVC.h"
+
+@interface ClassifyViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,EGORefreshTableHeaderDelegate,ClassifyCellDelegate,UITextFieldDelegate,ClassifyFirstCellDelegate>
+{
+    BOOL _reloading;
+    EGORefreshTableHeaderView *_refreshHeaderView;
+    int isHistory;
+    UIView *toSearchBgView;
+    int firClassifyIndex;
+    
+}
+
+@property (strong, nonatomic) UITableView *classifyTableV ;
+@property (strong, nonatomic) NSMutableArray *shopDataArray;  //二级分类数据数组
+//@property (strong, nonatomic) ZBarReaderViewController *zBarReader;
+
+@property (strong, nonatomic) UIView *topSearchView;
+@property (strong, nonatomic) UITextField *searchField;
+
+@property (strong, nonatomic) UITableView *searchTableView;
+@property (strong, nonatomic) NSMutableArray *searchArry;
+
+@property (assign, nonatomic) BOOL isInputSearch;
+
+@property (strong, nonatomic) UITableView *firClassifyTableView;  //一级分类
+
+@property (strong, nonatomic) NSMutableArray *firClassifyArry;  //一级分类数据数组
+
+@property (strong, nonatomic) NSDictionary * secondCellFirstDic;
+@end

@@ -1,0 +1,23 @@
+//
+//  OrderCell.h
+//  sexduoduo
+//
+//  Created by Showm on 14-7-23.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface OrderCell : UITableViewCell
+
+@property (weak, nonatomic) IBOutlet UILabel *goodsTitleLab;
+@property (weak, nonatomic) IBOutlet UILabel *goodsColorLab;
+@property (weak, nonatomic) IBOutlet UILabel *goodsPriceLab;
+@property (weak, nonatomic) IBOutlet UILabel *goodsNumLab;
+
+@property (weak, nonatomic) IBOutlet UIImageView *goodsImgView;
+@property (weak, nonatomic) IBOutlet UIImageView *activityImg;
+
+-(void)initCellWithDic:(NSDictionary *)dic;
+
+@end

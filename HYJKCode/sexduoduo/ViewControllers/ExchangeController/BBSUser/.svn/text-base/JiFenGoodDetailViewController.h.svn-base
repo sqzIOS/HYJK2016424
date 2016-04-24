@@ -1,0 +1,103 @@
+//
+//  JiFenGoodDetailViewController.h
+//  sexduoduo
+//
+//  Created by sqz on 14-11-25.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  积分商品详情
+
+#import <UIKit/UIKit.h>
+#import "MMGridView.h"
+#import "MMGridViewCell.h"
+#import "MMGridViewDefaultCell.h"
+#import "AppDelegate.h"
+#import "ShopCarController.h"
+#import "LoginViewController.h"
+
+#import "OrderViewController.h"
+#import "SDOrderVC.h"
+@interface JiFenGoodDetailViewController : UIViewController<UIScrollViewDelegate,UITableViewDelegate,UITableViewDataSource,UITextFieldDelegate,MMGridViewDataSource,MMGridViewDelegate>
+{
+    UIButton *colorBtn;
+    
+    UIButton *collectBtn;
+    
+    NSMutableArray *goodsArray;
+    NSMutableDictionary *productDic;
+    NSString *detaiLargeImg;
+    
+    NSString *basicParameter;
+    NSArray *basicArray;
+    
+    int topViewH;
+    
+    BOOL isSpecification;
+    
+    
+    MKNetworkOperation *opration;
+    
+    MKNetworkOperation *oprationTuWen;//图文详情的请求
+    
+    
+    BOOL isBack;
+}
+
+@property (strong, nonatomic) UIScrollView *detailScrollView;//详情 总scView
+@property (strong, nonatomic) UIScrollView *topPicScrollView;
+@property (strong, nonatomic) UIScrollView *bottomPicScrollView;
+
+@property (strong, nonatomic) UIView *bottomView;
+@property (strong, nonatomic) DDPageControl *pageControl;
+@property (strong, nonatomic) NSMutableArray *imagesArray;
+@property (strong, nonatomic) UITableView *mTableView;
+@property (assign, nonatomic) int numberRow;
+@property (assign, nonatomic) int numIndexColor;
+@property (strong, nonatomic) IBOutlet UIView *colorChooseView;
+@property (weak, nonatomic) IBOutlet UIScrollView *numChooseScrol;
+@property (weak, nonatomic) IBOutlet UITextField *goodsNumField;
+@property (weak, nonatomic) IBOutlet UIView *goodsNumView;
+@property (strong, nonatomic) UILabel *promptLab;
+@property (strong, nonatomic) UIButton *shopCarBtn;
+@property (weak, nonatomic) IBOutlet UIButton *toChooseColorBtn;
+
+@property (strong, nonatomic) NSMutableArray *colorArray;
+@property (nonatomic, retain) MMGridView * gridView;
+
+@property (assign, nonatomic) BOOL disPlayOne;  //从首页一路进入到详情
+@property (assign, nonatomic) BOOL disPlayTwo;  //分类页面进入详情
+
+@property (strong, nonatomic) NSMutableDictionary *goodsDetailDic;  //从上级页面 传递过来的商品信息
+
+@property (weak, nonatomic) UILabel *promptLable;  //提示lab
+
+
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
+
+
+@property (weak, nonatomic) IBOutlet UIImageView *productImg;  //产品图片
+@property (weak, nonatomic) IBOutlet UILabel *productPrice;    //产品价格
+@property (weak, nonatomic) IBOutlet UILabel *productColor;    //产品规格颜色
+
+@property (strong, nonatomic) NSString *goodsIdStr;  //商品id
+@property (strong, nonatomic) NSString *classifyIdStr;//分类id
+
+@property (assign, nonatomic) BOOL goBuyNow;
+
+@property (strong, nonatomic) NSMutableArray *recommendArray;
+
+@property (strong, nonatomic) IBOutlet UIView *detailPayDesView;// 包邮提示view
+@property (strong, nonatomic) IBOutlet UILabel *baoYouAlertLab;// 包邮提示Lab
+
+@property (strong, nonatomic) UILabel *numLabel;  //购物车商品数量
+@property (weak, nonatomic) IBOutlet UIView *primaryView;
+@property (weak, nonatomic) IBOutlet UIView *primaryShadeView;
+
+//下面的多币Lab
+@property (strong, nonatomic) IBOutlet UILabel *duoBiLab;
+
+
+
+@property (strong, nonatomic) UIView *productDetailView;//图文详情view
+@property (strong, nonatomic)NSMutableArray *detailImageStrArray;//详情图片路径array
+
+@end

@@ -1,0 +1,49 @@
+//
+//  ToCommentCell.h
+//  sexduoduo
+//
+//  Created by Showm on 14-9-3.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+#import "RatingView.h"
+#import "ARatingView.h"
+#import "BRatingView.h"
+
+
+@class ToCommentCell;
+
+@protocol ToCommentCellDelegate <NSObject>
+
+-(void)endWriteComment:(ToCommentCell *)cell andViewIndex:(int )viewIndex;
+
+@end
+
+@interface ToCommentCell : UITableViewCell<RatingViewDelegate,ARatingViewDelegate,BRatingViewDelegate>
+
+@property (strong, nonatomic) IBOutlet UILabel *goodsTitleLab;
+@property (strong, nonatomic) IBOutlet UILabel *goodsColorLab;
+@property (strong, nonatomic) IBOutlet UILabel *goodsPriceLab;
+@property (strong, nonatomic) IBOutlet UILabel *goodsNumLab;
+
+@property (weak, nonatomic) IBOutlet UILabel *alertLab;
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *goodsImgView;
+@property (strong, nonatomic) IBOutlet UITextView *commentField;
+
+@property (strong, nonatomic) IBOutlet RatingView *starQuality;
+@property (strong, nonatomic) IBOutlet ARatingView *starAttitude;
+@property (strong, nonatomic) IBOutlet BRatingView *starSpeed;
+
+@property (strong, nonatomic) NSString *quantityNum;
+@property (strong, nonatomic) NSString *attitudeNum;
+@property (strong, nonatomic) NSString *speedNum;
+
+@property (strong, nonatomic) id<ToCommentCellDelegate>delegate;
+
+
+-(void)initCellWithDic:(NSDictionary *)dic;
+
+@end

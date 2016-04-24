@@ -1,0 +1,150 @@
+//
+//  CouponsCell.m
+//  
+//
+//  Created by apple on 15/12/15.
+//
+//
+
+#import "CouponsCell.h"
+#import "ShareFunction.h"
+#import "CouponsModel.h"
+
+@interface CouponsCell ()
+
+@property (nonatomic,weak) UILabel *couponAmount;
+@property (nonatomic,weak) UILabel *couponDetail;
+@property (nonatomic,weak) UILabel *couponTime;
+
+@end
+
+@implementation CouponsCell
+
++ (instancetype)couponsCellInTableView:(UITableView *)tableView
+{
+    NSString *ID = @"cell";
+    CouponsCell *cell = [tableView dequeueReusableCellWithIdentifier:ID];
+    if (cell == nil) {
+        cell = [[CouponsCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ID];
+        cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    }
+    return cell;
+}
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+        [self setContent];
+    }
+    return  self;
+}
+
+- (void)setContent
+{
+    self.contentView.backgroundColor = RGBCOLOR(240, 240, 240);
+    
+    // 背景图片
+    UIImageView *bgView = [[UIImageView alloc] init];
+    bgView.userInteractionEnabled = YES;
+    bgView.frame = CGRectMake(QZMake(10),QZMake(10), QZMake(355), QZMake(103));
+    bgView.image = [UIImage imageNamed:@"coupons_bg"];
+    [self.contentView addSubview:bgView];
+    
+    
+    // 按钮
+    UIButton *receiveBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    [receiveBtn setTitle:@"领取" forState:UIControlStateNormal];
+    [receiveBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    receiveBtn.titleLabel.font = [UIFont systemFontOfSize:QZMake(23)];
+    receiveBtn.frame = CGRectMake(QZMake(355 - 80), 0, QZMake(80), QZMake(103));
+    [bgView addSubview:receiveBtn];
+    [receiveBtn addTarget:self action:@selector(receiveBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    
+    // 人民币图标
+    UILabel *icon = [[UILabel alloc] init];
+    icon.frame = CGRectMake(QZMake(15),QZMake(20),QZMake(24),QZMake(30));
+    [bgView addSubview:icon];
+    icon.font = [UIFont systemFontOfSize:QZMake(20)];
+    icon.textColor = RGBCOLOR16(0x9c46e5);
+    icon.text = @"¥";
+    
+    // 优惠券数值
+    UILabel *couponAmount = [[UILabel alloc] init];
+    couponAmount.frame = CGRectMake(QZMake(15 + 15),0,QZMake(75),QZMake(62));
+    [bgView addSubview:couponAmount];
+    couponAmount.font = [UIFont systemFontOfSize:QZMake(36)];
+    couponAmount.textColor = RGBCOLOR16(0x9c46e5);
+    couponAmount.text = @"10";
+    self.couponAmount = couponAmount;
+    
+     // 优惠券描述
+    UILabel *couponDetail = [[UILabel alloc] init];
+    couponDetail.frame = CGRectMake(QZMake(15 + 15 + 72 + 5),CGRectGetMinY(icon.frame),QZMake(150),QZMake(30));
+    [bgView addSubview:couponDetail];
+    couponDetail.font = [UIFont systemFontOfSize:QZMake(18)];
+    couponDetail.textColor = RGBCOLOR16(0x726d6d);
+    self.couponDetail = couponDetail;
+    
+    // 优惠券过期时间
+    UILabel *couponTime = [[UILabel alloc] init];
+    couponTime.frame = CGRectMake(QZMake(15),CGRectGetMaxY(couponAmount.frame),QZMake(250),QZMake(20));
+    [bgView addSubview:couponTime];
+    couponTime.font = [UIFont systemFontOfSize:QZMake(14)];
+    couponTime.textColor = RGBCOLOR16(0x9c46e5);
+    self.couponTime = couponTime;
+}
+
+
+
+- (void)setModel:(CouponsModel *)model
+{
+    _model = model;
+    self.couponAmount.text = [NSString stringWithFormat:@"%@",model.amount];
+    self.couponDetail.text = [NSString stringWithFormat:@"满%d元可用",model.conditions.intValue];
+    
+    // 是否有过期时间
+    BOOL isHasStarDate = model.startDate != nil && model.startDate.length != 0 && ![model.startDate isEqualToString:@"<null>"];
+    BOOL isHasEndDate = model.endDate != nil && model.endDate.length != 0 && ![model.endDate isEqualToString:@"<null>"];
+    
+    // 开始时间
+    NSString *starTime = [NSString string];
+    if (isHasStarDate) {
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:model.startDate.floatValue / 1000];
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+        starTime = [dateFormatter stringFromDate:date];
+    }
+    
+    // 结束时间
+    NSString *endTime = [NSString string];
+    if (isHasEndDate) {
+        NSDate *date = [NSDate dateWithTimeIntervalSince1970:model.endDate.floatValue / 1000];
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy-MM-dd"];
+        endTime = [dateFormatter stringFromDate:date];
+    }
+    
+    if ( !isHasStarDate && !isHasEndDate) {
+        self.couponTime.text = @"有效期：永久有效";
+    }
+    if (isHasStarDate  && !isHasEndDate) {
+        self.couponTime.text = [NSString stringWithFormat:@"有效期：%@ 起有效",starTime];
+    }
+    if (isHasStarDate && isHasEndDate) {
+        self.couponTime.text = [NSString stringWithFormat:@"有效期：至 %@",endTime];
+    }
+    if (isHasStarDate && isHasEndDate) {
+        self.couponTime.text = [NSString stringWithFormat:@"有效期：%@ 至 %@",starTime,endTime];
+    }
+    
+    
+}
+
+- (void)receiveBtnClick
+{
+    if ([self.delegate respondsToSelector:@selector(couponsCellReceiveBtnClick:)]) {
+        [self.delegate couponsCellReceiveBtnClick:self];
+    }
+}
+
+@end

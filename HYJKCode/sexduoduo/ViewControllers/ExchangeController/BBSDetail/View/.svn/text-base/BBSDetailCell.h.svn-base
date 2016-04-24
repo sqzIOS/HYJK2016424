@@ -1,0 +1,34 @@
+//
+//  BBSDetailCell.h
+//  sexduoduo
+//
+//  Created by Showm on 14-8-14.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+typedef void(^DetailCellBlock) (NSIndexPath *indexPath);
+@interface BBSDetailCell : UITableViewCell
+
+@property (strong, nonatomic) IBOutlet UIImageView *headImage;
+@property (strong, nonatomic) IBOutlet UILabel *nameLab;
+@property (strong, nonatomic) IBOutlet UILabel *subTitle;
+@property (strong, nonatomic) IBOutlet UILabel *contentLab;
+@property (strong, nonatomic) IBOutlet UIImageView *userSexImageView;
+
+@property (strong, nonatomic) IBOutlet UIImageView *lineImage;
+
+
+@property (strong, nonatomic) IBOutlet UIImageView *levelImageView;
+@property (strong, nonatomic) IBOutlet UILabel *levelNameLab;
+@property (nonatomic, assign) NSIndexPath *cellIndexPath;
+
+@property (nonatomic, copy) DetailCellBlock cellBlock;
+
+
+@property (weak, nonatomic) IBOutlet UIButton *zanBtn;
+
+
+-(void)configCellWithArrayForNvShenDaoGou:(NSArray *)arry indexRow:(NSIndexPath *)indexPath;
+
+@end

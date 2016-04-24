@@ -1,0 +1,864 @@
+//
+//  OrderDetailViewController.m
+//  sexduoduo
+//
+//  Created by Showm on 14-8-8.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import "OrderDetailViewController.h"
+#import "WuLiuInfoViewController.h"
+#import <AlipaySDK/AlipaySDK.h>
+@interface OrderDetailViewController ()
+
+@end
+
+@implementation OrderDetailViewController
+@synthesize result = _result;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+-(void)dealloc
+{
+    
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    
+    [super viewWillAppear:animated];
+    
+    //一共三个与支付相关的类
+    m_orderViewVC=nil;
+    m_orderRemindViewVC=nil;
+    m_orderDetailViewVC=self;
+    
+    AppDelegate *delegate1 = (AppDelegate*)[UIApplication sharedApplication].delegate;
+    [delegate1.tabController hidesTabBar:YES animated:YES];
+    
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    // Do any additional setup after loading the view from its nib.
+    
+    toPayBtnFrame=self.toPayOffBtn.frame;
+    toDeleteBtnFrame=self.toDeleteOrderBtn.frame;
+    cancelBtnFrame=self.cancelOrderBtn.frame;
+    
+    self.toPayOffBtn.backgroundColor = NAV_MoreBg_COLOR;
+    self.toDeleteOrderBtn.backgroundColor = NAV_MoreBg_COLOR;
+    self.cancelOrderBtn.backgroundColor = NAV_MoreBg_COLOR;
+
+    
+    
+    _result = @selector(paymentResult:);
+    self.orderArray = [NSMutableArray arrayWithCapacity:0];
+    self.orderDetailDic = [NSMutableDictionary dictionaryWithCapacity:0];
+    self.orderDetailArray = [NSMutableArray arrayWithCapacity:0];
+    [self setTopNavView];
+    
+    [self initOrderDetailTableView];
+    
+    NSLog(@">>%@",self.orderIdStr);
+    
+    NSDictionary *params = [[NSDictionary alloc]init];
+    params = @{@"orderId":self.orderIdStr};
+    [self requestMyOrderDetailWithDic:params];
+    
+    
+    self.promptLab = [[UILabel alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, 35)];
+    self.promptLab.backgroundColor = [UIColor blackColor];
+    self.promptLab.alpha = 0.0;
+    self.promptLab.font = [UIFont systemFontOfSize:14.0];
+    self.promptLab.textColor = [UIColor whiteColor];
+    self.promptLab.textAlignment = NSTextAlignmentCenter;
+    [self.view addSubview:self.promptLab];
+}
+
+//顶部NavView
+-(void)setTopNavView
+{
+    int imgY = -20;
+    if (IOS7_OR_LATER) {
+        imgY = 0;
+    }
+    
+    TopNavView *navView=[[TopNavView alloc] initWithFrame:CGRectMake(0, imgY,SCREEN_WIDTH, 64)];
+    [self.view addSubview:navView];
+    
+    [navView addLeftBtnTarget:self action:@selector(toBackView) forControlEvents:UIControlEventTouchUpInside];
+    
+    [navView setTitleStr:@"订单详情"];
+    
+    
+    
+    UIButton *rightBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+    rightBtn.frame = CGRectMake(SCREEN_WIDTH - 52, 30 , 45, 25);
+    [rightBtn setTitle:@"物流" forState:UIControlStateNormal];
+    [rightBtn setTitleColor:NAV_RED_COLOR forState:UIControlStateNormal];
+    [rightBtn addTarget:self action:@selector(wuLiuInfo) forControlEvents:UIControlEventTouchUpInside];
+    [navView addSubview:rightBtn];
+    
+    rightBtn.titleLabel.font = [UIFont systemFontOfSize:14.0];
+    rightBtn.layer.cornerRadius = 11.5;
+    rightBtn.layer.borderColor = NAV_RED_COLOR.CGColor;
+    rightBtn.layer.borderWidth = 0.5;
+    
+    
+}
+-(void)wuLiuInfo
+{
+
+    NSLog(@"物流信息");
+    WuLiuInfoViewController *controller = [[WuLiuInfoViewController alloc]initWithNibName:@"WuLiuInfoViewController" bundle:[NSBundle mainBundle]];
+    controller.hidesBottomBarWhenPushed = YES;
+    controller.orderId=self.orderIdStr;
+//    controller.orderId=@"8aaeccfd51b796e80151bd6660451e9a";
+    [self.navigationController pushViewController:controller animated:YES];
+    
+}
+
+//返回
+-(void)toBackView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+
+-(void)initOrderDetailTableView
+{
+    self.orderDetailTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, STAR_Y, SCREEN_WIDTH, [[UIScreen mainScreen] bounds].size.height - STAR_Y - 50 - OFFSET_Y)];
+    self.orderDetailTableView.backgroundColor = [UIColor clearColor];
+    self.orderDetailTableView.dataSource = self;
+    self.orderDetailTableView.delegate = self;
+    [self.view addSubview:self.orderDetailTableView];
+    
+    if (IOS7_OR_LATER) {
+        self.orderDetailTableView.separatorInset = UIEdgeInsetsZero;
+    }
+    
+    UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 0.5)];
+    line.backgroundColor = [UIColor clearColor];
+    self.orderDetailTableView.tableFooterView = line;
+    
+
+    self.orderDetailTableView.tableHeaderView = self.headerView;
+    
+}
+
+
+-(void)setUpHeaderViewDataWithDic:(NSDictionary *)dic
+{
+    self.userNameLab.text = [NSString stringWithFormat:@"收货人:%@",[dic objectForKey:@"shipName"]];
+    self.userPhoneLab.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"shipMobile"]];
+    self.userAddrLab.text = [NSString stringWithFormat:@"收货地址:%@%@",[dic objectForKey:@"ship_area_store"],[dic objectForKey:@"ship_address"]];
+    self.orderStateLab.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"OrderStatus"]];
+    self.orderTimeLab.text = [NSString stringWithFormat:@"下单日期:%@",[dic objectForKey:@"create_date"]];
+    self.orderNumLab.text = [NSString stringWithFormat:@"订单编号:%@",[dic objectForKey:@"orderSn"]];
+    self.orderPayWay.text = [NSString stringWithFormat:@"付款方式:%@",[dic objectForKey:@"payment_comnfig_name"]];
+}
+
+
+//显示提示
+-(void)showPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:0.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.6;} completion:nil];
+    [self performSelector:@selector(dismissPromptLab) withObject:nil afterDelay:0.0];
+}
+//提示消失
+-(void)dismissPromptLab
+{
+    [UIView animateWithDuration:1.0 delay:1.0 options:UIViewAnimationOptionCurveEaseIn animations:^{self.promptLab.alpha = 0.0;} completion:nil];
+}
+
+
+//展开商品列表
+-(void)showOrderDetaiList:(id)sender
+{
+    
+    if (self.orderDetailArray.count < 1) {
+
+        [self.orderDetailArray removeAllObjects];
+        [self.orderDetailArray addObjectsFromArray:self.orderArray];
+        [self.orderDetailTableView reloadData];
+        
+    }else
+    {
+        [self.orderDetailArray removeAllObjects];
+
+        [self.orderDetailTableView reloadData];
+        
+    }
+    
+    
+    
+}
+
+- (IBAction)togoPayOffOrder:(id)sender {
+    
+    
+    NSLog(@"-->%@",self.orderStateLab.text);
+    
+    if ([self.orderStateLab.text isEqual:@"待付款 "]) {// 去支付
+        
+        //判断是支付宝 还是微信支付
+        
+        if([[self.orderDetailDic objectForKey:@"payment_comnfig_name"] isEqualToString:@"支付宝"])
+        {
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"orderId":self.orderIdStr};
+            
+            
+            [self requestPayOrderWithDic:params];
+        }else if([[self.orderDetailDic objectForKey:@"payment_comnfig_name"] isEqualToString:@"微信支付"])
+        {
+            if(m_appDelegate)
+            {
+                [m_appDelegate sendPayWithOrderId:self.orderIdStr];
+            }
+        }
+        
+       
+        
+        
+        
+    }else if ([self.orderStateLab.text isEqual:@"待收货"]) {
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"确认收货？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+        alert.tag = 1002;
+        [alert show];
+        
+    }else//去评价
+    {
+        if (ISLOGIN) {
+            ToCommentViewController *ctr = [[ToCommentViewController alloc] initWithNibName:@"ToCommentViewController" bundle:nil];
+            ctr.hidesBottomBarWhenPushed = YES;
+            ctr.orderArray = self.orderArray;
+            [self.navigationController pushViewController:ctr animated:YES];
+        }else
+        {
+            [PublicMethod gotoLoginWithVC:self];
+
+        }
+        
+    }
+    
+}
+- (IBAction)deleteOrder:(id)sender {
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"确定删除订单？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    alert.tag = 1000;
+    [alert show];
+    
+    
+}
+- (IBAction)cancelOrder:(id)sender {
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"确定取消订单？" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    alert.tag = 1001;
+    [alert show];
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == 1000) {
+        switch (buttonIndex) {
+            case 0:
+                
+                break;
+            case 1:
+            {
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                params = @{@"OrderId":self.orderIdStr};
+                
+                [self requestDeleteMyOrderWithDic:params];
+                
+            }
+                break;
+                
+            default:
+                break;
+        }
+
+    }else if (alertView.tag == 1001)
+    {
+        switch (buttonIndex) {
+            case 0:
+                
+                break;
+            case 1:
+            {
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                params = @{@"orderId":self.orderIdStr};
+                
+                [self requestCancelOrderWithDic:params];
+                
+            }
+                break;
+                
+            default:
+                break;
+        }
+
+    }else if (alertView.tag == 1002)//确认收货
+    {
+        switch (buttonIndex) {
+            case 0:
+                
+                break;
+            case 1:
+            {
+                NSDictionary *params = [[NSDictionary alloc]init];
+                
+                params = @{@"orderId":self.orderIdStr};
+                
+                
+                [self requestReceiveOrderWithDic:params];
+                
+            }
+                break;
+                
+            default:
+                break;
+        }
+        
+    }
+
+    
+    
+}
+
+-(void)toRootView
+{
+    for (MyCenterVC *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[MyCenterVC class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    for (ShopCarViewController *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[ShopCarViewController class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    for (ClassifyViewController *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[ClassifyViewController class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+    
+    for (HomeViewThreeVC *controller in self.navigationController.viewControllers) {
+        if ([controller isKindOfClass:[HomeViewThreeVC class]]) {
+            [self.navigationController popToViewController:controller animated:YES];
+        }
+    }
+
+}
+
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 3;
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (section == 0) {
+        return self.orderDetailArray.count;
+    }else
+        return 0;
+    
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 40.0;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    if (tableView == self.orderDetailTableView) {
+        UIView *headerView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 40)];
+        headerView.backgroundColor = [UIColor whiteColor];
+        
+        
+        UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(10, 10, 100, 20)];
+        lab.backgroundColor = [UIColor clearColor];
+        lab.textColor = [UIColor colorWithRed:122/255.f green:122/255.f blue:122/255.f alpha:1.0];
+        lab.font = [UIFont systemFontOfSize:16.0];
+        [headerView addSubview:lab];
+        
+        UILabel *lastLab = [[UILabel alloc] initWithFrame:CGRectMake(110, 10, SCREEN_WIDTH - 120, 20)];
+        lastLab.backgroundColor = [UIColor clearColor];
+        lastLab.textColor = [UIColor lightGrayColor];
+        lastLab.textAlignment = NSTextAlignmentRight;
+        lastLab.font = [UIFont systemFontOfSize:12.0];
+        [headerView addSubview:lastLab];
+        
+        UIView *line = [[UIView alloc] initWithFrame:CGRectMake(0, headerView.frame.size.height - 0.5, headerView.frame.size.width, 0.5)];
+        line.backgroundColor = [UIColor lightGrayColor];
+        [headerView addSubview:line];
+        
+        if (section == 0) {
+            UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+            btn.tag = section;
+            [btn addTarget:self action:@selector(showOrderDetaiList:) forControlEvents:UIControlEventTouchUpInside];
+            btn.frame = headerView.frame;
+            [headerView addSubview:btn];
+            
+            self.detailIconImg = [[UIImageView alloc ] initWithFrame:CGRectMake(SCREEN_WIDTH - 25, 13, 14, 14)];
+            if (self.orderDetailArray.count > 0) {
+                [self.detailIconImg setImage:[UIImage imageNamed:@"icon_arrows_pre.png"]];
+            }else
+                [self.detailIconImg setImage:[UIImage imageNamed:@"icon_arrows_nor.png"]];
+            [headerView addSubview:self.detailIconImg];
+            
+            lastLab.frame = CGRectMake(110, 10, SCREEN_WIDTH - 140, 20);
+            
+        }
+        
+        if (section == 0) {
+            lab.text = @"商品清单";
+            lastLab.text = [NSString stringWithFormat:@"共%lu件商品，总计￥%.2f",(unsigned long)self.orderArray.count,[[self.orderDetailDic objectForKey:@"totalAmount"] floatValue]];
+            
+        }else if (section == 1) {
+            lab.text = @"运费";
+            float money = 0.00;
+            for (NSDictionary *dic in self.orderArray) {
+                if (([[dic objectForKey:@"isActivity"] boolValue] == 1)) {
+                    money += 22.00;
+                }
+            }
+            
+            lastLab.text = [NSString stringWithFormat:@"￥%.2f",[[self.orderDetailDic objectForKey:@"delivery"] floatValue] + money];
+            
+        }else if (section == 2) {
+            
+            lab.text = @"优惠";
+            
+            float money = 0.00;
+            for (NSDictionary *dic in self.orderArray) {
+                if (([[dic objectForKey:@"isActivity"] boolValue] == 0)) {
+                    money += 22.00;
+                }
+            }
+
+            
+            if (money > 0.00) {
+                if ([[self.orderDetailDic objectForKey:@"delivery"] floatValue] > 0.0) {
+                    lastLab.text = @"无";
+                }else if ([[self.orderDetailDic objectForKey:@"delivery"] floatValue] == 0.0 && [[self.orderDetailDic objectForKey:@"payment_comnfig_name"] isEqualToString:@"货到付款"])
+                {
+                    lastLab.text = @"满218包邮";
+                }else
+                {
+                    lastLab.text = @"满88包邮";
+                }
+
+            }else
+            {
+                lastLab.text = @"无";
+            }
+        }
+        
+        return headerView;
+        
+    }
+    return nil;
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 90;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{    
+    static NSString *CellIdentifier = @"OrderCell";
+    OrderCell *cell = (OrderCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"OrderCell" owner:self options:nil] lastObject];
+    }
+    
+    cell.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    NSDictionary *dic = [NSDictionary dictionaryWithDictionary:[self.orderDetailArray objectAtIndex:indexPath.row]];
+    
+    
+    if (judgeUrlIsHave(dic, @"newSmallGoodsImagePath")) {
+        [cell.goodsImgView sd_setImageWithURL:[NSURL URLWithString:[dic objectForKey:@"newSmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        
+    }else
+    {
+        [cell.goodsImgView sd_setImageWithURL:[PublicMethod imgWithUrl:[dic objectForKey:@"SmallGoodsImagePath"]] placeholderImage:[UIImage imageNamed:@"bg.png"]];
+        
+    }
+    
+    
+    
+    
+    cell.goodsTitleLab.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"productName"]];
+    
+    cell.goodsNumLab.text = [NSString stringWithFormat:@"数量:%@",[dic objectForKey:@"quanity"]];
+    cell.goodsPriceLab.text = [NSString stringWithFormat:@"小计:%.2f",[[dic objectForKey:@"productPrice"] floatValue] * [[dic objectForKey:@"quanity"] floatValue]];
+    if ([[dic objectForKey:@"Specifications"] isKindOfClass:[NSNull class]]) {
+        cell.goodsColorLab.text = @"规格:标准规格";
+    }else
+    {
+        cell.goodsColorLab.text = [NSString stringWithFormat:@"%@",[dic objectForKey:@"Specifications"]];
+    }
+    
+    
+    if ([[dic objectForKey:@"isActivity"] boolValue] == 1) {
+        cell.activityImg.hidden = NO;
+    }else
+    {
+        cell.activityImg.hidden = YES;
+    }
+    
+    return cell;
+    
+}
+
+
+
+#pragma  mark - OrderRequest
+#pragma  mark 订单详情
+-(void)requestMyOrderDetailWithDic:(NSDictionary *)dic
+{
+
+    
+    [[MKHttpServiceEngine shareMyInstance] requestMyOrderDetailWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+ 
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            [self.orderArray removeAllObjects];
+            NSArray *arry = [NSArray arrayWithArray:[[[responseDic objectForKey:@"datasource"] lastObject] objectForKey:@"productDetail"]];
+            [self.orderArray addObjectsFromArray:arry];
+            [self.orderDetailTableView reloadData];
+            
+            self.orderDetailDic = [[responseDic objectForKey:@"datasource"] lastObject];
+            
+            [self setUpHeaderViewDataWithDic:self.orderDetailDic];
+            
+            if ([[self.orderDetailDic objectForKey:@"payment_comnfig_name"] isEqualToString:@"货到付款"]) {
+                
+                NSString *str=[NSString stringWithFormat:@"%@",[self.orderDetailDic objectForKey:@"OrderStatus"]];
+                str=[NSString clearWhiteSpace:str];//去左右空格
+                
+                
+                if ([str isEqualToString:@"待付款"]) {
+                    self.cancelOrderBtn.hidden = NO;
+                    self.toPayOffBtn.hidden = YES;
+                    self.toDeleteOrderBtn.hidden = YES;
+                }else if ([str isEqualToString:@"待收货"])
+                {
+                    self.toPayOffBtn.hidden = NO;
+                    [self.toPayOffBtn setTitle:@"确认收货" forState:UIControlStateNormal];
+                    self.cancelOrderBtn.hidden = YES;
+                    self.toDeleteOrderBtn.hidden = YES;
+                    
+                    self.toPayOffBtn.frame = self.cancelOrderBtn.frame;
+                }else if ([str isEqualToString:@"待评价"])
+                {
+                    self.toPayOffBtn.hidden = NO;
+                    [self.toPayOffBtn setTitle:@"去评价" forState:UIControlStateNormal];
+                    self.cancelOrderBtn.hidden = YES;
+                    self.toDeleteOrderBtn.hidden = YES;
+                    
+                    self.toPayOffBtn.frame = self.cancelOrderBtn.frame;
+                }else if ([str isEqualToString:@"已作废"])
+                {
+                    self.toPayOffBtn.hidden = YES;
+                    self.cancelOrderBtn.hidden = YES;
+                    
+                    self.toDeleteOrderBtn.frame = self.cancelOrderBtn.frame;
+                }else if ([str isEqualToString:@"已完成"])
+                {
+                    
+                }
+                
+            }else if ([[self.orderDetailDic objectForKey:@"payment_comnfig_name"] isEqualToString:@"支付宝"] || [[self.orderDetailDic objectForKey:@"payment_comnfig_name"] isEqualToString:@"微信支付"] )
+            {
+                NSString *str=[NSString stringWithFormat:@"%@", [self.orderDetailDic objectForKey:@"OrderStatus"]];
+                str=[NSString clearWhiteSpace:str];//去左右空格
+                
+                
+                
+                if ([str isEqualToString:@"待付款"]) {
+                    self.cancelOrderBtn.hidden = NO;
+                    self.cancelOrderBtn.frame=self.toDeleteOrderBtn.frame;
+                    self.toPayOffBtn.hidden = NO;
+                    self.toDeleteOrderBtn.hidden = YES;
+
+                }else if ([str isEqualToString:@"待收货"])
+                {
+                    self.toPayOffBtn.hidden = NO;
+                    [self.toPayOffBtn setTitle:@"确认收货" forState:UIControlStateNormal];
+                    self.cancelOrderBtn.hidden = YES;
+                    self.toDeleteOrderBtn.hidden = YES;
+                    
+                    self.toPayOffBtn.frame = self.cancelOrderBtn.frame;
+                }
+                else if ([str isEqualToString:@"待评价"])
+                {
+                    self.toPayOffBtn.hidden = NO;
+                    [self.toPayOffBtn setTitle:@"去评价" forState:UIControlStateNormal];
+                    self.cancelOrderBtn.hidden = YES;
+                    self.toDeleteOrderBtn.hidden = YES;
+                    
+                    self.toPayOffBtn.frame = self.cancelOrderBtn.frame;
+                }else if ([str isEqualToString:@"已作废"])
+                {
+                    self.toPayOffBtn.hidden = YES;
+                    self.cancelOrderBtn.hidden = YES;
+                    
+                    self.toDeleteOrderBtn.frame = cancelBtnFrame;
+                }else if([str isEqualToString:@"已完成"])
+                {
+                    
+                }
+
+            }
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+    }];
+}
+
+#pragma OrderRequest
+#pragma mark 删除订单
+-(void)requestDeleteMyOrderWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestDeleteMyOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        if ([[responseDic objectForKey:@"success"] boolValue] == 1) {
+            [self toBackView];
+            
+        }
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+    }];
+}
+
+//修改时间戳
+- (NSString *)changeTheTime:(int)str {
+    NSDate *confromTimesp = [NSDate dateWithTimeIntervalSince1970:str];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateStyle:NSDateFormatterMediumStyle];
+    [formatter setTimeStyle:NSDateFormatterShortStyle];
+    [formatter setDateFormat:@"YYYY-MM-dd  hh:mm"];
+    NSString *time = [formatter stringFromDate:confromTimesp];
+    return time;
+}
+
+#pragma mark 订单支付
+//订单支付
+-(void)requestPayOrderWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestPayOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            NSString *orderString = [responseDic objectForKey:@"datasource"];
+            
+            // 生成支付参数
+            NSLog(@"orderString-->%@",orderString);
+            appType=ALIXPAY_RET;
+            
+            //新
+            [[AlipaySDK defaultService] payOrder:orderString fromScheme:AlipayAppScheme callback:^(NSDictionary *resultDic) {
+                NSLog(@"支付宝 支付返回参数 =%@",resultDic);
+                
+                
+                if (resultDic[@"resultStatus"]  && [resultDic[@"resultStatus"] integerValue]==9000) {
+                    OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+                    ctr.hidesBottomBarWhenPushed = YES;
+                    ctr.orderIdStr = self.orderIdStr;
+                    ctr.isPayOff = @"1";
+                    ctr.totalPriceStr = [NSString stringWithFormat:@"总价:￥%@", self.orderDetailDic[@"totalAmount"]];
+                    
+                    ctr.orderArray = self.orderArray;
+                    ctr.payWayType = zhifubao;
+                    [self.navigationController pushViewController:ctr animated:YES];
+                    
+                    
+                }else{
+                    OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+                    ctr.hidesBottomBarWhenPushed = YES;
+                    ctr.orderIdStr = self.orderIdStr;
+                    ctr.isPayOff = @"0";
+                    ctr.totalPriceStr =[NSString stringWithFormat:@"总价:￥%@", self.orderDetailDic[@"totalAmount"]];
+                    ctr.orderArray = self.orderArray;
+                    ctr.payWayType = zhifubao;
+                    [self.navigationController pushViewController:ctr animated:YES];
+                    
+                }
+
+                
+            }];
+            
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+    }];
+}
+
+-(void)recordCallBackWithResultDic:(NSDictionary *)resultDic
+{
+   
+}
+#pragma mark 确认收货
+//确认收货
+-(void)requestReceiveOrderWithDic:(NSDictionary *)dic
+{
+    
+    [[MKHttpServiceEngine shareMyInstance] requestReceiveOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+
+            self.promptLab.text = [NSString stringWithFormat:@"%@",[responseDic objectForKey:@"message"]];
+            [self showPromptLab];
+
+            
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"orderId":self.orderIdStr};
+            
+            [self requestMyOrderDetailWithDic:params];
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+    }];
+}
+
+#pragma mark 取消订单
+//取消订单
+-(void)requestCancelOrderWithDic:(NSDictionary *)dic
+{
+    
+    
+    
+    [[MKHttpServiceEngine shareMyInstance] requestCancelOrderWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic = responseObject;
+        NSLog(@"responseArray-->%@",responseDic);
+        
+        
+        
+        
+        if (![[responseDic objectForKey:@"success"] isKindOfClass:[NSNull class]] && [[responseDic objectForKey:@"success"] intValue] == 1) {
+            
+            self.promptLab.text = [NSString stringWithFormat:@"%@",[responseDic objectForKey:@"message"]];
+            [self showPromptLab];
+
+            NSDictionary *params = [[NSDictionary alloc]init];
+            
+            params = @{@"orderId":self.orderIdStr};
+            
+            [self requestMyOrderDetailWithDic:params];
+            
+        }
+        
+        
+        
+    } errorHandler:^(NSError *error) {
+        NSLog(@"error-->%@",error);
+        
+    }];
+}
+
+#pragma mark wap回调函数
+//wap回调函数
+-(void)paymentResult:(NSString *)resultd
+{
+    NSLog(@"32位支付宝 购买回调=%@",resultd);
+
+}
+
+
+-(void)paymentResultDelegate:(NSString *)result
+{
+    
+    NSLog(@"--》》%d",[result intValue]);
+
+    NSArray *arrVc=self.navigationController.viewControllers;
+    
+     if (![arrVc.lastObject isKindOfClass:[OrderRemindController class]]) {
+         
+         
+        OrderRemindController *ctr = [[OrderRemindController alloc] initWithNibName:@"OrderRemindController" bundle:nil];
+        ctr.hidesBottomBarWhenPushed = YES;
+        ctr.orderIdStr = self.orderIdStr;
+        ctr.isPayOff = result;//支付成功失败
+        ctr.totalPriceStr = [NSString stringWithFormat:@"总价:￥%@", self.orderDetailDic[@"totalAmount"]];
+        ctr.orderArray = self.orderArray;
+         
+         if(appType == ALIXPAY_RET)
+         {
+             ctr.payWayType = zhifubao;
+         }else if(appType == WEXin_AliPay)//微信支付
+         {
+             ctr.payWayType = weiXin;
+         }
+         
+        [self.navigationController pushViewController:ctr animated:YES];
+         
+         
+         
+    }
+    
+}
+
+
+
+
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

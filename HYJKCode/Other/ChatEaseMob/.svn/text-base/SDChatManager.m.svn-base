@@ -1,0 +1,964 @@
+ //
+//  SDChatManager.m
+//  sexduoduo
+//
+//  Created by showm on 15/11/20.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDChatManager.h"
+#import "EMCDDeviceManager.h"
+#import "UserProfileManager.h"
+#import "ChatSendHelper.h"
+
+#import "SHEvaluationVC.h"
+
+//两次提示的默认间隔
+static const CGFloat kDefaultPlaySoundInterval = 3.0;
+static NSString *kMessageType = @"MessageType";
+static NSString *kConversationChatter = @"ConversationChatter";
+
+static SDChatManager *instance = nil;
+
+
+@interface SDChatManager() <IChatManagerDelegate,EMCallManagerDelegate,UIAlertViewDelegate>
+@property (strong, nonatomic) NSDate *lastPlaySoundDate;
+
+@end
+
+@implementation SDChatManager
+
++(instancetype)shareInstance
+{
+    if (instance == nil)
+    {
+        instance = [[SDChatManager alloc] init];
+    }
+    return instance;
+}
+
+
+-(instancetype)init
+{
+    if (self = [super init]) {
+        
+        [self configeManager];
+        
+    }
+    
+    return self;
+}
+
+-(void)configeManager
+{
+#warning 把self注册为SDK的delegate
+    [self registerNotifications];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setupUntreatedApplyCount) name:@"setupUntreatedApplyCount" object:nil];
+    
+    
+    [self setupUnreadMessageCount];
+    [self setupUntreatedApplyCount];
+    
+    
+}
+
+#pragma mark - private
+
+-(void)registerNotifications
+{
+    [self unregisterNotifications];
+    
+    [[EaseMob sharedInstance].chatManager addDelegate:self delegateQueue:nil];
+    [[EaseMob sharedInstance].callManager addDelegate:self delegateQueue:nil];
+}
+
+-(void)unregisterNotifications
+{
+    [[EaseMob sharedInstance].chatManager removeDelegate:self];
+    [[EaseMob sharedInstance].callManager removeDelegate:self];
+}
+// 统计未读消息数
+-(void)setupUnreadMessageCount
+{
+    NSArray *conversations = [[[EaseMob sharedInstance] chatManager] conversations];
+    NSInteger unreadCount = 0;
+    for (EMConversation *conversation in conversations) {
+        unreadCount += conversation.unreadMessagesCount;
+    }
+//    if (_chatListVC) {
+//        if (unreadCount > 0) {
+//            _chatListVC.tabBarItem.badgeValue = [NSString stringWithFormat:@"%i",(int)unreadCount];
+//        }else{
+//            _chatListVC.tabBarItem.badgeValue = nil;
+//        }
+//    }
+//    
+    UIApplication *application = [UIApplication sharedApplication];
+    [application setApplicationIconBadgeNumber:unreadCount];
+}
+
+- (void)setupUntreatedApplyCount
+{
+//    NSInteger unreadCount = [[[ApplyViewController shareController] dataSource] count];
+//    if (_contactsVC) {
+//        if (unreadCount > 0) {
+//            _contactsVC.tabBarItem.badgeValue = [NSString stringWithFormat:@"%i",(int)unreadCount];
+//        }else{
+//            _contactsVC.tabBarItem.badgeValue = nil;
+//        }
+//    }
+    
+}
+
+#pragma mark - IChatManagerDelegate 消息变化
+
+- (void)didUpdateConversationList:(NSArray *)conversationList
+{
+    [self setupUnreadMessageCount];
+//    [_chatListVC refreshDataSource];
+}
+
+// 未读消息数量变化回调
+-(void)didUnreadMessagesCountChanged
+{
+    [self setupUnreadMessageCount];
+}
+
+#pragma mark 离线非透传消息接收完成的回调
+- (void)didFinishedReceiveOfflineMessages
+{
+    [self setupUnreadMessageCount];
+}
+#pragma mark 离线透传消息接收完成的回调
+- (void)didFinishedReceiveOfflineCmdMessages
+{
+    
+}
+
+- (BOOL)needShowNotification:(NSString *)fromChatter
+{
+    BOOL ret = YES;
+    NSArray *igGroupIds = [[EaseMob sharedInstance].chatManager ignoredGroupIds];
+    for (NSString *str in igGroupIds) {
+        if ([str isEqualToString:fromChatter]) {
+            ret = NO;
+            break;
+        }
+    }
+    
+    return ret;
+}
+
+
+// 收到消息回调  GOTO 跳转聊天页面时要加上caseId
+-(void)didReceiveMessage:(EMMessage *)message
+{
+    BOOL needShowNotification = (message.messageType != eMessageTypeChat) ? [self needShowNotification:message.conversationChatter] : YES;
+    if (needShowNotification) {
+#if !TARGET_IPHONE_SIMULATOR
+        
+        UIApplicationState state = [[UIApplication sharedApplication] applicationState];
+        switch (state) {
+            case UIApplicationStateActive:
+                [self playSoundAndVibration];
+                break;
+            case UIApplicationStateInactive:
+                [self playSoundAndVibration];
+                break;
+            case UIApplicationStateBackground:
+                [self showNotificationWithMessage:message];
+                break;
+            default:
+                break;
+        }
+#endif
+    }
+    
+    
+    
+    [self jumpToChatListWithMessageModel:message];
+    
+}
+
+#pragma mark 接收透传消息
+-(void)didReceiveCmdMessage:(EMMessage *)message
+{
+//    [self showHint:NSLocalizedString(@"receiveCmd", @"receive cmd message")];
+ 
+    
+#if !TARGET_IPHONE_SIMULATOR
+    
+    UIApplicationState state = [[UIApplication sharedApplication] applicationState];
+    switch (state) {
+        case UIApplicationStateActive:
+       
+        case UIApplicationStateInactive:
+        {
+            
+            NSDictionary *userInfo = [self messageTurnToUserInfo:message];
+            [self showCMdAlertViewWithUserInfo:userInfo];
+            
+//            [self playSoundAndVibration];
+
+        }
+            break;
+        case UIApplicationStateBackground:
+            //去发送本地通知
+            [self receiveCemPushLocalMessage:message];
+            break;
+        default:
+            break;
+    }
+#endif
+    
+    
+
+}
+
+- (void)playSoundAndVibration{
+    NSTimeInterval timeInterval = [[NSDate date]
+                                   timeIntervalSinceDate:self.lastPlaySoundDate];
+    if (timeInterval < kDefaultPlaySoundInterval) {
+        //如果距离上次响铃和震动时间太短, 则跳过响铃
+        NSLog(@"skip ringing & vibration %@, %@", [NSDate date], self.lastPlaySoundDate);
+        return;
+    }
+    
+    //保存最后一次响铃时间
+    self.lastPlaySoundDate = [NSDate date];
+    if (!CLOSEVOICE) {
+        // 收到消息时，播放音频
+        [[EMCDDeviceManager sharedInstance] playNewMessageSound];
+    }
+    if (!CLOSESHAKE) {
+        // 收到消息时，震动
+        [[EMCDDeviceManager sharedInstance] playVibration];
+    }
+    
+}
+
+- (void)showNotificationWithMessage:(EMMessage *)message
+{
+    EMPushNotificationOptions *options = [[EaseMob sharedInstance].chatManager pushNotificationOptions];
+    //发送本地推送
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.fireDate = [NSDate date]; //触发通知的时间
+    
+//    options.displayStyle = ePushNotificationDisplayStyle_messageSummary;
+    
+    if (options.displayStyle == ePushNotificationDisplayStyle_messageSummary) {
+        id<IEMMessageBody> messageBody = [message.messageBodies firstObject];
+        NSString *messageStr = nil;
+        switch (messageBody.messageBodyType) {
+            case eMessageBodyType_Text:
+            {
+                messageStr = ((EMTextMessageBody *)messageBody).text;
+            }
+                break;
+            case eMessageBodyType_Image:
+            {
+                messageStr = NSLocalizedString(@"message.image", @"Image");
+            }
+                break;
+            case eMessageBodyType_Location:
+            {
+                messageStr = NSLocalizedString(@"message.location", @"Location");
+            }
+                break;
+            case eMessageBodyType_Voice:
+            {
+                messageStr = NSLocalizedString(@"message.voice", @"Voice");
+            }
+                break;
+            case eMessageBodyType_Video:{
+                messageStr = NSLocalizedString(@"message.video", @"Video");
+            }
+                break;
+            default:
+                break;
+        }
+        
+        NSString *title = [[UserProfileManager sharedInstance] getNickNameWithUsername:message.from];
+        
+        
+        notification.alertBody = [NSString stringWithFormat:@"%@:%@", title, messageStr];
+    }
+    else{
+        notification.alertBody = NSLocalizedString(@"receiveMessage", @"you have a new message");
+    }
+    
+#warning 去掉注释会显示[本地]开头, 方便在开发中区分是否为本地推送
+//    notification.alertBody = [[NSString alloc] initWithFormat:@"[本地]%@", notification.alertBody];
+//    
+    notification.alertAction = NSLocalizedString(@"open", @"Open");
+    notification.timeZone = [NSTimeZone defaultTimeZone];
+    NSTimeInterval timeInterval = [[NSDate date] timeIntervalSinceDate:self.lastPlaySoundDate];
+    if (timeInterval < kDefaultPlaySoundInterval) {
+        NSLog(@"skip ringing & vibration %@, %@", [NSDate date], self.lastPlaySoundDate);
+    } else {
+        notification.soundName = UILocalNotificationDefaultSoundName;
+        self.lastPlaySoundDate = [NSDate date];
+    }
+    
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    [userInfo setObject:[NSNumber numberWithInt:message.messageType] forKey:kMessageType];
+    [userInfo setObject:message.conversationChatter forKey:kConversationChatter];
+    notification.userInfo = userInfo;
+    
+
+    
+    
+    //发送通知
+    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+        UIApplication *application = [UIApplication sharedApplication];
+        application.applicationIconBadgeNumber += 1;
+}
+
+#pragma mark - IChatManagerDelegate 登陆回调（主要用于监听自动登录是否成功）
+
+- (void)didLoginWithInfo:(NSDictionary *)loginInfo error:(EMError *)error
+{
+    if (error) {
+        
+//        NSString *hintText = NSLocalizedString(@"reconnection.retry", @"Fail to log in your account, is try again... \nclick 'logout' button to jump to the login page \nclick 'continue to wait for' button for reconnection successful");
+//        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"prompt", @"Prompt")
+//                                                            message:hintText
+//                                                           delegate:self
+//                                                  cancelButtonTitle:NSLocalizedString(@"reconnection.wait", @"continue to wait")
+//                                                  otherButtonTitles:NSLocalizedString(@"logout", @"Logout"),
+//                                  nil];
+//        alertView.tag = 99;
+//        [alertView show];
+//        [_chatListVC isConnect:NO];
+        
+        
+    }
+}
+
+#pragma mark - IChatManagerDelegate 好友变化
+
+- (void)didReceiveBuddyRequest:(NSString *)username
+                       message:(NSString *)message
+{
+#if !TARGET_IPHONE_SIMULATOR
+    [self playSoundAndVibration];
+    
+    BOOL isAppActivity = [[UIApplication sharedApplication] applicationState] == UIApplicationStateActive;
+    if (!isAppActivity) {
+        //发送本地推送
+        UILocalNotification *notification = [[UILocalNotification alloc] init];
+        notification.fireDate = [NSDate date]; //触发通知的时间
+        notification.alertBody = [NSString stringWithFormat:NSLocalizedString(@"friend.somebodyAddWithName", @"%@ add you as a friend"), username];
+        notification.alertAction = NSLocalizedString(@"open", @"Open");
+        notification.timeZone = [NSTimeZone defaultTimeZone];
+    }
+#endif
+    
+//    [_contactsVC reloadApplyView];
+}
+
+- (void)_removeBuddies:(NSArray *)userNames
+{
+//    [[EaseMob sharedInstance].chatManager removeConversationsByChatters:userNames deleteMessages:YES append2Chat:YES];
+//    [_chatListVC refreshDataSource];
+//    
+//    NSMutableArray *viewControllers = [NSMutableArray arrayWithArray:self.navigationController.viewControllers];
+//    ChatViewController *chatViewContrller = nil;
+//    for (id viewController in viewControllers)
+//    {
+//        if ([viewController isKindOfClass:[ChatViewController class]] && [userNames containsObject:[(ChatViewController *)viewController chatter]])
+//        {
+//            chatViewContrller = viewController;
+//            break;
+//        }
+//    }
+//    if (chatViewContrller)
+//    {
+//        [viewControllers removeObject:chatViewContrller];
+//        [self.navigationController setViewControllers:viewControllers animated:YES];
+//    }
+//    [self showHint:[NSString stringWithFormat:@"%@ %@", NSLocalizedString(@"delete", @"delete"), userNames[0]]];
+}
+
+- (void)didUpdateBuddyList:(NSArray *)buddyList
+            changedBuddies:(NSArray *)changedBuddies
+                     isAdd:(BOOL)isAdd
+{
+    if (!isAdd)
+    {
+        NSMutableArray *deletedBuddies = [NSMutableArray array];
+        for (EMBuddy *buddy in changedBuddies)
+        {
+            if ([buddy.username length])
+            {
+                [deletedBuddies addObject:buddy.username];
+            }
+        }
+        if (![deletedBuddies count])
+        {
+            return;
+        }
+        
+        [self _removeBuddies:deletedBuddies];
+    } else {
+        // clear conversation
+        NSArray *conversations = [[EaseMob sharedInstance].chatManager conversations];
+        NSMutableArray *deleteConversations = [NSMutableArray arrayWithArray:conversations];
+        NSMutableDictionary *buddyDic = [NSMutableDictionary dictionary];
+        for (EMBuddy *buddy in buddyList) {
+            if ([buddy.username length]) {
+                [buddyDic setObject:buddy forKey:buddy.username];
+            }
+        }
+        for (EMConversation *conversation in conversations) {
+            if (conversation.conversationType == eConversationTypeChat) {
+                if ([buddyDic objectForKey:conversation.chatter]) {
+                    [deleteConversations removeObject:conversation];
+                }
+            } else {
+                [deleteConversations removeObject:conversation];
+            }
+        }
+//        if ([deleteConversations count] > 0) {
+//            NSMutableArray *deletedBuddies = [NSMutableArray array];
+//            for (EMConversation *conversation in deleteConversations) {
+//                if (![[RobotManager sharedInstance] isRobotWithUsername:conversation.chatter]) {
+//                    [deletedBuddies addObject:conversation.chatter];
+//                }
+//            }
+//            if ([deletedBuddies count] > 0) {
+//                [self _removeBuddies:deletedBuddies];
+//            }
+//        }
+    }
+//    [_contactsVC reloadDataSource];
+}
+
+- (void)didRemovedByBuddy:(NSString *)username
+{
+//    [self _removeBuddies:@[username]];
+//    [_contactsVC reloadDataSource];
+}
+
+- (void)didAcceptedByBuddy:(NSString *)username
+{
+//    [_contactsVC reloadDataSource];
+}
+
+- (void)didRejectedByBuddy:(NSString *)username
+{
+    
+}
+
+- (void)didAcceptBuddySucceed:(NSString *)username
+{
+//    [_contactsVC reloadDataSource];
+}
+
+
+
+#pragma mark - IChatManagerDelegate 登录状态变化
+
+- (void)didLoginFromOtherDevice
+{
+    [[EaseMob sharedInstance].chatManager asyncLogoffWithUnbindDeviceToken:NO completion:^(NSDictionary *info, EMError *error) {
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"prompt", @"Prompt") message:NSLocalizedString(@"loginAtOtherDevice", @"your login account has been in other places") delegate:self cancelButtonTitle:NSLocalizedString(@"ok", @"OK") otherButtonTitles:nil, nil];
+        alertView.tag = 100;
+        [alertView show];
+        
+    } onQueue:nil];
+}
+
+- (void)didRemovedFromServer
+{
+    [[EaseMob sharedInstance].chatManager asyncLogoffWithUnbindDeviceToken:NO completion:^(NSDictionary *info, EMError *error) {
+        UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"prompt", @"Prompt") message:NSLocalizedString(@"loginUserRemoveFromServer", @"your account has been removed from the server side") delegate:self cancelButtonTitle:NSLocalizedString(@"ok", @"OK") otherButtonTitles:nil, nil];
+        alertView.tag = 101;
+        [alertView show];
+    } onQueue:nil];
+}
+
+- (void)didServersChanged
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:KNOTIFICATION_LOGINCHANGE object:@NO];
+}
+
+- (void)didAppkeyChanged
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:KNOTIFICATION_LOGINCHANGE object:@NO];
+}
+
+#pragma mark - 自动登录回调
+
+- (void)willAutoReconnect{
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    NSNumber *showreconnect = [ud objectForKey:@"identifier_showreconnect_enable"];
+    if (showreconnect && [showreconnect boolValue]) {
+//        [self hideHud];
+//        [self showHint:NSLocalizedString(@"reconnection.ongoing", @"reconnecting...")];
+    }
+}
+
+- (void)didAutoReconnectFinishedWithError:(NSError *)error{
+    NSUserDefaults *ud = [NSUserDefaults standardUserDefaults];
+    NSNumber *showreconnect = [ud objectForKey:@"identifier_showreconnect_enable"];
+    if (showreconnect && [showreconnect boolValue]) {
+//        [self hideHud];
+//        if (error) {
+//            [self showHint:NSLocalizedString(@"reconnection.fail", @"reconnection failure, later will continue to reconnection")];
+//        }else{
+//            [self showHint:NSLocalizedString(@"reconnection.success", @"reconnection successful！")];
+//        }
+    }
+}
+
+#pragma mark - ICallManagerDelegate
+
+- (void)callSessionStatusChanged:(EMCallSession *)callSession changeReason:(EMCallStatusChangedReason)reason error:(EMError *)error
+{
+    if (callSession.status == eCallSessionStatusConnected)
+    {
+        EMError *error = nil;
+        do {
+            BOOL isShowPicker = [[[NSUserDefaults standardUserDefaults] objectForKey:@"isShowPicker"] boolValue];
+            if (isShowPicker) {
+                error = [EMError errorWithCode:EMErrorInitFailure andDescription:NSLocalizedString(@"call.initFailed", @"Establish call failure")];
+                break;
+            }
+            
+//            if (![self canRecord]) {
+//                error = [EMError errorWithCode:EMErrorInitFailure andDescription:NSLocalizedString(@"call.initFailed", @"Establish call failure")];
+//                break;
+//            }
+            
+#warning 在后台不能进行视频通话
+//            if(callSession.type == eCallSessionTypeVideo && ([[UIApplication sharedApplication] applicationState] != UIApplicationStateActive || ![CallViewController canVideo])){
+//                error = [EMError errorWithCode:EMErrorInitFailure andDescription:NSLocalizedString(@"call.initFailed", @"Establish call failure")];
+//                break;
+//            }
+            
+            if (!isShowPicker){
+                [[EaseMob sharedInstance].callManager removeDelegate:self];
+//                CallViewController *callController = [[CallViewController alloc] initWithSession:callSession isIncoming:YES];
+//                callController.modalPresentationStyle = UIModalPresentationOverFullScreen;
+//                [self presentViewController:callController animated:NO completion:nil];
+//                if ([self.navigationController.topViewController isKindOfClass:[ChatViewController class]])
+//                {
+//                    ChatViewController *chatVc = (ChatViewController *)self.navigationController.topViewController;
+//                    chatVc.isInvisible = YES;
+//                }
+            }
+        } while (0);
+        
+        if (error) {
+            [[EaseMob sharedInstance].callManager asyncEndCall:callSession.sessionId reason:eCallReasonHangup];
+            return;
+        }
+    }
+}
+
+#pragma mark - public
+
+- (void)jumpToChatListWithInfo:(NSDictionary *)senderInfo
+{
+    
+    UINavigationController *nav = (UINavigationController *)m_appDelegate.tabController.selectedViewController;
+
+    if ([nav.topViewController isKindOfClass:[ChatViewController class]]) {
+        ChatViewController *chatController = (ChatViewController *)nav.topViewController;
+        [chatController hideImagePicker];
+    }
+    else
+    {
+        ChatViewController *vc =[[ChatViewController alloc] initWithChatter:senderInfo[@"f"] isGroup:NO];
+        [nav pushViewController:vc animated:YES];
+    
+    }
+}
+
+- (void)jumpToChatListWithMessageModel:(EMMessage *)message
+{
+    
+    NSDictionary *ext = message.ext;
+    
+    UINavigationController *nav = (UINavigationController *)m_appDelegate.tabController.selectedViewController;
+    
+    if ([nav.topViewController isKindOfClass:[ChatViewController class]]) {
+        ChatViewController *chatController = (ChatViewController *)nav.topViewController;
+        chatController.caseID = ext[@"quesionId"];
+        [chatController hideImagePicker];
+    }
+    else
+    {
+        ChatViewController *vc =[[ChatViewController alloc] initWithChatter:message.from isGroup:NO];
+        vc.caseID = ext[@"quesionId"];
+        [nav pushViewController:vc animated:YES];
+    }
+    
+}
+
+
+- (EMConversationType)conversationTypeFromMessageType:(EMMessageType)type
+{
+    EMConversationType conversatinType = eConversationTypeChat;
+    switch (type) {
+        case eMessageTypeChat:
+            conversatinType = eConversationTypeChat;
+            break;
+        case eMessageTypeGroupChat:
+            conversatinType = eConversationTypeGroupChat;
+            break;
+        case eMessageTypeChatRoom:
+            conversatinType = eConversationTypeChatRoom;
+            break;
+        default:
+            break;
+    }
+    return conversatinType;
+}
+#pragma mark 接收本地通知 
+- (void)didReceiveLocalNotification:(UILocalNotification *)notification
+{
+    UINavigationController *nav = (UINavigationController *)m_appDelegate.tabController.selectedViewController;
+    
+    
+    NSDictionary *userInfo = notification.userInfo;
+    NSLog(@"本地消息=%@",userInfo);
+    if (userInfo)
+    {
+        
+        
+        if(userInfo[@"actionType"])//有这个字段 是透传消息  没有是普通消息
+        {
+            [self receiveCemLocalMessageWithDic:notification.userInfo];
+        }else
+        {
+            if ([nav.topViewController isKindOfClass:[ChatViewController class]]) {
+                ChatViewController *chatController = (ChatViewController *)nav.topViewController;
+                [chatController hideImagePicker];
+            }else
+            {
+                ChatViewController *vc =[[ChatViewController alloc] initWithChatter:userInfo[kConversationChatter] isGroup:NO];
+                
+                NSString *conversationChatter = userInfo[kConversationChatter];
+                vc.title = conversationChatter;
+                [nav pushViewController:vc animated:YES];
+                
+                return;
+            }
+        }
+    }
+    else
+    {
+        
+    }
+}
+
+#pragma mark  发送消息的扩展消息
++(NSMutableDictionary *)formartSendExtDic:(NSMutableDictionary *)ext andCaseId:(NSString *)caseId
+{
+    [ext setObject:USERID forKey:@"userId"];
+    [ext setObject:USER_HEADIMAGE_URL forKey:@"avatar"];
+    [ext setObject:NICKNAME forKey:@"nickname"];
+    [ext setObject:ISDOCTOR?@"2":@"1" forKey:@"idenity"];
+    [ext setObject:[NSString stringWithFormat:@"%@",caseId] forKey:@"questionId"];
+    
+    return ext;
+}
+
+#pragma mark  - 透传消息 往外发
+
+#pragma mark  用户向医生发送透传消息 （vip 或 电话咨询已支付）
++(void)UserSendDoctor:(NSString *)receiverName withAciton:(chatCmdType)action andQuestionId:(NSString *)questionId ;
+{
+    NSMutableDictionary *ext = [[NSMutableDictionary alloc] init];//扩展消息
+    [ext setObject:[NSString stringWithFormat:@"%@",questionId] forKey:@"questionId"];
+    
+    EMChatCommand *cmdChat = [[EMChatCommand alloc] init];
+    
+    switch (action) {
+        case cmd_ACTION_DOCTOR_VIP:
+            cmdChat.cmd = ACTION_DOCTOR_VIP;
+            break;
+        case cmd_ACTION_DOCTOR_PHONE:
+            cmdChat.cmd = ACTION_DOCTOR_PHONE;
+            break;
+        case cmd_ACTION_USER_PHONE:
+            cmdChat.cmd = ACTION_USER_PHONE;
+            break;
+        case cmd_ACTION_USER_VIP:
+            cmdChat.cmd = ACTION_USER_VIP;
+            break;
+        default:
+            break;
+    }
+    
+    EMCommandMessageBody *body = [[EMCommandMessageBody alloc] initWithChatObject:cmdChat];
+    
+    // 生成message
+    EMMessage *message = [[EMMessage alloc] initWithReceiver:receiverName bodies:@[body]];
+    message.messageType = eMessageTypeChat; // 设置为单聊消息
+    
+    message.ext = ext;
+
+    //发送消息
+    [[EaseMob sharedInstance].chatManager asyncSendMessage:message
+                                                  progress:nil];
+}
+#pragma mark  医生向用户发送透传消息 （已完成 去评价吧）
++(void)doctorSendToUser:(NSString *)receiverName withAciton:(chatCmdType)action andQuestionId:(NSString *)questionId andDoctorId:(NSString *)doctorId;
+{
+    NSMutableDictionary *ext = [[NSMutableDictionary alloc] init];//扩展消息
+    [ext setObject:[NSString stringWithFormat:@"%@",questionId] forKey:@"questionId"];
+    [ext setObject:[NSString stringWithFormat:@"%@",doctorId] forKey:@"doctorId"];
+
+    
+    EMChatCommand *cmdChat = [[EMChatCommand alloc] init];
+    switch (action) {
+        case cmd_ACTION_DOCTOR_VIP:
+            cmdChat.cmd = ACTION_DOCTOR_VIP;
+            break;
+        case cmd_ACTION_DOCTOR_PHONE:
+            cmdChat.cmd = ACTION_DOCTOR_PHONE;
+            break;
+        case cmd_ACTION_USER_PHONE:
+            cmdChat.cmd = ACTION_USER_PHONE;
+            break;
+        case cmd_ACTION_USER_VIP:
+            cmdChat.cmd = ACTION_USER_VIP;
+            break;
+        default:
+            break;
+    }
+    
+    EMCommandMessageBody *body = [[EMCommandMessageBody alloc] initWithChatObject:cmdChat];
+    
+    // 生成message
+    EMMessage *message = [[EMMessage alloc] initWithReceiver:receiverName bodies:@[body]];
+    message.messageType = eMessageTypeChat; // 设置为单聊消息
+    
+    message.ext = ext;
+    
+    //发送消息
+    [[EaseMob sharedInstance].chatManager asyncSendMessage:message
+                                                  progress:nil];
+}
+
+
+#pragma mark  - 透传消息 接收后
+
+-(NSMutableDictionary *)messageTurnToUserInfo:(EMMessage *)message
+{
+    EMCommandMessageBody *body = (EMCommandMessageBody *)message.messageBodies.lastObject;
+
+
+    // 通知的userinfo 消息
+    NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    [userInfo setObject:[NSNumber numberWithInt:message.messageType] forKey:kMessageType];
+    [userInfo setObject:message.conversationChatter forKey:kConversationChatter];
+    
+    
+    NSString *messageStr = nil;
+    
+    //用户向医生发送透传消息（vip咨询）
+    if ([body.action isEqualToString:ACTION_USER_VIP]) {
+        messageStr = @"您有一条新的健康咨询";
+        
+        [userInfo setObject:ACTION_USER_VIP forKey:@"actionType"];
+        [userInfo setObject:message.ext forKey:@"actionExt"];
+        //用户向医生发送头传消息
+    }else if([body.action isEqualToString:ACTION_USER_PHONE])
+    {
+        messageStr = @"您有一条新的健康咨询";
+        
+        [userInfo setObject:ACTION_USER_PHONE forKey:@"actionType"];
+        [userInfo setObject:message.ext forKey:@"actionExt"];
+        
+        
+        //医生向用户发送透传消息(vip评价)
+    }else if ([body.action isEqualToString:ACTION_DOCTOR_VIP])
+    {
+        messageStr = @"您有一条待评价咨询";
+        
+        [userInfo setObject:ACTION_DOCTOR_VIP forKey:@"actionType"];
+        [userInfo setObject:message.ext forKey:@"actionExt"];
+        
+        //医生向用户发送透传消息(电话评价)未使用
+    }else if([body.action isEqualToString:ACTION_DOCTOR_PHONE])
+    {
+        messageStr = @"您有一条待评价咨询";
+        [userInfo setObject:ACTION_DOCTOR_PHONE forKey:@"actionType"];
+        [userInfo setObject:message.ext forKey:@"actionExt"];
+        
+    }
+    
+    return userInfo;
+}
+
+#pragma mark 接手透传消息 并发送透传消息的本地通知
+-(void)receiveCemPushLocalMessage:(EMMessage *)message
+{
+    EMCommandMessageBody *body = (EMCommandMessageBody *)message.messageBodies.lastObject;
+    NSDictionary *ext = message.ext;
+    NSLog(@"SDChatManager收到的action是 -- %@",body.action);
+    NSLog(@"SDChatManager cmd消息中的扩展属性是 -- %@",ext);
+    
+    //发送本地推送
+    UILocalNotification *notification = [[UILocalNotification alloc] init];
+    notification.fireDate = [NSDate date]; //触发通知的时间
+    
+
+    NSString *messageStr = nil;
+    //用户向医生发送透传消息（vip咨询）
+    if ([body.action isEqualToString:ACTION_USER_VIP]) {
+        messageStr = @"您有一条新的健康咨询";
+        //用户向医生发送头传消息
+    }else if([body.action isEqualToString:ACTION_USER_PHONE])
+    {
+        messageStr = @"您有一条新的健康咨询";
+        //医生向用户发送透传消息(vip评价)
+    }else if ([body.action isEqualToString:ACTION_DOCTOR_VIP])
+    {
+        messageStr = @"您有一条待评价咨询";
+
+        //医生向用户发送透传消息(电话评价)未使用
+    }else if([body.action isEqualToString:ACTION_DOCTOR_PHONE])
+    {
+        messageStr = @"您有一条待评价咨询";
+    }else
+    {
+        return;//不是这几种就不发通知
+    }
+    
+    
+    
+    notification.userInfo = [self messageTurnToUserInfo:message];
+
+    notification.alertBody = [NSString stringWithFormat:@"%@", messageStr];
+//    notification.alertBody = NSLocalizedString(@"receiveMessage", @"you have a new message");
+    
+#warning 去掉注释会显示[本地]开头, 方便在开发中区分是否为本地推送
+    //    notification.alertBody = [[NSString alloc] initWithFormat:@"[本地]%@", notification.alertBody];
+    //
+    notification.alertAction = NSLocalizedString(@"open", @"Open");
+    notification.timeZone = [NSTimeZone defaultTimeZone];
+    NSTimeInterval timeInterval = [[NSDate date] timeIntervalSinceDate:self.lastPlaySoundDate];
+    if (timeInterval < kDefaultPlaySoundInterval) {
+        NSLog(@"skip ringing & vibration %@, %@", [NSDate date], self.lastPlaySoundDate);
+    } else {
+        notification.soundName = UILocalNotificationDefaultSoundName;
+        self.lastPlaySoundDate = [NSDate date];
+    }
+    
+    
+    //发送通知
+    [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+    UIApplication *application = [UIApplication sharedApplication];
+    application.applicationIconBadgeNumber += 1;
+}
+#pragma mark 接收自己发送的cmd的本地通知 或者 点开alertView
+-(void)receiveCemLocalMessageWithDic:(NSDictionary *)userInfo
+{
+    
+    NSString *action=userInfo[@"actionType"];
+    NSDictionary *ext = userInfo[@"actionExt"];
+    NSLog(@"%@ %@",userInfo[@"actionType"] ,ext);
+    
+    //用户向医生发送透传消息（vip咨询）
+    if ([action isEqualToString:ACTION_USER_VIP]) {
+        
+        //
+        UINavigationController *nav = (UINavigationController *)m_appDelegate.tabController.selectedViewController;
+        if ([nav.topViewController isKindOfClass:[ChatViewController class]]) {
+            ChatViewController *chatController = (ChatViewController *)nav.topViewController;
+            chatController.caseID =[NSString stringWithFormat:@"%@",ext[@"questionId"]];
+            [chatController hideImagePicker];
+        }
+        else
+        {
+            ChatViewController *vc =[[ChatViewController alloc] initWithChatter:userInfo[kConversationChatter] isGroup:NO];
+            vc.caseID = [NSString stringWithFormat:@"%@",ext[@"questionId"]];
+            [nav pushViewController:vc animated:YES];
+        }
+        
+        //用户向医生发送头传消息
+    }else if([action isEqualToString:ACTION_USER_PHONE])
+    {
+        
+        
+        //医生向用户发送透传消息(vip评价)
+    }else if ([action isEqualToString:ACTION_DOCTOR_VIP])
+    {
+        UINavigationController *nav = (UINavigationController *)m_appDelegate.tabController.selectedViewController;
+
+        
+        SHEvaluationVC *vc = [[SHEvaluationVC alloc] init];
+        
+        SHConsulting *model =[[SHConsulting alloc] init];
+        model.casesId = ext[@"questionId"];
+        model.doctorId = ext[@"doctorId"];
+        
+        vc.consulting =model;
+        [nav pushViewController:vc animated:YES];
+        
+        //医生向用户发送透传消息(电话评价)未使用
+    }else if([action isEqualToString:ACTION_DOCTOR_PHONE])
+    {
+        
+        
+    }
+
+}
+
+
+-(void)showCMdAlertViewWithUserInfo:(NSDictionary *)userInfo
+{
+    
+    NSString *action=userInfo[@"actionType"];
+    
+    NSString *messageStr;
+    //用户向医生发送透传消息（vip咨询）
+    if ([action isEqualToString:ACTION_USER_VIP]) {
+        messageStr = @"您有一条新的健康咨询";
+        //用户向医生发送头传消息
+    }else if([action isEqualToString:ACTION_USER_PHONE])
+    {
+        messageStr = @"您有一条新的健康咨询";
+
+        //医生向用户发送透传消息(vip评价)
+    }else if ([action isEqualToString:ACTION_DOCTOR_VIP])
+    {
+        messageStr = @"您有一条待评价咨询";
+        //医生向用户发送透传消息(电话评价)未使用
+    }else if([action isEqualToString:ACTION_DOCTOR_PHONE])
+    {
+        messageStr = @"您有一条待评价咨询";
+    }else
+    {
+        return;
+    }
+
+    [self playSoundAndVibration];
+
+    
+    UIAlertView *alertView=[[UIAlertView alloc] initWithTitle:@"提示" message:messageStr delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil];
+    [alertView qzSetAssociatedObject:userInfo forKey:@"userInfo"];
+    alertView.qzTagString = @"cemAlert";
+    [alertView show];
+    
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if ([alertView.qzTagString isEqualToString:@"cemAlert"]) {
+        
+        if (buttonIndex == 1) {
+            
+            [self receiveCemLocalMessageWithDic:[alertView qzAssociatedObjectForKey:@"userInfo"]];
+
+        }
+    }
+}
+
+
+@end

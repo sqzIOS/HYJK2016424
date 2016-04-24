@@ -1,0 +1,1686 @@
+//
+//  AppDelegate.m
+//  sexduoduo
+//
+//  Created by showm on 14-5-14.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+//
+//                            _ooOoo_
+//                           o8888888o
+//                           88" . "88
+//                           (| -_- |)
+//                            O\ = /O
+//                        ____/`---'\____
+//                      .   ' \\| |// `.
+//                       / \\||| : |||// \
+//                     / _||||| -:- |||||- \
+//                       | | \\\ - /// | |
+//                     | \_| ''\---/'' | /  |
+//                      \ .-\__ `-` ___/-. /
+//                   ___`. .' /--.--\ `. . __
+//                ."" '< `.___\_<|>_/___.' >'"".
+//               | | : `- \`.;`\ _ /`;.`/ - ` : | |
+//                 \ \ `-. \_ __\ /__ _/ .-` / /
+//         ======`-.____`-.___\_____/___.-`____.-'======
+//                            `=---='
+//
+//         .............................................
+//                  佛祖保佑                  永无BUG
+
+
+
+
+#import "AppDelegate.h"
+
+#import "MobClick.h"
+//#import "AlixPayResult.h"
+#import <AlipaySDK/AlipaySDK.h>
+//#import "DataVerifier.h"
+
+#import "StartPictureView.h"
+
+#import "ActivityViewController.h"
+#import "SDSetTimeBuyGoodsVC.h"
+
+#import "QQInterface.h"
+#import <TencentOpenAPI/TencentOAuth.h>
+#import "MKHttpYiJiFenTongJi.h"
+
+#import "BBSDetailNewViewController.h"
+
+//for mac
+#include<sys/socket.h>
+#include<sys/sysctl.h>
+#include<net/if.h>
+#include<net/if_dl.h>
+
+//for idfa
+#import<AdSupport/AdSupport.h>
+//#import "APService.h"
+#import "UMFeedback.h"
+
+#import "IPDetector.h"
+
+#import "JiFenShopViewController.h"
+#import "SRRecordHomeVC.h"
+#import "GoodListMainController.h"
+//#if defined(_SUPPORT_BAIDU_NAVIGA_)
+//#import "BNCoreServices.h"
+//#endif
+
+#import "AppDelegate+EaseMob.h"
+#import "AppDelegate+ThirdPartyRegister.h"
+#import "AppDelegate+GeTuiPush.h"
+
+@implementation AppDelegate
+@synthesize tabController;
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    
+    
+    m_appDelegate=self;//全局变量
+    // 在线参数相关
+    [self umengConfigParams];
+    
+    // 初始化环信SDK，详细内容在AppDelegate+EaseMob.m 文件中
+    [self easemobApplication:application didFinishLaunchingWithOptions:launchOptions];
+    
+    // 每次打开应用 需要做点啥呢
+    [self doEveryLunchEventWithLaunchOptions:launchOptions];
+    
+    
+    
+    //如果 第一次启动应用加引导图 
+    if ([[AppSet shareInstance] is_new_fun] == 1)
+    {
+        [self setUpCustomTab];//创建各视图控制器
+    }else
+    {
+        UIViewController *vc=[[UIViewController alloc] init];
+        self.window.rootViewController = vc;
+        
+        
+        //scView引导
+        BeginView *beginView = [[BeginView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, [[UIScreen mainScreen] bounds].size.height)];
+//        [self.window addSubview:beginView];// 加载window上 没有加在tab
+        
+        [vc.view addSubview:beginView];
+        
+        //滚动引导
+//        PhotoScrollViewCtrl *ctrVc = [[PhotoScrollViewCtrl alloc] init];
+//        [self.window setRootViewController:ctrVc];
+        
+        //测试统计激活量
+        [self appActivation];
+    }
+    
+    
+    //自定义启动图判断是否应该显示
+    NSString *showStartwithVersion=[NSString stringWithFormat:@"is_showStartPicture%@",[ShareFunction getApplicationVersion]];
+    NSString* isShow = [MobClick getConfigParams:showStartwithVersion];
+    
+    if ([isShow isEqualToString:@"YES"]) {
+        StartPictureView *startPicView = [[StartPictureView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+        [tabController.view addSubview:startPicView];//第一次引导没有改启动图 tabController还没有创建
+    }else
+    {
+        //否则默认启动图延时两秒
+        [NSThread sleepForTimeInterval:2.0];
+    }
+    
+    
+    self.window.backgroundColor = [UIColor whiteColor];
+    [self.window makeKeyAndVisible];
+    
+   
+    
+    return YES;
+    
+    
+}
+
+
+
+#pragma mark - ====app激活量
+#pragma mark app激活量
+-(void)appActivation
+{
+    NSDictionary *dic=@{@"mac":[ShareFunction getMACAddress],@"idfa":[ShareFunction getADFA],@"imie":DEVICEUUID};
+    
+    NSLog(@"统计激活量的请求参数-%@",dic);
+    [[MKHttpExchangeDemo shareMyInstance] requestAppActivationWithDic:dic completionHandler:^(id responseObject) {
+        NSDictionary *responseDic=responseObject;
+        NSLog(@"统计激活量-%@",responseDic);
+    } errorHandler:^(NSError *error) {
+        NSLog(@"统计激活量失败");
+    }];
+}
+
+
+
+#pragma mark umeng统计app激活量
+-(void)umengTrackActivation
+{
+    NSString * appKey = @"53e1ed0ffd98c5ab4c00c0cf";
+    NSString * deviceName = [[[UIDevice currentDevice] name] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSString * mac = [self macString];
+    NSString * idfa = [self idfaString];
+    NSString * idfv = [self idfvString];
+    NSString * urlString = [NSString stringWithFormat:@"http://log.umtrack.com/ping/%@/?devicename=%@&mac=%@&idfa=%@&idfv=%@", appKey, deviceName, mac, idfa, idfv];
+    [NSURLConnection connectionWithRequest:[NSURLRequest requestWithURL: [NSURL URLWithString:urlString]] delegate:nil];
+    
+}
+
+
+
+-(NSString * )macString{
+    int mib[6];
+    size_t len;
+    char *buf;
+    unsigned char *ptr;
+    struct if_msghdr *ifm;
+    struct sockaddr_dl *sdl;
+    
+    mib[0] = CTL_NET;
+    mib[1] = AF_ROUTE;
+    mib[2] = 0;
+    mib[3] = AF_LINK;
+    mib[4] = NET_RT_IFLIST;
+    
+    if ((mib[5] = if_nametoindex("en0")) == 0) {
+        printf("Error: if_nametoindex error\n");
+        return NULL;
+    }
+    
+    if (sysctl(mib, 6, NULL, &len, NULL, 0) < 0) {
+        printf("Error: sysctl, take 1\n");
+        return NULL;
+    }
+    
+    if ((buf = malloc(len)) == NULL) {
+        printf("Could not allocate memory. error!\n");
+        return NULL;
+    }
+    
+    if (sysctl(mib, 6, buf, &len, NULL, 0) < 0) {
+        printf("Error: sysctl, take 2");
+        free(buf);
+        return NULL;
+    }
+    
+    ifm = (struct if_msghdr *)buf;
+    sdl = (struct sockaddr_dl *)(ifm + 1);
+    ptr = (unsigned char *)LLADDR(sdl);
+    NSString *macString = [NSString stringWithFormat:@"%02X:%02X:%02X:%02X:%02X:%02X",
+                           *ptr, *(ptr+1), *(ptr+2), *(ptr+3), *(ptr+4), *(ptr+5)];
+    free(buf);
+    
+    return macString;
+}
+
+-(NSString *)idfaString {
+    
+    NSBundle *adSupportBundle = [NSBundle bundleWithPath:@"/System/Library/Frameworks/AdSupport.framework"];
+    [adSupportBundle load];
+    
+    if (adSupportBundle == nil) {
+        return @"";
+    }
+    else{
+        
+        Class asIdentifierMClass = NSClassFromString(@"ASIdentifierManager");
+        
+        if(asIdentifierMClass == nil){
+            return @"";
+        }
+        else{
+            
+            //for no arc
+            //ASIdentifierManager *asIM = [[[asIdentifierMClass alloc] init] autorelease];
+            //for arc
+            ASIdentifierManager *asIM = [[asIdentifierMClass alloc] init];
+            
+            if (asIM == nil) {
+                return @"";
+            }
+            else{
+                
+                if(asIM.advertisingTrackingEnabled){
+                    return [asIM.advertisingIdentifier UUIDString];
+                }
+                else{
+                    return [asIM.advertisingIdentifier UUIDString];
+                }
+            }
+        }
+    }
+}
+
+-(NSString *)idfvString
+{
+    if([[UIDevice currentDevice] respondsToSelector:@selector( identifierForVendor)]) {
+        return [[UIDevice currentDevice].identifierForVendor UUIDString];
+    }
+    
+    return @"";
+}
+#pragma mark - ====在线参数
+
+#pragma mark 获得umeng在线参数
+-(void)umengConfigParams
+{
+    // 是否放大头像
+    NSString* isShowHead = [MobClick getConfigParams:@"is_showBigHead"];
+    if ([isShowHead isEqualToString:@"YES"])
+    {
+        IS_ShowBigHead=YES;
+    }else IS_ShowBigHead = NO;
+    
+    
+    // 是否关闭二级回复功能
+    NSString* isOffBBSSecond = [MobClick getConfigParams:@"is_offBBSSecond"];
+    if ([isOffBBSSecond isEqualToString:@"YES"])
+    {
+        IS_OFFBBSSecond=YES;
+    }else IS_OFFBBSSecond = NO;
+    
+    // 是否显示消息提示num
+    IS_ShowMessageIcon=YES;
+    NSString * isShowMessageNum = [MobClick getConfigParams:@"IS_ShowMessageIcon"];
+    if ([isShowMessageNum isEqualToString:@"YES"])
+    {
+        IS_ShowMessageIcon=YES;
+    }else if([isShowMessageNum isEqualToString:@"NO"])
+    {
+        IS_ShowMessageIcon = NO;
+    }
+    
+    // 是否使用emoji表情
+    useEmojiAble=NO;
+    NSString * isUseEmojiAble = [MobClick getConfigParams:@"isUseEmojiAble"];
+    if ([isUseEmojiAble isEqualToString:@"YES"])
+    {
+        useEmojiAble=YES;
+    }else if([isUseEmojiAble isEqualToString:@"NO"])
+    {
+        useEmojiAble = NO;
+    }
+}
+#pragma mark  在线参数更新后的通知事件
+- (void)onlineConfigCallBack:(NSNotification *)notification {
+    
+    NSLog(@"online config has fininshed and params = %@", notification.userInfo);
+    
+    
+    NSString *networkUseIp=@"1,1,1,0";// 商城 ，论坛 ，商城图片，论坛图片networkUseIp3.9Later
+    if ([notification.userInfo objectForKey:@"networkUseIp3.9Later"]) {
+        networkUseIp= [notification.userInfo objectForKey:@"networkUseIp3.9Later"];
+        NSLog(@"----%@",networkUseIp);
+    }
+    
+    NSArray *networkArr=[networkUseIp componentsSeparatedByString:@","];
+    if (networkArr.count>0) {
+        if (networkArr.count>0) {
+            if ([networkArr[0] isEqualToString:@"1"]) {
+                useShopIp = YES;
+                [UserDefaults setObject:@"1" forKey:@"useShopIp"];
+            }else{
+                useShopIp = NO;
+                [UserDefaults setObject:@"0" forKey:@"useShopIp"];
+            }
+        }
+        if (networkArr.count>1) {
+            if ([networkArr[1] isEqualToString:@"1"]) {
+                useLunTanIp = YES;
+                [UserDefaults setObject:@"1" forKey:@"useLunTanIp"];
+            }else{
+                
+                useLunTanIp = NO;
+                [UserDefaults setObject:@"0" forKey:@"useLunTanIp"];
+            }
+        }
+        
+        if (networkArr.count>2) {
+            if ([networkArr[2] isEqualToString:@"1"]) {
+                shopPicUseIp = YES;
+                [UserDefaults setObject:@"1" forKey:@"shopPicUseIp"];
+            }else {
+                shopPicUseIp = NO;
+                [UserDefaults setObject:@"0" forKey:@"shopPicUseIp"];
+            }
+        }
+        if (networkArr.count>3) {
+            
+            if ([networkArr[3] isEqualToString:@"1"]) {
+                lunTanPicUseIp = YES;
+                [UserDefaults setObject:@"1" forKey:@"lunTanPicUseIp"];
+            }else{
+                lunTanPicUseIp = NO;
+                [UserDefaults setObject:@"0" forKey:@"lunTanPicUseIp"];
+            }
+        }
+    }
+    [UserDefaults synchronize];
+    
+    
+    if ([[AppSet shareInstance] is_new_fun] == 1)//保证不再第一安装打开引导的过程中 修改
+    {
+        NSString *showBBSwithVersion=[NSString stringWithFormat:@"isPassStoreCheck%@",[ShareFunction getApplicationVersion]];
+        NSString* showBBS= [notification.userInfo objectForKey:showBBSwithVersion];
+        if ([showBBS isEqualToString:@"YES"] && [[UserDefaults objectForKey:@"isPassStoreCheck"]isEqualToString:@"0"])//isPassStoreCheck 变为了YES且以前为NO的时候调用
+        {
+            [self setUpCustomTab]; //重新加载各视图控制器
+        }else NSLog(@"为NO 或者没有");
+        
+    }else NSLog(@"引导图");
+    
+    
+}
+
+
+
+#pragma mark - ====
+
+
+//每次启动执行任务
+-(void)doEveryLunchEventWithLaunchOptions:(NSDictionary *)launchOptions
+{
+    // umeng + 分享 +微信支付
+    [self umengTrackAndWeiXinAlipay];
+    
+    // 推送
+//    [self initJPush:launchOptions];
+    
+    // 判断一周内有3天打开程序，则弹出引导用户评5分提示
+//    [self pop5StarsTip];
+    
+    // 个推 注册
+    [self registerUserNotification];
+    // 个推 处理远程通知启动APP
+    [self receiveNotificationByLaunchingOptions:launchOptions];
+    
+    
+    
+    // 检查论坛消息数目
+    [self checkMessageNum];
+    
+    // 提示跳转AppSore评论应用
+    [self checkEveryDayEvent];
+    
+    // 隐私锁屏界面
+    [self performSelector:@selector(yinSiPass) withObject:nil afterDelay:0.];
+    
+    // 使用umeng按渠道统计激活量
+    [self umengTrackActivation];
+    
+    // umeng在线参数改变的话 发送通知用以判断应用从睡眠启动时 bbs板块是否打开 并重新布局应用
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onlineConfigCallBack:) name:UMOnlineConfigDidFinishedNotification object:nil];
+    
+//#if defined(_SUPPORT_BAIDU_NAVIGA_)
+//    //初始化百度地图导航SDK
+//    [BNCoreServices_Instance initServices:SDKBAIDUKEY];
+//    [BNCoreServices_Instance startServicesAsyn:nil fail:nil];
+//#endif
+    
+//#if defined(_SUPPORT_BAIDU_MAP_)
+//    
+//    //使用百度地图，请先启动
+//    _mapManager = [[BMKMapManager alloc]init];
+//    // 如果要关注网络及授权验证事件，
+//    BOOL ret = [_mapManager start:SDKBAIDUKEY  generalDelegate:self];
+//    if (!ret) {
+//        NSLog(@"定位失败!");
+//    }
+////    
+////     self.mapView=[[BMKMapView alloc] initWithFrame:CGRectMake(0., 0.,[UIScreen mainScreen].bounds.size.width , SCREEN_HEIGHT)];
+//#endif
+    
+    
+}
+#pragma mark  判断改天是否是一天内的第一次启动
+-(void)checkEveryDayEvent
+{
+    NSDate* date = [NSDate date];
+    NSTimeZone* zone = [NSTimeZone systemTimeZone];
+    NSInteger interval = [zone secondsFromGMTForDate:date];
+    NSDate* localDate = [date dateByAddingTimeInterval:interval];
+    
+    NSString* curTime = [NSString stringWithFormat:@"%@",localDate];
+    NSLog(@"currentTime=%@",curTime);
+    if (curTime.length > 10) {
+        curTime = [curTime substringToIndex:10];
+    }
+    
+    NSString* lastTime = [[NSUserDefaults standardUserDefaults] objectForKey:@"Launch_LAST_TIME"];
+    if (lastTime == nil || ![curTime isEqualToString:lastTime])
+    {
+        [self doEveryDayEvent];
+    }
+    
+    [[NSUserDefaults standardUserDefaults] setObject:curTime forKey:@"Launch_LAST_TIME"];
+}
+#pragma mark 每天第一次启动要执行的任务
+//执行每天任务
+-(void)doEveryDayEvent
+{
+    
+}
+#pragma mark  判断一周内有3天打开程序，则弹出引导用户评5分提示
+-(void)pop5StarsTip
+{
+    BOOL isPingLun=[[[NSUserDefaults standardUserDefaults] objectForKey:@"isPingLun"] boolValue];
+    NSLog(@"isPingLun=%d",isPingLun);
+    
+    if (isPingLun) {
+        return;
+    }
+    
+    NSString* flag = @"openTimestampArray";
+    NSArray*   curAr = [[NSUserDefaults standardUserDefaults] objectForKey:flag];
+    NSMutableArray* ar = [curAr mutableCopy];
+    if (ar == nil) {
+        ar = [[NSMutableArray alloc] init];
+    }
+    else{
+        if ([ar count] >= 2) {
+            NSNumber* preDate = [ar objectAtIndex:ar.count -2];
+            NSTimeInterval interval = [[NSDate date] timeIntervalSince1970]-[preDate doubleValue];
+            if (interval < ONE_DAY_TIMEINTERVAL*7) {
+                //pop
+                if (self.alertPingLun == nil) {
+                    self.alertPingLun=[[UIAlertView alloc]initWithTitle:nil message:@"亲,去给苦逼程序员加油,\n赏个好评吧!" delegate:self cancelButtonTitle:@"残忍拒绝" otherButtonTitles:@"好评", @"我要吐槽",nil];
+                    self.alertPingLun.tag=1000;
+                    [self.alertPingLun show];
+                }
+                
+                [[NSUserDefaults standardUserDefaults] removeObjectForKey:flag];
+                return;
+            }
+        }
+    }
+    
+    [ar addObject:[NSNumber numberWithDouble:[[NSDate date] timeIntervalSince1970]]];
+    
+    [[NSUserDefaults standardUserDefaults] setObject:ar forKey:flag];
+}
+
+-(void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if (alertView.tag==1000) {
+        
+        if (buttonIndex==0) {
+            self.alertPingLun=nil;
+            [self.pingLunTimer invalidate];// 如果决绝也停止计时器
+            return;
+        }else if (buttonIndex==1){
+            NSString *url =[NSString stringWithFormat:@"https://itunes.apple.com/us/app/xiu-ai-qing-qu-shang-cheng/id%@?l=zh&ls=1&mt=8",ITUNES_APP_ID];
+            
+            //给应用打分
+            BOOL isPingLun=[[UIApplication sharedApplication] openURL:[NSURL URLWithString:url]];
+            if (isPingLun) {
+                [self.pingLunTimer invalidate];//评论成功 停止计时器 并记录已经评论过
+                [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:YES] forKey:@"isPingLun"];
+            }
+            
+            
+        }else if (buttonIndex==2){
+            
+            //意见反馈
+            [tabController presentViewController:[UMFeedback feedbackModalViewController] animated:YES completion:^{
+                
+            }];
+        }
+    }
+    
+    
+    if([alertView.qzTagString isEqualToString:@"LoginFromOtherDevice"])
+    {
+        [SDUserManager userLogOut];
+    }
+}
+
+
+
+#pragma mark - tabbar
+- (void)setUpCustomTab {
+    
+    
+    [self testSetupSHHealthTab];
+    return;
+    
+    
+    // 判断是否为审核状态
+    if (IS_APPSTORE) {
+        isPassStoreCheck=NO;
+        
+        NSString *showName=[NSString stringWithFormat:@"isPassStoreCheck%@",[ShareFunction getApplicationVersion]];
+        NSString* passCheck= [MobClick getConfigParams:showName];
+        if ([passCheck isEqualToString:@"YES"])
+        {
+            isPassStoreCheck =YES;
+        }else{
+            isPassStoreCheck = NO;
+            
+            [UserDefaults setObject:@"0" forKey:@"isPassStoreCheck"];
+            [UserDefaults synchronize];
+        }
+        
+        isShowFenLei = NO;
+        showName=[NSString stringWithFormat:@"isShowFenLei%@",[ShareFunction getApplicationVersion]];
+        NSString* showFenLei= [MobClick getConfigParams:showName];
+        if ([showFenLei isEqualToString:@"YES"])
+        {
+            isShowFenLei =YES;
+        }else{
+            isShowFenLei = NO;
+        }
+        
+        
+        isShowLunTan = NO;
+        showName=[NSString stringWithFormat:@"isShowLunTan%@",[ShareFunction getApplicationVersion]];
+        NSString *showLunTan= [MobClick getConfigParams:showName];
+        if ([showLunTan isEqualToString:@"YES"])
+        {
+            isShowLunTan =YES;
+            
+        }else{
+            isShowLunTan = NO;
+        }
+        
+        isHiddenSexhealth = NO;
+        showName=[NSString stringWithFormat:@"isHiddenSexhealth%@",[ShareFunction getApplicationVersion]];
+        NSString *isHidden= [MobClick getConfigParams:showName];
+        if ([isHidden isEqualToString:@"YES"])
+        {
+            isHiddenSexhealth =YES;
+            
+        }else{
+            isHiddenSexhealth = NO;
+            
+        }
+        
+        
+        
+    }else if([Flag isEqualToString:@"tb"])
+    {
+        isPassStoreCheck=NO;
+    }else if ([Flag isEqualToString:@"91"])
+    {
+        isPassStoreCheck=NO;
+    }
+    
+    
+    
+    if(homeVC==nil){
+        homeVC = [[HomeViewThreeVC alloc]initWithNibName:@"HomeViewThreeVC" bundle:[NSBundle mainBundle]];
+    }
+    
+    if (classifyVC==nil)
+    {
+        classifyVC = [[ClassifyViewController alloc]initWithNibName:@"ClassifyViewController" bundle:[NSBundle mainBundle]];
+    }
+    
+    if(classifyVC2==nil)
+    {
+         classifyVC2 = [[ClasifyTwoVC alloc]initWithNibName:@"ClasifyTwoVC" bundle:[NSBundle mainBundle]];
+    }
+    
+    //医疗首页
+    if(SHVC1==nil){
+        SHVC1 = [[SHHealthVC alloc]init];
+    }
+    
+    if (shopCarVC==nil)
+        shopCarVC = [[ShopCarViewController alloc]initWithNibName:@"ShopCarViewController" bundle:[NSBundle mainBundle]];
+    if (exchangeVC==nil)
+        exchangeVC = [[ExchangeTwoViewController alloc]initWithNibName:@"ExchangeTwoViewController" bundle:[NSBundle mainBundle]];
+    if (myCenterVC==nil)
+    {
+        myCenterVC = [[MyCenterVC alloc] initWithNibName:@"MyCenterVC" bundle:[NSBundle mainBundle]];
+    }
+    
+    
+    if (firNc==nil)
+    {
+        firNc = [[UINavigationController alloc]initWithRootViewController:homeVC];
+        firNc.delegate = self;
+        
+    }else
+    {
+        //上次是不显示论坛 且显示的简版首页
+        if ( [[UserDefaults objectForKey:@"isPassStoreCheck"] isEqualToString:@"0"]) {
+            if(isPassStoreCheck)
+            {
+                firNc = [[UINavigationController alloc]initWithRootViewController:homeVC];
+                
+                [UserDefaults setObject:@"1" forKey:@"isPassStoreCheck"];
+                [UserDefaults synchronize];
+            }
+        }
+    }
+    
+    
+    
+    if(SHVC1==nil){
+        SHVC1 = [[SHHealthVC alloc]init];
+    }
+
+    if (secNc==nil) {
+        if(isHiddenSexhealth)
+        {
+            secNc = [[UINavigationController alloc] initWithRootViewController:classifyVC2];
+        }else
+        {
+            secNc = [[UINavigationController alloc]initWithRootViewController:SHVC1];
+        }
+        
+        // 医师端
+//        secNc = [[UINavigationController alloc]initWithRootViewController:SHVC1];
+
+        //新
+//        secNc = [[UINavigationController alloc] initWithRootViewController:classifyVC2];
+        secNc.delegate = self;
+    }
+
+    if (thirdNc==nil) {
+        thirdNc = [[UINavigationController alloc]initWithRootViewController:shopCarVC];
+        thirdNc.delegate = self;
+    }
+    
+    if (fourthNc==nil) {
+        fourthNc = [[UINavigationController alloc]initWithRootViewController:exchangeVC];
+        fourthNc.delegate = self;
+    }
+    
+    
+    if (fifNc==nil) {
+        fifNc = [[UINavigationController alloc]initWithRootViewController:myCenterVC];
+        fifNc.delegate = self;
+    }
+    
+    firNc.navigationBar.hidden=YES;
+    secNc.navigationBar.hidden=YES;
+    thirdNc.navigationBar.hidden=YES;
+    fourthNc.navigationBar.hidden=YES;
+    fifNc.navigationBar.hidden=YES;
+    // BBS是否显示
+    
+   
+    
+	NSMutableDictionary *imgDic = [NSMutableDictionary dictionaryWithCapacity:3];
+	[imgDic setObject:[UIImage imageNamed:@"home_nor.png"] forKey:@"Default"];
+	[imgDic setObject:[UIImage imageNamed:@"home_pre.png"] forKey:@"Highlighted"];
+	[imgDic setObject:[UIImage imageNamed:@"home_pre.png"] forKey:@"Seleted"];
+	NSMutableDictionary *imgDic2 = [NSMutableDictionary dictionaryWithCapacity:3];
+	[imgDic2 setObject:[UIImage imageNamed:@"classify_nor.png"] forKey:@"Default"];
+	[imgDic2 setObject:[UIImage imageNamed:@"classify_pre.png"] forKey:@"Highlighted"];
+	[imgDic2 setObject:[UIImage imageNamed:@"classify_pre.png"] forKey:@"Seleted"];
+	NSMutableDictionary *imgDic3 = [NSMutableDictionary dictionaryWithCapacity:3];
+	[imgDic3 setObject:[UIImage imageNamed:@"shopcar_nor.png"] forKey:@"Default"];
+	[imgDic3 setObject:[UIImage imageNamed:@"shopcar_pre.png"] forKey:@"Highlighted"];
+	[imgDic3 setObject:[UIImage imageNamed:@"shopcar_pre.png"] forKey:@"Seleted"];
+	NSMutableDictionary *imgDic4 = [NSMutableDictionary dictionaryWithCapacity:3];
+	[imgDic4 setObject:[UIImage imageNamed:@"exchange_nor.png"] forKey:@"Default"];
+	[imgDic4 setObject:[UIImage imageNamed:@"exchange_pre.png"] forKey:@"Highlighted"];
+	[imgDic4 setObject:[UIImage imageNamed:@"exchange_pre.png"] forKey:@"Seleted"];
+	NSMutableDictionary *imgDic5 = [NSMutableDictionary dictionaryWithCapacity:3];
+	[imgDic5 setObject:[UIImage imageNamed:@"mycenter_nor.png"] forKey:@"Default"];
+	[imgDic5 setObject:[UIImage imageNamed:@"mycenter_pre.png"] forKey:@"Highlighted"];
+	[imgDic5 setObject:[UIImage imageNamed:@"mycenter_pre.png"] forKey:@"Seleted"];
+	
+    NSArray *ctrlArr=nil;
+    NSArray *imgArr=nil;
+
+    if(IS_APPSTORE)
+    {
+        if ( isPassStoreCheck) {
+            
+            if (isShowFenLei && isShowLunTan) {
+                ctrlArr = [NSArray arrayWithObjects:firNc,secNc,fourthNc,thirdNc,fifNc ,nil];
+                imgArr = [NSArray arrayWithObjects:imgDic,imgDic2,imgDic4,imgDic3,imgDic5,nil];
+            }
+            
+            if (isShowFenLei && !isShowLunTan) {
+                ctrlArr = [NSArray arrayWithObjects:firNc,secNc,thirdNc,fifNc ,nil];
+                imgArr = [NSArray arrayWithObjects:imgDic,imgDic2,imgDic3,imgDic5,nil];
+            }
+            
+            if (!isShowFenLei && isShowLunTan) {
+                ctrlArr = [NSArray arrayWithObjects:firNc,fourthNc,thirdNc,fifNc ,nil];
+                imgArr = [NSArray arrayWithObjects:imgDic,imgDic4,imgDic3,imgDic5,nil];
+                
+            }
+            
+            if (!isShowFenLei && isShowLunTan) {
+                ctrlArr = [NSArray arrayWithObjects:firNc,thirdNc,fifNc ,nil];
+                imgArr = [NSArray arrayWithObjects:imgDic,imgDic3,imgDic5,nil];
+            }
+            
+            
+        }else
+        {
+            ctrlArr = [NSArray arrayWithObjects:firNc,thirdNc,fifNc ,nil];
+            imgArr = [NSArray arrayWithObjects:imgDic,imgDic3,imgDic5,nil];
+            
+        }
+    }else
+    {
+        ctrlArr = [NSArray arrayWithObjects:firNc,secNc,fourthNc,thirdNc,fifNc ,nil];
+        imgArr = [NSArray arrayWithObjects:imgDic,imgDic2,imgDic4,imgDic3,imgDic5,nil];
+
+    }
+   
+    
+	tabController = [[LeveyTabBarController alloc] initWithViewControllers:ctrlArr imageArray:imgArr];
+	[tabController.tabBar setBackgroundImage:[UIImage imageNamed:@"c-2-1.png"]];
+    [tabController setTabBarTransparent:YES];
+
+    [self.window setRootViewController:tabController];
+    
+    
+}
+
+
+-(void)testSetupSHHealthTab
+{
+
+    if(SHVC1==nil){
+        SHVC1 = [[SHHealthVC alloc]init];
+    }
+    
+    if (SHVC2==nil)
+    {
+        SHVC2 = [[SHDiagnoseVC alloc]init];
+        SHVC2.type = diagUseForNavRoot;
+    }
+    
+    if(SHVC3==nil)
+    {
+        SHVC3 = [[SHCopeVC alloc]init];
+        SHVC3.copeType = copeUseForNavRoot;
+    }
+    
+    if (SHVC4==nil)
+    {
+        SHVC4 = [[SHMIneViewController alloc]init];
+    }
+    
+    // UINavigationController
+    if (firNc==nil)
+    {
+        firNc = [[UINavigationController alloc]initWithRootViewController:SHVC1];
+        firNc.delegate = self;
+    }
+    
+    if (secNc==nil) {
+        //新
+        secNc = [[UINavigationController alloc]initWithRootViewController:SHVC2];
+        secNc.delegate = self;
+    }
+    
+    if (thirdNc==nil) {
+        thirdNc = [[UINavigationController alloc]initWithRootViewController:SHVC3];
+        thirdNc.delegate = self;
+    }
+    
+    if (fourthNc==nil) {
+        fourthNc = [[UINavigationController alloc]initWithRootViewController:SHVC4];
+        
+        
+//         myCenterVC = [[MyCenterVC alloc] initWithNibName:@"MyCenterVC" bundle:[NSBundle mainBundle]];
+//        fourthNc = [[UINavigationController alloc]initWithRootViewController:myCenterVC];
+        
+        fourthNc.delegate = self;
+    }
+    
+    firNc.navigationBar.hidden=YES;
+    secNc.navigationBar.hidden=YES;
+    thirdNc.navigationBar.hidden=YES;
+    fourthNc.navigationBar.hidden=YES;
+    
+    
+    
+    NSArray *ctrlArr=nil;
+    ctrlArr = [NSArray arrayWithObjects:firNc,secNc,thirdNc,fourthNc ,nil];
+    
+    NSMutableDictionary *imgDic = [NSMutableDictionary dictionaryWithCapacity:3];
+    [imgDic setObject:[UIImage imageNamed:@"xjk_icon_home_n"] forKey:@"Default"];
+    [imgDic setObject:[UIImage imageNamed:@"xjk_icon_home_p"] forKey:@"Highlighted"];
+    [imgDic setObject:[UIImage imageNamed:@"xjk_icon_home_p"] forKey:@"Seleted"];
+    NSMutableDictionary *imgDic2 = [NSMutableDictionary dictionaryWithCapacity:3];
+    [imgDic2 setObject:[UIImage imageNamed:@"xjk_icon_iagnosis_n"] forKey:@"Default"];
+    [imgDic2 setObject:[UIImage imageNamed:@"xjk_icon_iagnosis_p"] forKey:@"Highlighted"];
+    [imgDic2 setObject:[UIImage imageNamed:@"xjk_icon_iagnosis_p"] forKey:@"Seleted"];
+    NSMutableDictionary *imgDic3 = [NSMutableDictionary dictionaryWithCapacity:3];
+    [imgDic3 setObject:[UIImage imageNamed:@"xjk_icon_infomation_n"] forKey:@"Default"];
+    [imgDic3 setObject:[UIImage imageNamed:@"xjk_icon_infomation_p"] forKey:@"Highlighted"];
+    [imgDic3 setObject:[UIImage imageNamed:@"xjk_icon_infomation_p"] forKey:@"Seleted"];
+    NSMutableDictionary *imgDic4 = [NSMutableDictionary dictionaryWithCapacity:3];
+    [imgDic4 setObject:[UIImage imageNamed:@"xjk_icon_me_n"] forKey:@"Default"];
+    [imgDic4 setObject:[UIImage imageNamed:@"xjk_icon_me_p"] forKey:@"Highlighted"];
+    [imgDic4 setObject:[UIImage imageNamed:@"xjk_icon_me_p"] forKey:@"Seleted"];
+
+    
+    NSArray *imgArr=nil;
+    imgArr = [NSArray arrayWithObjects:imgDic,imgDic2,imgDic3,imgDic4,nil];
+    
+    tabController = [[LeveyTabBarController alloc] initWithViewControllers:ctrlArr imageArray:imgArr];
+    [tabController.tabBar setBackgroundImage:[UIImage imageNamed:@"c-2-1.png"]];
+    [tabController setTabBarTransparent:YES];
+    
+    [self.window setRootViewController:tabController];
+}
+
+- (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+
+    
+    if (viewController.hidesBottomBarWhenPushed)
+    {
+        [tabController hidesTabBar:YES animated:YES];
+    }
+    else
+    {
+        [tabController hidesTabBar:NO animated:YES];
+    }
+}
+
+- (void)navigationController:(UINavigationController *)navigationController didShowViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+    if (viewController.hidesBottomBarWhenPushed)
+    {
+        [tabController hidesTabBar:YES animated:YES];
+    }
+    else
+    {
+        [tabController hidesTabBar:NO animated:YES];
+    }
+
+}
+
+
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+    // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
+    // Use this method to pause ongoing tasks, disable timers, and throttle down OpenGL ES frame rates. Games should use this method to pause the game.
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
+    // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:@"protectSecret"])
+    {
+        self.homeImg = [[UIImageView alloc] initWithFrame:self.window.rootViewController.view.frame];
+        [self.homeImg setImage:[UIImage imageNamed:@"Default.png"]];
+        if (IS_IPHONE_5) {
+            [self.homeImg setImage:[UIImage imageNamed:@"Default-568h@2x.png"]];
+        }
+        
+        [self.window.rootViewController.view addSubview:self.homeImg];
+    }
+    
+    // 有通知的原点置零
+    [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
+    
+    
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+    // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+    
+    [application setApplicationIconBadgeNumber:0];
+    [application cancelAllLocalNotifications];
+    
+    [self yinSiPass];
+
+    // 在线参数相关
+   [MobClick updateOnlineConfig];  //在线参数配置
+    
+    // 激活量
+    [self appActivation];
+    
+    
+}
+
+
+
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+    // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    //SSO授权进入 客户端后进入后台，再返回原来应用
+    [UMSocialSnsService  applicationDidBecomeActive];
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application
+{
+    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+
+
+#pragma mark - ====隐私密码
+
+-(void)yinSiPass
+{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([defaults objectForKey:@"protectSecret"])
+    {
+        [self.homeImg removeFromSuperview];
+        self.homeImg = nil;
+    }
+    
+    
+    NSLog(@"隐私密码>>%@",[defaults objectForKey:@"protectSecret"]);
+    if ([defaults objectForKey:@"protectSecret"]) {
+        PAPasscodeViewController *passcodeViewController = [[PAPasscodeViewController alloc] initForAction:PasscodeActionEnter];
+        passcodeViewController.delegate = self;
+        passcodeViewController.protect = YES;
+        passcodeViewController.passcode = [defaults objectForKey:@"protectSecret"];
+        passcodeViewController.simple = YES;
+        [self.window.rootViewController presentViewController:passcodeViewController animated:YES completion:nil];
+    }
+    [defaults synchronize];
+}
+
+- (void)PAPasscodeViewControllerDidEnterPasscode:(PAPasscodeViewController *)controller {
+    [self.window.rootViewController dismissViewControllerAnimated:YES completion:^() {
+        
+//        [[[UIAlertView alloc] initWithTitle:nil message:@"输入正确" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] show];
+        
+    }];
+}
+
+- (void)PAPasscodeViewControllerDidCancel:(PAPasscodeViewController *)controller
+{
+    
+}
+
+#pragma mark - 推送部分
+
+
+
+/** 远程通知注册失败委托 */
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error {
+    
+    //环信
+    [[EaseMob sharedInstance] application:application didFailToRegisterForRemoteNotificationsWithError:error];
+
+    
+    
+    // 个推
+    [GeTuiSdk registerDeviceToken:@""];
+    
+    NSLog(@"\n>>>[DeviceToken Error]:%@\n\n",error.description);
+}
+/** 远程通知注册成功委托 */
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken {
+    
+    // 环信 
+    [[EaseMob sharedInstance] application:application didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
+
+    //个推
+    NSString *myToken = [[deviceToken description] stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@"<>"]];
+    myToken = [myToken stringByReplacingOccurrencesOfString:@" " withString:@""];
+    [GeTuiSdk registerDeviceToken:myToken];
+    NSLog(@"\n>>>[DeviceToken Success]:%@\n\n",myToken);
+    
+    
+
+}
+
+
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED > __IPHONE_7_1
+/** 已登记用户通知 */
+- (void)application:(UIApplication *)application
+didRegisterUserNotificationSettings:
+(UIUserNotificationSettings *)notificationSettings {
+    
+    // 注册远程通知（推送）
+    [application registerForRemoteNotifications];
+}
+
+- (void)application:(UIApplication *)application
+handleActionWithIdentifier:(NSString *)identifier
+forLocalNotification:(UILocalNotification *)notification
+  completionHandler:(void (^)())completionHandler {
+}
+
+- (void)application:(UIApplication *)application
+handleActionWithIdentifier:(NSString *)identifier
+forRemoteNotification:(NSDictionary *)userInfo
+  completionHandler:(void (^)())completionHandler {
+}
+#endif
+
+
+
+#pragma mark - APNS Delegate
+
+
+#pragma mark - APP运行中接收到通知(推送)处理
+- (void)application:(UIApplication *)application
+didReceiveRemoteNotification:(NSDictionary *)userInfo {
+    
+    
+    if (self.chatManager) {
+        [self.chatManager jumpToChatListWithInfo:userInfo];
+    }
+}
+
+- (void)application:(UIApplication *)application
+didReceiveRemoteNotification:(NSDictionary *)userInfo
+fetchCompletionHandler:
+(void (^)(UIBackgroundFetchResult))completionHandler {
+    
+    
+    // 个推处理APN
+    NSLog(@"\n>>>[Receive RemoteNotification - Background Fetch]:%@\n\n",userInfo);
+    completionHandler(UIBackgroundFetchResultNewData);
+    
+    
+    //环信
+    if (self.chatManager && userInfo[@"f"] && userInfo[@"t"]) {
+        [self.chatManager jumpToChatListWithInfo:userInfo];
+    }
+    
+}
+
+- (void)application:(UIApplication *)application
+didReceiveLocalNotification:(UILocalNotification *)notification {
+    
+    //环信
+    if (self.chatManager) {
+        [self.chatManager didReceiveLocalNotification:notification];
+    }
+}
+
+
+#pragma mark - =====
+
+/**
+ 这里处理新浪微博SSO授权之后跳转回来，和微信分享完成之后跳转回来
+ */
+#pragma mark 通过URL Schemes 跳转过来的
+- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+    
+    NSLog(@"111跳转回来的url=%@",url);
+    
+    // 短信推广 Safari浏览器跳转过来的
+    if ([[url absoluteString] hasPrefix:@"xdd://com.xingduoduo.xdd"]) {
+        NSString *strURL=[url absoluteString];
+        [self processNotify:strURL];
+        
+        return YES;
+    }
+    
+    switch (appType) {
+        case WECHAT_RET:
+        {
+            return  [UMSocialSnsService handleOpenURL:url wxApiDelegate:nil];
+        }
+            break;
+        case ALIXPAY_RET://支付宝
+        {
+            [self parse:url application:application];
+        }
+            break;
+            
+        case ALIXPay_SH_RET:
+        {
+            [self parse:url application:application];
+        }
+            break;
+            
+        case QQ_QZONE_RET:
+        {
+            NSLog(@"信息 %d",[[QQInterface shareInstance]isQZoneAuthValid ]);
+#if __QQAPI_ENABLE__
+            [QQApiInterface handleOpenURL:url delegate:(id)[QQAPIDemoEntry class]];
+#endif
+            if (YES == [TencentOAuth CanHandleOpenURL:url])
+            {
+                return [TencentOAuth HandleOpenURL:url];
+            }
+            return YES;
+            
+        }
+            break;
+            
+        case WEXin_AliPay:
+        {
+            return  [WXApi handleOpenURL:url delegate:self];
+        }
+            break;
+        default:
+            break;
+    }
+    
+
+
+    return YES;
+}
+
+
+//独立客户端回调函数
+- (BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url {
+	NSLog(@"跳转回来的url=%@",url);
+    switch (appType) {
+        case WECHAT_RET:
+        {
+            //分享的 需要加判断
+           return [UMSocialSnsService handleOpenURL:url];
+        }
+            break;
+        case ALIXPAY_RET:
+        {
+            [self parse:url application:application];
+            
+        }
+            break;
+        case QQ_QZONE_RET:
+        {
+            return [TencentOAuth HandleOpenURL:url];
+        }
+            break;
+        case WEXin_AliPay:
+        {
+            return  [WXApi handleOpenURL:url delegate:self];
+        }
+            break;
+            
+        case ALIXPay_SH_RET:
+        {
+            [self parse:url application:application];
+        }
+            break;
+            
+        default:
+            break;
+    }
+	
+    
+    
+	return YES;
+}
+
+- (void)parse:(NSURL *)url application:(UIApplication *)application {
+    
+    // 64新支付宝
+    //如果极简 SDK 不可用,会跳转支付宝钱包进行支付,需要将支付宝钱包的支付结果回传给 SDK
+    if ([url.host isEqualToString:@"safepay"]) {
+        [[AlipaySDK defaultService] processOrderWithPaymentResult:url standbyCallback:^(NSDictionary *resultDic) {
+            NSLog(@"delegate safepay result = %@",resultDic);
+            
+            if (resultDic[@"resultStatus"]  && [resultDic[@"resultStatus"] integerValue]==9000) {
+                [self orderCallBackWithSucess:@"1"];
+            }else [self orderCallBackWithSucess:@"0"];
+            
+        }];
+    }
+    if ([url.host isEqualToString:@"platformapi"]){//支付宝钱包快登授权返回 authCode
+        [[AlipaySDK defaultService] processAuthResult:url standbyCallback:^(NSDictionary *resultDic) {
+            NSLog(@"delegate platformapi result = %@",resultDic);
+            
+            if (resultDic[@"resultStatus"]  && [resultDic[@"resultStatus"] integerValue]==9000) {
+                [self orderCallBackWithSucess:@"1"];
+            }else [self orderCallBackWithSucess:@"0"];
+            
+            
+        }];
+    }
+    
+}
+
+
+-(void)orderCallBackWithSucess:(NSString *)sucessStr
+{
+    
+   //是性健康的支付
+    if(appType==ALIXPay_SH_RET)
+    {
+        if(m_sexHealthBuyVC)
+        {
+            [m_sexHealthBuyVC paymentResultDelegate:sucessStr];
+        }
+    }else
+    {
+        if (m_orderViewVC) {
+            [m_orderViewVC paymentResultDelegate:sucessStr];
+        }
+        if (m_orderDetailViewVC) {
+            [m_orderDetailViewVC paymentResultDelegate:sucessStr];
+        }
+        if (m_orderRemindViewVC) {
+            [m_orderRemindViewVC paymentResultDelegate:sucessStr];
+        }
+    }
+    
+    
+    
+    
+    
+    
+}
+
+
+- (void)tagsAliasCallback:(int)iResCode tags:(NSSet*)tags alias:(NSString*)alias {
+    NSLog(@"rescode: %d, \ntags: %@, \nalias: %@\n", iResCode, tags , alias);
+}
+
+
+#pragma mark 处理短信推广的商品
+-(void)processNotify:(NSString  *)userInfo
+{
+    if (userInfo == nil) {
+        return;
+    }
+    
+    NSString *url=[NSString stringWithFormat:@"%@",userInfo];
+    
+    NSArray *arr=[url componentsSeparatedByString:@"?"];
+    if (arr.count>1) {
+        NSString *canshuStr= arr[1];
+        
+        NSArray *arr1=[canshuStr componentsSeparatedByString:@"&"];
+        NSLog(@"canarr=%@",arr1);
+        NSMutableDictionary *dic=[[NSMutableDictionary alloc]init];
+        for (int i=0; i<arr1.count; i++) {
+            NSArray *arr2=[arr1[i] componentsSeparatedByString:@"="];
+            if (arr2.count>1) {
+                [dic setObject:arr2[1] forKey:arr2[0]];
+            }
+        }
+        
+        
+        NSLog(@"字典=%@",dic);
+        
+        //商品
+        if (dic[@"tag"] && [dic[@"tag"] isEqualToString:@"1"]) {
+            if (dic[@"id"]) {
+                NSString *productID=dic[@"id"];
+                
+                GoodsDetailTwoViewController *ctrVc = [[GoodsDetailTwoViewController alloc] initWithNibName:@"GoodsDetailTwoViewController" bundle:nil];
+                ctrVc.hidesBottomBarWhenPushed = YES;
+                ctrVc.goodsIdStr = productID;
+                
+                [(UINavigationController *)tabController.selectedViewController pushViewController:ctrVc animated:YES];
+            }
+        }
+        
+        
+        //专区
+        if (dic[@"tag"] && [dic[@"tag"] isEqualToString:@"2"]) {
+            if (dic[@"id"]) {
+                NSString *classifyID=dic[@"id"];
+                NSString *nameStr=[dic[@"name"] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                
+                GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+                ctrVc.hidesBottomBarWhenPushed = YES;
+                ctrVc.disPlayOne = YES;
+                ctrVc.classifyStr = classifyID;
+                ctrVc.titleStr = nameStr;
+                ctrVc.requestType = homeViewType;
+                
+                [(UINavigationController *)tabController.selectedViewController pushViewController:ctrVc animated:YES];
+            }
+        }
+        
+        //活动专区的界面
+        if (dic[@"tag"] && [dic[@"tag"] isEqualToString:@"3"]) {
+            if (dic[@"id"] && [dic[@"id"] isEqualToString:@"isActivities"]) {
+                
+                
+                ActivityViewController*ctrVc = [[ActivityViewController alloc] initWithNibName:@"ActivityViewController" bundle:[NSBundle mainBundle]];
+                ctrVc.hidesBottomBarWhenPushed = YES;
+                ctrVc.classifyStr = @"isActivities";
+                
+                [(UINavigationController *)tabController.selectedViewController pushViewController:ctrVc animated:YES];
+            }
+        }
+        
+        // 分类
+        if (dic[@"tag"] && [dic[@"tag"] isEqualToString:@"4"]) {
+            NSString *classifyID=dic[@"id"];
+            NSString *nameStr=[dic[@"name"] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            
+            GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.isHiddenSort=YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.titleStr = nameStr;
+            ctrVc.requestType = classifyType;
+            ctrVc.classifyId = classifyID;
+            
+            [(UINavigationController *)tabController.selectedViewController pushViewController:ctrVc animated:YES];
+        }
+        
+        // 限时
+        if (dic[@"tag"] && [dic[@"tag"] isEqualToString:@"5"]) {
+            
+            SDSetTimeBuyGoodsVC *vc = [[SDSetTimeBuyGoodsVC alloc] init];
+            [(UINavigationController *)tabController.selectedViewController pushViewController:vc animated:YES];
+            
+        }
+        
+        
+        
+        
+        // 帖子
+        if(dic[@"tag"] && [dic[@"tag"] isEqualToString:@"6"])
+        {
+            BBSDetailNewViewController *controller = [[BBSDetailNewViewController alloc] initWithNibName:@"BBSDetailNewViewController" bundle:[NSBundle mainBundle]];
+            controller.forumId = [dic objectForKey:@"name"];
+            controller.topicId = [dic objectForKey:@"id"];
+            controller.hidesBottomBarWhenPushed = YES;
+            [(UINavigationController *)tabController.selectedViewController pushViewController:controller animated:YES];
+        }
+        
+        // 年终活动
+        if(dic[@"tag"] && [dic[@"tag"] isEqualToString:@"7"])
+        {
+            // 标题需要改
+            GoodListMainController *ctrVc = [GoodListMainController goodListMainControllerWithTitle:[dic objectForKey:@"name"]];
+            
+            [(UINavigationController *)tabController.selectedViewController pushViewController:ctrVc animated:YES];
+            
+        }
+        
+        // 积分商城
+        if(dic[@"tag"] && [dic[@"tag"] isEqualToString:@"8"])
+        {
+            JiFenShopViewController *ctrVc = [[JiFenShopViewController alloc] initWithNibName:@"JiFenShopViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.titleStr = @"积分商城";
+            
+            ctrVc.isHiddenSort=YES;
+            ctrVc.disPlayTwo = YES;
+            ctrVc.requestType = classifyType;
+            ctrVc.classifyId =@"8a04bc8b4a050d2c014a05252972004a";
+            [(UINavigationController *)tabController.selectedViewController pushViewController:ctrVc animated:YES];
+        }
+        
+        // 标签
+        if(dic[@"tag"] && [dic[@"tag"] isEqualToString:@"9"])
+        {
+            GoodsViewController *ctrVc = [[GoodsViewController alloc] initWithNibName:@"GoodsViewController" bundle:[NSBundle mainBundle]];
+            ctrVc.hidesBottomBarWhenPushed = YES;
+            ctrVc.disPlayOne = YES;
+            ctrVc.classifyStr = dic[@"id"];
+            ctrVc.titleStr = dic[@"name"];
+            ctrVc.requestType = flagType;
+            [(UINavigationController *)tabController.selectedViewController pushViewController:ctrVc animated:YES];
+        }
+        
+        // 爱记录
+        if(dic[@"tag"] && [dic[@"tag"] isEqualToString:@"10"])
+        {
+            [SRRecordHomeVC gotoMySelf:(UINavigationController *)tabController.selectedViewController];
+        }
+        
+    }
+    
+}
+
+
+#pragma mark - 检查论坛我的消息数目
+
+-(void)checkMessageNum
+{
+    if (ISLOGIN) {
+        
+        NSMutableDictionary *tempDic=[[NSMutableDictionary alloc]init];
+        
+        [tempDic setObject:LUNTANUSERID forKey:@"userId"];
+        
+        
+        
+        [[MKHttpExchangeDemo shareMyInstance] requestExchangeAppPostReadCountWithDic:tempDic completionHandler:^(id responseObject)
+         {
+             NSDictionary *responseDic = responseObject;
+             NSLog(@"--<>>%@--我的消息数目请求 %@",responseDic,[responseDic objectForKey:@"message"]);
+             
+             if(responseDic[@"datasource"])
+             {
+                 int num=[responseDic[@"datasource"] intValue];
+                 
+                 // 通知
+                 NSDictionary *dic=@{@"messageNum":[NSString stringWithFormat:@"%d",num]};
+                 [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_BBSMESSAGE object:nil userInfo:dic];
+             }
+           
+          
+         } errorHandler:^(NSError *error) {
+             
+         }];
+        
+    }
+}
+
+
+#pragma mark - 爱记录音乐播放相关
+-(void)playMusic
+{
+    //获取本地文件路径
+    NSString *path=[[NSBundle mainBundle]pathForResource:@"Vie" ofType:@"mp3"];
+    NSURL *url=[[NSURL alloc]initFileURLWithPath:path];//文件路径
+    self.av=[[AVAudioPlayer alloc]initWithContentsOfURL:url error:nil];//用声音播放器根据路径来播放文件
+    self.av.delegate=self;//音频播放代理
+    //播放音乐
+    [self.av play];
+    
+    //第二种
+//    [self.av setNumberOfLoops:1000000];
+}
+
+//音频将要完成播放时（用到代理）
+-(void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag
+{
+    [self.av play];
+}
+
+-(void)stopMusic
+{
+    [self.av stop];
+}
+
+#pragma mark -
+#pragma mark - 微信支付
+
+#pragma mark 改url请求服务器
+- (void)sendPay
+{
+    
+    appType = WEXin_AliPay;
+    //从服务器获取支付参数，服务端自定义处理逻辑和格式
+    //订单标题
+    NSString *ORDER_NAME    = @"Ios服务器端签名支付 测试";
+    //订单金额，单位（元）
+    NSString *ORDER_PRICE   = @"0.01";
+    
+    //根据服务器端编码确定是否转码
+    NSStringEncoding enc;
+    //if UTF8编码
+    //enc = NSUTF8StringEncoding;
+    //if GBK编码
+    enc = CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingGB_18030_2000);
+    NSString *urlString = [NSString stringWithFormat:@"%@?plat=ios&order_no=%@&product_name=%@&order_price=%@",
+                           @"http://wxpay.weixin.qq.com/pub_v2/app/app_pay.php",
+                           [[NSString stringWithFormat:@"%ld",time(0)] stringByAddingPercentEscapesUsingEncoding:enc],
+                           [ORDER_NAME stringByAddingPercentEscapesUsingEncoding:enc],
+                           ORDER_PRICE];
+    
+    //解析服务端返回json数据
+    NSError *error;
+    //加载一个NSURL对象
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:urlString]];
+    //将请求的url数据放到NSData对象中
+    NSData *response = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+    if ( response != nil) {
+        NSMutableDictionary *dict = NULL;
+        //IOS5自带解析类NSJSONSerialization从response中解析出数据放到字典中
+        dict = [NSJSONSerialization JSONObjectWithData:response options:NSJSONReadingMutableLeaves error:&error];
+        
+        NSLog(@"url:%@",urlString);
+        if(dict != nil){
+            NSMutableString *retcode = [dict objectForKey:@"retcode"];
+            if (retcode.intValue == 0){
+                NSMutableString *stamp  = [dict objectForKey:@"timestamp"];
+                
+                //调起微信支付
+                PayReq* req             = [[PayReq alloc] init];
+                req.openID              = [dict objectForKey:@"appid"];
+                req.partnerId           = [dict objectForKey:@"partnerid"];
+                req.prepayId            = [dict objectForKey:@"prepayid"];
+                req.nonceStr            = [dict objectForKey:@"noncestr"];
+                req.timeStamp           = stamp.intValue;
+                req.package             = [dict objectForKey:@"package"];
+                req.sign                = [dict objectForKey:@"sign"];
+                [WXApi sendReq:req];
+                //日志输出
+                NSLog(@"appid=%@\npartid=%@\nprepayid=%@\nnoncestr=%@\ntimestamp=%ld\npackage=%@\nsign=%@",req.openID,req.partnerId,req.prepayId,req.nonceStr,(long)req.timeStamp,req.package,req.sign );
+            }else{
+                [self alert:@"提示信息" msg:[dict objectForKey:@"retmsg"]];
+            }
+        }else{
+            [self alert:@"提示信息" msg:@"服务器返回错误，未获取到json对象"];
+        }
+    }else{
+        [self alert:@"提示信息" msg:@"服务器返回错误"];
+    }
+    
+    
+}
+
+
+- (void)sendPayWithOrderId:(NSString *)orderId;//微信支付
+{
+    appType = WEXin_AliPay;
+//    //从服务器获取支付参数，服务端自定义处理逻辑和格式
+//    //订单标题
+//    NSString *ORDER_NAME    = @"Ios服务器端签名支付 测试";
+//    //订单金额，单位（元）
+//    NSString *ORDER_PRICE   = @"0.01";
+//    
+//    //根据服务器端编码确定是否转码
+//    NSStringEncoding enc;
+    
+    NSDictionary *dic=@{@"orderId":orderId,@"type":@"shop"};//商城的客户端type=shop
+    NSLog(@"打印=%@",dic);
+    [[MKHttpServiceEngine shareMyInstance] requestWeXinPayOrderWithDic:dic completionHandler:^(id responseObject) {
+      
+        NSLog(@"responseArray-->%@",responseObject);
+        
+        NSDictionary *dict = responseObject;
+        if(dict != nil){
+            NSMutableString *retcode = [dict objectForKey:@"success"];
+            if (retcode.intValue == 1){
+                
+                NSDictionary *datasource=dict[@"datasource"][0];
+                
+                NSMutableString *stamp  = [datasource objectForKey:@"timestamp"];
+                
+                //调起微信支付
+                PayReq* req             = [[PayReq alloc] init];
+                req.openID              = [datasource objectForKey:@"appid"];
+                req.partnerId           = [datasource objectForKey:@"partnerid"];
+                req.prepayId            = [datasource objectForKey:@"prepayid"];
+                req.nonceStr            = [datasource objectForKey:@"noncestr"];
+                req.timeStamp           = stamp.intValue;
+//                req.timeStamp           = (int32_t)[datasource objectForKey:@"timestamp"];
+                req.package             = [datasource objectForKey:@"packageValue"];
+                req.sign                = [datasource objectForKey:@"sign"];
+                
+                
+                [WXApi sendReq:req];
+                
+                //日志输出
+                NSLog(@"appid=%@\npartid=%@\nprepayid=%@\nnoncestr=%@\ntimestamp=%ld\npackage=%@\nsign=%@",req.openID,req.partnerId,req.prepayId,req.nonceStr,(long)req.timeStamp,req.package,req.sign );
+            }else{
+                [self alert:@"提示信息" msg:[dict objectForKey:@"message"]];
+            }
+        }else{
+            [self alert:@"提示信息" msg:@"服务器返回错误，未获取到json对象"];
+        }
+        
+    } errorHandler:^(NSError *error) {
+        
+    }];
+    
+    
+}
+
+
+#pragma mark 支付
+
+//客户端提示信息
+- (void)alert:(NSString *)title msg:(NSString *)msg
+{
+    UIAlertView *alter = [[UIAlertView alloc] initWithTitle:title message:msg delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
+    
+    [alter show];
+}
+
+#pragma mark - 微信支付代理
+
+-(void) onResp:(BaseResp*)resp
+{
+    NSString *strTitle;
+    
+    if([resp isKindOfClass:[PayResp class]]){
+        //支付返回结果，实际支付结果需要去微信服务器端查询
+        strTitle = [NSString stringWithFormat:@"支付结果"];
+        
+        switch (resp.errCode) {
+            case WXSuccess:
+            {
+                [self orderCallBackWithSucess:@"1"];
+            }
+                break;
+                
+            default:
+            {
+                [self orderCallBackWithSucess:@"0"];
+            }
+                
+                break;
+        }
+    }
+    
+
+   
+}
+
+
+//#pragma mark ---百度地图
+//- (void)onGetNetworkState:(int)iError
+//{
+//    if (0 == iError) {
+//        NSLog(@"联网成功");
+//    }
+//    else{
+//        NSLog(@"onGetNetworkState %d",iError);
+//    }
+//    
+//}
+//
+//- (void)onGetPermissionState:(int)iError
+//{
+//    if (0 == iError) {
+//        NSLog(@"授权成功");
+//    }
+//    else {
+//        NSLog(@"onGetPermissionState %d",iError);
+//    }
+//}
+
+
+@end

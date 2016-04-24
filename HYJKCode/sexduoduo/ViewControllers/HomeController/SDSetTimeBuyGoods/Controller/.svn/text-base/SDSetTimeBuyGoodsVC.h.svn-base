@@ -1,0 +1,29 @@
+//
+//  SDSetTimeBuyGoodsVC.h
+//  sexduoduo
+//
+//  Created by shown on 15/12/1.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  限时抢购 －lct
+
+#import <UIKit/UIKit.h>
+
+@interface SDSetTimeBuyGoodsVC : UIViewController
+
+@property (nonatomic, strong) NSMutableArray *sectionDataArr;       //抢购时间段数组
+
+@property (nonatomic, strong) NSMutableArray *goodsDataArr;         //商品数组
+
+@property (nonatomic, strong) NSString *currentStr;                 //当前抢购时段
+
+@property (nonatomic, strong) NSString *aid;                        //当前抢购时段id
+
+@property (nonatomic, assign) int pageApp;                          //页数
+
+@property (nonatomic, assign) BOOL isNextPage;                      //是否有下一页
+
+@property (nonatomic, strong) NSString *selectTimeId;                 //选中时间段
+
+
+
+@end

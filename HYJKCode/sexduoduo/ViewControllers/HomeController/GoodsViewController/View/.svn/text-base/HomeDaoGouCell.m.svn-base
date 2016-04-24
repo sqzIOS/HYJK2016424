@@ -1,0 +1,152 @@
+//
+//  HomeDaoGouCell.m
+//  sexduoduo
+//
+//  Created by dsz on 15-3-13.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "HomeDaoGouCell.h"
+
+@implementation HomeDaoGouCell
+
+- (void)awakeFromNib {
+    // Initialization code
+}
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+    
+    
+}
+
+-(void)configCellWithArray:(NSArray *)arry indexRow:(int)row
+{
+        
+    self.leftView.userInteractionEnabled=YES;
+    self.rightView.userInteractionEnabled=YES;
+    
+    self.leftView.layer.cornerRadius=2;
+    self.leftView.layer.borderColor=btnBorderColor;
+    self.leftView.layer.borderWidth = 0.5;
+    
+    self.rightView.layer.cornerRadius=2;
+    self.rightView.layer.borderColor=btnBorderColor;
+    self.rightView.layer.borderWidth = 0.5;
+    
+    self.leftView.clipsToBounds=YES;
+    self.rightView.clipsToBounds=YES;
+    
+    
+    self.leftHeadImage.layer.cornerRadius=self.leftHeadImage.frame.size.width/2.;
+    self.leftHeadImage.layer.masksToBounds = YES;
+    self.leftHeadImage.layer.borderColor=[WHITE_COLOR CGColor];
+    self.leftHeadImage.layer.borderWidth=2;
+
+    self.leftHeadImage.userInteractionEnabled=YES;
+    
+    self.rightHeadImage.layer.cornerRadius=self.rightHeadImage.frame.size.width/2.;
+    self.rightHeadImage.layer.masksToBounds = YES;
+    self.rightHeadImage.layer.borderColor=[WHITE_COLOR CGColor];
+    self.rightHeadImage.layer.borderWidth=2;
+
+    self.rightHeadImage.userInteractionEnabled=YES;
+    
+    if ([arry count] == 2) {
+        self.leftBtn.tag = row * 2;
+        self.rightBtn.tag = row * 2 + 1;
+        self.rightBtn.hidden = NO;
+        self.rightView.hidden = NO;
+        
+        // 用户名
+        self.leftNameLab.text = [NSString stringWithFormat:@"%@",[[arry objectAtIndex:0] objectForKey:@"nickname"]];
+        self.rightNameLab.text = [NSString stringWithFormat:@"%@",[[arry objectAtIndex:1] objectForKey:@"nickname"]];
+        self.rightNameLab.hidden = NO;
+        
+      
+        
+        [self.leftImg sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:arry[0][@"guideImg"]] placeholderImage:[UIImage imageNamed:@"bbslistdefaultImage.png"]];
+        [self.rightImg sd_setImageWithURL:[PublicMethod bbsImgURlAndroidWithStr:arry[1][@"guideImg"]] placeholderImage:[UIImage imageNamed:@"bbslistdefaultImage.png"]];
+        self.rightImg.hidden = NO;
+        
+       
+        
+        [self.leftHeadImage sd_setImageWithURL:[NSURL URLWithString:[[arry objectAtIndex:0] objectForKey:@"headImage"]] placeholderImage:[UIImage imageNamed:@"morentouxiangMan.png"]];
+        [self.rightHeadImage sd_setImageWithURL:[NSURL URLWithString:[[arry objectAtIndex:1] objectForKey:@"headImage"]] placeholderImage:[UIImage imageNamed:@"morentouxiangMan.png"]];
+        self.rightHeadImage.hidden = NO;
+        
+        //评论数
+        self.leftPingLun.text=arry[0][@"replyCount"];
+        self.rightPingLun.text=arry[1][@"replyCount"];
+        self.rightPingLun.hidden=NO;
+        
+        //赞数
+        if (arry[0][@"praiseCount"]) {
+            self.leftZan.text =arry[0][@"praiseCount"];
+        }
+        if (arry[1][@"praiseCount"]) {
+            self.rightZan.text =arry[0][@"praiseCount"];
+        }
+        
+        
+        // 描述
+        NSString *strContent=[NSString stringWithFormat:@"%@",arry[0][@"content"]];
+        NSString *detailStr=[NSString clearWhiteSpaceAndNewLine:strContent]; //去除掉首尾的空白字符和换行字符
+        
+        detailStr = [detailStr stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+        self.leftProperty.text=detailStr;
+        
+        strContent=[NSString stringWithFormat:@"%@",arry[1][@"content"]];
+        NSString *detailStr1=[NSString clearWhiteSpaceAndNewLine:strContent]; //去除掉首尾的空白字符和换行字符
+        
+        detailStr1 = [detailStr1 stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+        self.rightProPerty.text=detailStr1;
+        
+        
+    }else if ([arry count] == 1)
+    {
+        self.leftBtn.tag = row * 2;
+        self.rightBtn.hidden = YES;
+        self.rightView.hidden = YES;
+        
+        // 用户名
+        self.leftNameLab.text = [NSString stringWithFormat:@"%@",[[arry objectAtIndex:0] objectForKey:@"nickname"]];
+        
+        
+        
+        [self.leftImg sd_setImageWithURL:[[arry objectAtIndex:0] objectForKey:@"guideImg"] placeholderImage:[UIImage imageNamed:@"bbslistdefaultImage.png"]];
+        
+        
+        
+        [self.leftHeadImage sd_setImageWithURL:[[arry objectAtIndex:0] objectForKey:@"headImage"] placeholderImage:[UIImage imageNamed:@"morentouxiangMan.png"]];
+        
+        //评论数
+        self.leftPingLun.text=arry[0][@"replyCount"];
+        
+        //赞数
+        if (arry[0][@"praiseCount"]) {
+            self.leftZan.text =arry[0][@"praiseCount"];
+        }
+        
+        
+        // 描述
+        NSString *strContent=[NSString stringWithFormat:@"%@",arry[0][@"content"]];
+
+        NSString *detailStr=[NSString clearWhiteSpaceAndNewLine:strContent]; //去除掉首尾的空白字符和换行字符
+        
+        detailStr = [detailStr stringByReplacingOccurrencesOfString:@"\n" withString:@""];
+        self.leftProperty.text=detailStr;
+        
+    }
+}
+
+-(IBAction)btnClick:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    [self.delegate daoGouCellBtnClick:btn.tag];
+}
+
+
+@end

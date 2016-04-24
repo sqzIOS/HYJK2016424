@@ -1,0 +1,87 @@
+//
+//  SDGoodsModel.m
+//  sexduoduo
+//
+//  Created by shown on 15/12/2.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "SDGoodsModel.h"
+
+@implementation SDGoodsModel
+
+- (instancetype)initWithDict:(NSDictionary  *)dict {
+    
+    if (self = [super init]) {
+        
+        id value = nil;
+        
+        value = dict[@"id"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodsId = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"name"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodsName = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goodsCategoryId"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodsCategoryId = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goodsSn"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodsSn = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goods_price"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goods_price = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"goodtype_id"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.goodtype_id = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"limitNum"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.limitNum = [NSString stringWithFormat:@"%@",value];
+        else
+            self.limitNum = @"0";
+        
+        value = dict[@"marketPrice"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.marketPrice = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"metaDescription"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.metaDescription = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"newBigGoodsImagePath"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.bigGoodsImagePath = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"newSmallGoodsImagePath"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.smallGoodsImagePath = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"newSourceImagePath"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.sourceImagePath = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"newThumbnailGoodsImagePath"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.thumbnailGoodsImagePath = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"salesVolume"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.salesVolume = [NSString stringWithFormat:@"%@",value];
+        
+        value = dict[@"sellNum"];
+        if (value && ![value isKindOfClass:[NSNull class]])
+            self.sellNum = [NSString stringWithFormat:@"%@",value];
+        else
+            self.sellNum = @"0";
+    }
+    
+    return self;
+}
+
+@end

@@ -1,0 +1,24 @@
+//
+//  SDBBSDetailObj.m
+//  sexduoduo
+//
+//  Created by showm on 15/12/7.
+//  Copyright © 2015年 dbCode. All rights reserved.
+//
+
+#import "SDBBSDetailObj.h"
+
+@implementation SDBBSDetailObj
+
+-(instancetype)init
+{
+    if (self =[super init]) {
+        self.normalPostArr = [NSMutableArray array];
+        self.hotPostArr = [NSMutableArray array];
+        self.mainContent = [NSDictionary dictionary];
+    }
+    
+    return self;
+}
+
+@end

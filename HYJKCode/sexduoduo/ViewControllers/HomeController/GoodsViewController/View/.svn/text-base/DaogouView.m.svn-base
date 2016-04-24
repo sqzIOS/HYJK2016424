@@ -1,0 +1,295 @@
+//
+//  DaogouView.m
+//  sexduoduo
+//
+//  Created by dsz on 15-3-13.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "DaogouView.h"
+
+#import "NvShenDaoGouListCell.h"
+#import "HomeDaoGouCell.h"
+#import "SDDaoGouCollectionCell.h"
+@implementation DaogouView
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+
+-(void)configView
+{
+    self.backgroundColor=CLEAR_COLOR;
+    
+//    self.daoGouTableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, self.frame.size.height) style:0];
+//    self.daoGouTableView.dataSource = self;
+//    self.daoGouTableView.delegate = self;
+//    self.daoGouTableView.scrollEnabled=NO;
+//    self.daoGouTableView.separatorStyle=UITableViewCellSeparatorStyleNone;
+//    [self addSubview:self.daoGouTableView];
+//    
+//    UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0,self.frame.size.width, 0.5)];
+//    self.daoGouTableView.tableFooterView = footView;
+//
+    
+    UICollectionViewFlowLayout *flowLayout = [[UICollectionViewFlowLayout alloc]init];
+    [flowLayout setItemSize:CGSizeMake(SCREEN_WIDTH/2.-MAKEOF5(10), MAKEOF5(230))];//设置cell的尺寸
+    [flowLayout setScrollDirection:UICollectionViewScrollDirectionVertical];//设置其布局方向
+    flowLayout.sectionInset = UIEdgeInsetsMake(MAKEOF5(5), MAKEOF5(5), MAKEOF5(5), MAKEOF5(5));//设置其边界
+    //其布局很有意思，当你的cell设置大小后，一行多少个cell，由cell的宽度决定
+    
+    
+    _collectionView = [[UICollectionView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, self.frame.size.height) collectionViewLayout:flowLayout];
+    _collectionView.dataSource = self;
+    _collectionView.delegate = self;
+    _collectionView.backgroundColor = CLEAR_COLOR;
+    [_collectionView registerClass:[SDDaoGouCollectionCell class] forCellWithReuseIdentifier:@"SDDaoGouCollectionCell"];
+    [_collectionView registerClass:[UICollectionReusableView class] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"HeaderView"];
+    
+    _collectionView.scrollEnabled=NO;
+    [self addSubview:_collectionView];
+    
+    
+}
+
+
+
+-(void)setNvShenDaoGouListArr:(NSMutableArray *)nvShenDaoGouListArr
+{
+    _nvShenDaoGouListArr=nvShenDaoGouListArr;
+    [self.daoGouTableView reloadData];
+    [self.collectionView reloadData];
+}
+
+
+#pragma mark - collectionView delegate 
+
+//collectionView的代理方法
+#pragma mark - collectionView dataSource Or delegate
+-(NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    return self.nvShenDaoGouListArr.count;
+}
+-(NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
+{
+    return 1;
+}
+-(UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    SDDaoGouCollectionCell *cell =[collectionView dequeueReusableCellWithReuseIdentifier:@"SDDaoGouCollectionCell" forIndexPath:indexPath];
+ 
+    
+    NSDictionary *dic=self.nvShenDaoGouListArr[indexPath.row];
+    [cell configCellWithDic:dic indexRow:indexPath.row];
+    
+    
+    return cell;
+}
+-(void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSLog(@"%s %@",__FUNCTION__ ,indexPath);
+    
+    [self.delegate daoGouViewCellBtnClick:indexPath.row];
+}
+
+// section header 的尺寸
+-(CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section{
+    CGSize size={SCREEN_WIDTH,40};
+    return size;
+}
+
+
+
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
+
+{
+    
+    UICollectionReusableView *reusableview = nil;
+    
+    if (kind == UICollectionElementKindSectionHeader){
+        
+        UICollectionReusableView *headerView = [collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:@"HeaderView" forIndexPath:indexPath];
+        
+        
+        UIView *labLeftView=[[UIView alloc] initWithFrame:CGRectMake(5, (40-18)/2., 18, 18)];
+        labLeftView.backgroundColor=UIColorFromRGB(0xcd0400);
+        [headerView addSubview:labLeftView];
+        labLeftView.layer.cornerRadius = 2;
+        labLeftView.layer.borderColor =WHITE_COLOR.CGColor;
+        labLeftView.layer.borderWidth = 0.5;
+        
+        
+        UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(30, 0, 100, headerView.frame.size.height)];
+        lab.backgroundColor=CLEAR_COLOR;
+        lab.font = [UIFont systemFontOfSize:14.0];
+        lab.text = @"达人导购";
+        lab.textColor=UIColorFromRGB(0xcd0400);
+        [headerView addSubview:lab];
+        
+        if (isPassStoreCheck) {
+            
+            UIButton *btn =FastCreatButton(CGRectMake(SCREEN_WIDTH-80, 0, 80, headerView.frame.size.height), @"更多", CLEAR_COLOR, UIColorFromRGB(0x333333), nil, nil);
+            btn.tag=10001;
+            btn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+            [btn addTarget:self action:@selector(moreBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+            [headerView addSubview:btn];
+            
+            UIImage *image=UIImageByName(@"homeDaoGouMore");
+            UIImageView *imageView=[[UIImageView alloc]initWithFrame:CGRectMake(80-image.size.width, (40-image.size.height)/2., image.size.width, image.size.width)];
+            imageView.image=image;
+            [btn addSubview:imageView];
+        }
+        
+        
+        reusableview = headerView;
+        
+    }
+    
+    if (kind == UICollectionElementKindSectionFooter){
+        
+//        UICollectionReusableView *footerview = [collectionView dequeueResuableSupplementaryViewOfKind:UICollectionElementKindSectionFooter withReuseIdentifier:@"FooterView" forIndexPath:indexPath];
+//        reusableview = footerview;
+        
+    }
+    
+    return reusableview;
+}
+
+
+
+#pragma mark- tableView detegate
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView;
+{
+    return 1;
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+   
+    return (self.nvShenDaoGouListArr.count-1)/2 +1;
+   
+    
+}
+
+
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+//    return 190;
+    return 230;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 40;
+}
+
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    UIView *view = [[UIView alloc] initWithFrame:CGRectMake(0, 0,self.frame.size.width, 40)];
+    
+    view.backgroundColor=CLEAR_COLOR;
+    
+    
+    
+    UIView *labLeftView=[[UIView alloc] initWithFrame:CGRectMake(5, (40-18)/2., 18, 18)];
+    labLeftView.backgroundColor=UIColorFromRGB(0xcd0400);
+    [view addSubview:labLeftView];
+    labLeftView.layer.cornerRadius = 2;
+    labLeftView.layer.borderColor =WHITE_COLOR.CGColor;
+    labLeftView.layer.borderWidth = 0.5;
+    
+    
+    UILabel *lab = [[UILabel alloc] initWithFrame:CGRectMake(30, 0, 100, view.frame.size.height)];
+    lab.backgroundColor=CLEAR_COLOR;
+    //    lab.textColor = [UIColor darkGrayColor];
+    lab.font = [UIFont systemFontOfSize:14.0];
+    lab.text = @"达人导购";
+    lab.textColor=UIColorFromRGB(0xcd0400);
+    [view addSubview:lab];
+    
+    if (isPassStoreCheck) {
+        
+        
+        UIButton *btn =FastCreatButton(CGRectMake(SCREEN_WIDTH-80, 0, 80, view.frame.size.height), @"更多", CLEAR_COLOR, UIColorFromRGB(0x333333), nil, nil);
+        btn.tag=10001;
+        btn.titleLabel.font = [UIFont systemFontOfSize:13.0];
+        [btn addTarget:self action:@selector(moreBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [view addSubview:btn];
+        
+        UIImage *image=UIImageByName(@"homeDaoGouMore");
+        UIImageView *imageView=[[UIImageView alloc]initWithFrame:CGRectMake(80-image.size.width, (40-image.size.height)/2., image.size.width, image.size.width)];
+        imageView.image=image;
+        [btn addSubview:imageView];
+    }
+    
+    
+    
+    
+    return view;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *CellIdentifier = @"HomeDaoGouCell";
+    HomeDaoGouCell *cell = (HomeDaoGouCell *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
+    if (cell == nil) {
+        cell = [[[NSBundle mainBundle] loadNibNamed:@"HomeDaoGouCell" owner:self options:nil] lastObject];
+    }
+    
+    cell.backgroundColor = [UIColor whiteColor];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.delegate = self;
+    //    [cell configCellWithArray:nil];
+    
+    if ([self.nvShenDaoGouListArr count]%2 == 0) {
+        NSArray *subArray = [self.nvShenDaoGouListArr subarrayWithRange:NSMakeRange(indexPath.row*2 ,2)];
+        [cell configCellWithArray:subArray indexRow:(int)indexPath.row];
+        
+    }else if([self.nvShenDaoGouListArr count]%2 == 1)
+    {
+        if ( (indexPath.row + 1) * 2 < [self.nvShenDaoGouListArr count]) {
+            NSArray *subArray = [self.nvShenDaoGouListArr subarrayWithRange:NSMakeRange(indexPath.row * 2 ,2)];
+            [cell configCellWithArray:subArray indexRow:(int)indexPath.row];
+        }else
+        {
+            NSArray *subArray = [self.nvShenDaoGouListArr subarrayWithRange:NSMakeRange(indexPath.row*2 ,1)];
+            [cell configCellWithArray:subArray indexRow:(int)indexPath.row];
+        }
+        
+    }
+    
+    
+    return cell;
+    
+}
+
+
+-(void)daoGouCellBtnClick:(NSUInteger)row
+{
+    NSLog(@"%d",(int)row);
+    
+    [self.delegate daoGouViewCellBtnClick:row];
+}
+
+
+-(void)moreBtnClick:(id)sender
+{
+    
+    [self.delegate moreDaoGouClick:sender];
+    
+//     [m_appDelegate.tabController setSelectedIndex:2];
+//    [self performSelector:@selector(postMyNotification:) withObject:nil afterDelay:0.4];
+    
+    
+}
+
+-(void)postMyNotification:(id)sender
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"showNvShenDaoGou" object:nil];
+}
+@end

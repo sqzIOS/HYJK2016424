@@ -1,0 +1,30 @@
+//
+//  BBSUserInfo.m
+//  sexduoduo
+//
+//  Created by dsz on 15-3-12.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//
+
+#import "BBSUserInfo.h"
+
+@implementation BBSUserInfo
+
+
+#pragma mark 网络请求
+-(void)requestExchangeUserInfo
+{
+    [[MKHttpExchangeDemo shareMyInstance] requestExchangeUserInfoCompletionHandler:^(id responseObject) {
+        
+        NSDictionary *dic=(NSDictionary *)responseObject;
+        NSLog(@"请求论坛用户中心=%@",dic);
+        if ([dic[@"success"] intValue]==1) {
+            
+            self.userInfo=[dic[@"datasource"] objectAtIndex:0];
+            
+        }
+    } errorHandler:^(NSError *error) {
+        
+    }];
+}
+@end

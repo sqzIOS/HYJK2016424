@@ -1,0 +1,21 @@
+//
+//  CouponsModel.h
+//  
+//
+//  Created by apple on 15/12/15.
+//
+//
+
+#import <Foundation/Foundation.h>
+
+@interface CouponsModel : NSObject
+
+@property (nonatomic,copy) NSString *ID;
+@property (nonatomic,copy) NSString *conditions;
+@property (nonatomic,copy) NSString *amount;
+@property (nonatomic,copy) NSString *startDate;
+@property (nonatomic,copy) NSString *endDate;
+
++ (instancetype)couponsModelWithDict:(NSDictionary *)dict;
+
+@end

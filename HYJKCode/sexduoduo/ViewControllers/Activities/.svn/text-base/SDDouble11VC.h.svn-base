@@ -1,0 +1,19 @@
+//
+//  SDDouble11VC.h
+//  sexduoduo
+//
+//  Created by showm on 15/10/29.
+//  Copyright (c) 2015年 dbCode. All rights reserved.
+//  双十一活动
+
+#import <UIKit/UIKit.h>
+
+@interface SDDouble11VC : UIViewController
+
+@property (strong, nonatomic) IBOutlet UIScrollView *mainScView;
+
+@property (strong, nonatomic) IBOutlet UIView *mainContentView;
+
+@property (strong, nonatomic)NSString *titleStr;
+
+@end

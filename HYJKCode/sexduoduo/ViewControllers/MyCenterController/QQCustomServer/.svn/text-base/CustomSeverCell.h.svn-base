@@ -1,0 +1,17 @@
+//
+//  CustomSeverCell.h
+//  sexduoduo
+//
+//  Created by sqz on 14-12-1.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface CustomSeverCell : UITableViewCell
+@property (strong, nonatomic) IBOutlet UIImageView *headImageView;
+@property (strong, nonatomic) IBOutlet UILabel *nameLab;
+
+-(void)configCellWithNameArray:(NSArray *)nameArray andQQArray:(NSArray *)qqArray  andIsOnlineArray:(NSArray *)qqIsOnlineArray  indexRow:(int)row;
+
+@end

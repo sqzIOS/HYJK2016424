@@ -1,0 +1,86 @@
+//
+//  GoodsViewController.h
+//  sexduoduo
+//
+//  Created by showm on 14-5-20.
+//  Copyright (c) 2014年 dbCode. All rights reserved.
+//  专区 分类 商品列表
+
+#import <UIKit/UIKit.h>
+#import "GoodsViewCell.h"
+#import "UIScrollView+SVInfiniteScrolling.h"
+#import "GoodsDetailTwoViewController.h"
+
+typedef enum _theRequestType {
+    searchGoodsType = 0,    //搜索
+    homeViewType,           //首页 专区
+    classifyType,           //分类
+    collectType,            //收藏
+    brandStreet,            //品牌街
+    flagType,               //标签类型
+} theRequestType;
+
+
+enum _sortType {
+    comprehensiveType = 10,
+    salesType,
+    timeType,
+    priceType,
+    
+} sortType;
+
+typedef enum _topType {
+    isTimeType = 100,  //限时抢购
+    isBestType,        //高大上
+    isNewType,         //新品
+    isHotType,        //热卖
+    isWalkType,      //一路同性
+    isGiftType,      //礼品专区
+    isSpoofType,      //恶搞专区
+    
+    
+} topType;
+
+
+
+
+@interface GoodsViewController : UIViewController<UITableViewDataSource,UITableViewDelegate,GoodsViewCellDelegate>
+{
+    NSMutableArray *goodsDataArray;
+    int currentPage;
+    BOOL isAscSort;
+    
+    MKNetworkOperation *operation;
+    MKNetworkOperation *operationMore;
+}
+
+@property (strong, nonatomic) UITableView *goodsTableView;
+
+@property (assign, nonatomic) BOOL disPlayOne;  //是否从home跳转过来  并将值传递到详情页面  为了区别隐藏tabbar
+@property (assign, nonatomic) BOOL disPlayTwo;   //是否从分类页跳转过来  并将值传递到详情页面  为了区别隐藏tabbar
+
+@property (strong, nonatomic) IBOutlet UIView *loadingView;
+@property (strong, nonatomic) IBOutlet UIActivityIndicatorView *indicator;
+@property (strong, nonatomic) IBOutlet UIView *noNetView;
+
+@property (strong, nonatomic) NSString *classifyStr;// 专区 品牌街 id 标签
+
+@property (strong, nonatomic) NSString *classifyId;
+
+@property (strong, nonatomic) NSString *titleStr;
+
+@property (strong, nonatomic) NSString *searchStr;
+
+@property (nonatomic) theRequestType requestType;
+//@property (nonatomic) topType theTopType;
+
+@property (strong, nonatomic) UILabel *promptLab;
+
+
+@property (assign, nonatomic) BOOL isHiddenSort;
+
+@property (strong, nonatomic) IBOutlet UIView *noCollectView;
+
+
+
+@end
