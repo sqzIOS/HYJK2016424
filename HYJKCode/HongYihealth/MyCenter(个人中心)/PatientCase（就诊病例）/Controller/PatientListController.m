@@ -110,7 +110,6 @@
     PatientListCell *cell = [PatientListCell cellInTableView:tableView];
     cell.delegate = self;
     cell.model = [self.dataArry objectAtIndex:indexPath.row];
-    cell.title = [NSString stringWithFormat:@"病例%zi",indexPath.row + 1];
     return cell;
 }
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath

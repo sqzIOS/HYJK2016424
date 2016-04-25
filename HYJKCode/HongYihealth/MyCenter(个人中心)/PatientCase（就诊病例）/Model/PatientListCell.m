@@ -35,6 +35,7 @@
 - (void)setModel:(PatientCaseModel *)model
 {
     _model = model;
+    self.title = model.disease_desc;
     self.chooseBtn.selected = model.isSelected;
 }
 
