@@ -236,6 +236,8 @@
             }];
         } else {
             [UserOperation addPatientCase:self.model Succeed:^{
+                
+                
                 [self submitSucceed];
             } failed:^{
                 [MBProgressHUD hideHUDForView:self.tableView animated:YES];

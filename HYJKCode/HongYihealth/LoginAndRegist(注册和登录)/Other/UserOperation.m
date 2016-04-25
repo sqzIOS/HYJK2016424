@@ -392,18 +392,21 @@
 /**
  * 是否有默认病例
  */
-+ (void)hasDefaultPatientCase:(void(^)(BOOL hasDefaultPatientCase))finished{    [self getPatientListSucceed:^(NSArray *caseList) {
++ (void)hasDefaultPatientCase:(void(^)(NSString *case_id))finished {
+    [self getPatientListSucceed:^(NSArray *caseList) {
         for (PatientCaseModel *model in caseList) {
-            if ( model.isSelected) {
-                finished(YES);
-                return ;
-            }
+                        if ( model.isSelected) {
+                            finished(model.case_id);
+                            return ;
+                        }
+                    finished(nil);
         }
-        finished(NO);
     } failed:^{
-        finished(NO);
+        finished(nil);
     }];
 }
+
+
 /**
  * 删除病例
  */
