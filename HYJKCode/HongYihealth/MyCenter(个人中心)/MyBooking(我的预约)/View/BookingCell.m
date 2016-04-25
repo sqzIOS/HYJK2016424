@@ -134,7 +134,7 @@
     self.rightImage.frame = CGRectMake(self.progress.right + 5, self.patientName.top + 5, 5, 10);
     self.doctorPhoto.frame = CGRectMake(10, self.line.bottom + 5,80, 80);
     self.doctorPhoto.layer.cornerRadius = self.doctorPhoto.frame.size.width / 2;
-    self.doctorName.frame = CGRectMake(self.doctorPhoto.right + 10, self.doctorPhoto.top + 15, 100, 14);
+    self.doctorName.frame = CGRectMake(self.doctorPhoto.right + 10, self.doctorPhoto.top + 15, SCREEN_WIDTH - self.doctorPhoto.right - 20, 14);
     self.doctorDetail.frame = CGRectMake(self.doctorName.left, self.doctorName.bottom, SCREEN_WIDTH - self.doctorName.left - 10, 40);
     self.treatDay.frame = CGRectMake(self.doctorPhoto.left - 5, self.doctorPhoto.bottom + 5, self.doctorPhoto.width + 20, 20);
     self.treatTime.frame = CGRectMake(self.treatDay.right, self.treatDay.top, self.treatDay.width, self.treatDay.height);

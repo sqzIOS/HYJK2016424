@@ -263,6 +263,46 @@
     return NO;
 }
 
+/**
+ * 更新病例
+ */
++ (void)updataPatientCase:(PatientCaseModel *)model Succeed:(void(^)())succeed failed:(void(^)())failed
+{
+    [self getSession:^(NSDictionary *session) {
+        NSString *path = @"/user_case/update";
+        NSMutableDictionary *user_case = [NSMutableDictionary dictionary];
+        
+        [user_case setObject:model.age forKey:@"age"];
+        [user_case setObject:model.weight forKey:@"weight"];
+        [user_case setObject:model.height forKey:@"height"];
+        [user_case setObject:model.blood_type forKey:@"blood_type"];
+        [user_case setObject:model.rhblood_type forKey:@"rhblood_type"];
+        [user_case setObject:model.disease_desc forKey:@"disease_desc"];
+        [user_case setObject:model.disease_history forKey:@"disease_history"];
+        [user_case setObject:model.bmi forKey:@"bmi"];
+        if (model.case_id) {
+            [user_case setObject:[NSString stringWithFormat:@"%d",model.isSelected]    forKey:@"default_case"];
+        } else {
+            [user_case setObject:@"1" forKey:@"default_case"];
+        }
+        
+        NSDictionary *params = @{@"session":session,
+                                 @"user_case":user_case,
+                                 @"case_id":model.case_id};
+        [AFHTTPClient postJSONPath:path httpHost:HOST parameters:params success:^(id json) {
+            NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:json options:NSJSONReadingAllowFragments error:nil];
+            if ([self isSucceedWithResponsDict:dict]) {
+                succeed();
+            } else {
+                failed();
+            }
+        } fail:^{
+            failed();
+        }];
+    }];
+    
+
+}
 
 #pragma mark - 增加病例
 + (void)addPatientCase:(PatientCaseModel *)model Succeed:(void(^)())succeed failed:(void(^)())failed
@@ -352,18 +392,21 @@
 /**
  * 是否有默认病例
  */
-+ (void)hasDefaultPatientCase:(void(^)(BOOL hasDefaultPatientCase))finished{    [self getPatientListSucceed:^(NSArray *caseList) {
++ (void)hasDefaultPatientCase:(void(^)(NSString *case_id))finished {
+    [self getPatientListSucceed:^(NSArray *caseList) {
         for (PatientCaseModel *model in caseList) {
-            if ( model.isSelected) {
-                finished(YES);
-                return ;
-            }
+                        if ( model.isSelected) {
+                            finished(model.case_id);
+                            return ;
+                        }
+                    finished(nil);
         }
-        finished(NO);
     } failed:^{
-        finished(NO);
+        finished(nil);
     }];
 }
+
+
 /**
  * 删除病例
  */

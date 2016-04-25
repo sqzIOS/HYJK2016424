@@ -94,8 +94,8 @@
                 _headView.shopArr = self.shopArr;
                 
                 // 判断是否有默认病例
-                [UserOperation hasDefaultPatientCase:^(BOOL hasDefaultPatientCase) {
-                    if (hasDefaultPatientCase) {
+                [UserOperation hasDefaultPatientCase:^(NSString *case_id) {
+                    if (case_id) {
                         [_headView changeBingLi:YES];
                     }
                     [MBHud removeFromView:self.view];

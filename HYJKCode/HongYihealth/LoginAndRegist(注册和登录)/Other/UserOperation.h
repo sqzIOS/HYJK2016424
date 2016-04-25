@@ -118,7 +118,7 @@ typedef enum {
 /**
  * 是否默认病例
  */
-+ (void)hasDefaultPatientCase:(void(^)(BOOL hasDefaultPatientCase))finished;
++ (void)hasDefaultPatientCase:(void(^)(NSString *case_id))finished;
 
 /**
  * 删除病例
