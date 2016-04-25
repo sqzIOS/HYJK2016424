@@ -120,6 +120,7 @@
 		11BED9811C1514D500CEDB7A /* SDPublicModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 11BED9801C1514D500CEDB7A /* SDPublicModel.m */; };
 		11C397F61B53537A007A37F8 /* QzImageView.m in Sources */ = {isa = PBXBuildFile; fileRef = 11C397F51B53537A007A37F8 /* QzImageView.m */; };
 		11C397FF1B5353F7007A37F8 /* UIImage+QzColorAtPixel.m in Sources */ = {isa = PBXBuildFile; fileRef = 11C397FE1B5353F7007A37F8 /* UIImage+QzColorAtPixel.m */; };
+		11CE214C1CCDC0EA00ED6350 /* CTBanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 11CE214B1CCDC0EA00ED6350 /* CTBanner.m */; };
 		3308B5CD1CB8200600F2914C /* mycenter_code@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3308B5CC1CB8200600F2914C /* mycenter_code@2x.png */; };
 		3308B5CF1CB8200C00F2914C /* mycenter_code@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 3308B5CE1CB8200C00F2914C /* mycenter_code@3x.png */; };
 		3308B5D31CB8225B00F2914C /* TaoBaoWebViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3308B5D11CB8225B00F2914C /* TaoBaoWebViewController.m */; };
@@ -909,6 +910,8 @@
 		11C397F51B53537A007A37F8 /* QzImageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QzImageView.m; sourceTree = "<group>"; };
 		11C397FD1B5353F7007A37F8 /* UIImage+QzColorAtPixel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+QzColorAtPixel.h"; sourceTree = "<group>"; };
 		11C397FE1B5353F7007A37F8 /* UIImage+QzColorAtPixel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+QzColorAtPixel.m"; sourceTree = "<group>"; };
+		11CE214A1CCDC0EA00ED6350 /* CTBanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CTBanner.h; sourceTree = "<group>"; };
+		11CE214B1CCDC0EA00ED6350 /* CTBanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CTBanner.m; sourceTree = "<group>"; };
 		3308B5CC1CB8200600F2914C /* mycenter_code@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "mycenter_code@2x.png"; sourceTree = "<group>"; };
 		3308B5CE1CB8200C00F2914C /* mycenter_code@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "mycenter_code@3x.png"; sourceTree = "<group>"; };
 		3308B5D01CB8225B00F2914C /* TaoBaoWebViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TaoBaoWebViewController.h; sourceTree = "<group>"; };
@@ -3189,6 +3192,8 @@
 		33AB288A1C425F54002FE21F /* View */ = {
 			isa = PBXGroup;
 			children = (
+				11CE214A1CCDC0EA00ED6350 /* CTBanner.h */,
+				11CE214B1CCDC0EA00ED6350 /* CTBanner.m */,
 				33AB288B1C425F54002FE21F /* AreaTableView.h */,
 				33AB288C1C425F54002FE21F /* AreaTableView.m */,
 				33AB288D1C425F54002FE21F /* BannerScrollView.h */,
@@ -4782,7 +4787,7 @@
 				ORGANIZATIONNAME = dbCode;
 				TargetAttributes = {
 					BA2FE6DE19235B3B00B48933 = {
-						DevelopmentTeam = 455FLQKUP8;
+						DevelopmentTeam = 9VRNPS4GBN;
 					};
 					BA2FE6F919235B3B00B48933 = {
 						TestTargetID = BA2FE6DE19235B3B00B48933;
@@ -5471,6 +5476,7 @@
 				336D90911C4263FD00C3790F /* QzMessageToolBar.m in Sources */,
 				BA0B71C71947001A002E0962 /* SDWebImageCompat.m in Sources */,
 				BA15F825193588DC00F436B8 /* UIImageView+MKNetworkKitAdditions.m in Sources */,
+				11CE214C1CCDC0EA00ED6350 /* CTBanner.m in Sources */,
 				BA0B71C91947001A002E0962 /* SDWebImageDownloader.m in Sources */,
 				33ED48041C57A5F4000CC4B7 /* MyAddressCell.m in Sources */,
 				33AB29A61C425F54002FE21F /* PayDetailsHeadView.m in Sources */,
@@ -5649,7 +5655,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				CODE_SIGN_IDENTITY = "iPhone Developer: Huai Lai (35W52YDU3V)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=*]" = "iPhone Developer: Huai Lai (35W52YDU3V)";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				ENABLE_BITCODE = NO;
@@ -5685,9 +5691,9 @@
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.qzlh.hyjk;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lct.HongYiheadlth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "a0613686-cc97-45c0-85ba-4fb39915be31";
+				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = 1;
 				VALID_ARCHS = "armv7 arm64";
 				WARNING_CFLAGS = "-Wno-shorten-64-to-32";
@@ -5700,9 +5706,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				CODE_SIGN_IDENTITY = "iPhone Distribution: Xiamen Hongyi Medical Information Technology Co., Ltd. (JR6X5VY59K)";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=*]" = "iPhone Distribution: Xiamen Hongyi Medical Information Technology Co., Ltd. (JR6X5VY59K)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution: Xiamen Hongyi Medical Information Technology Co., Ltd. (JR6X5VY59K)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -5736,9 +5742,9 @@
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.qzlh.hyjk;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lct.HongYiheadlth;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "e6670264-fb6f-43db-9938-15d8d6b42ac9";
+				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = 1;
 				VALID_ARCHS = "armv7 arm64";
 				WARNING_CFLAGS = "-Wno-shorten-64-to-32";

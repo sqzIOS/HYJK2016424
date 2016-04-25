@@ -75,29 +75,41 @@
 #pragma mark --- 网络请求
 //提交订单
 - (void)requestData {
-    [UserOperation getSession:^(NSDictionary *session) {
-        [MBHud showInView:self.view withTitle:@"请稍等..."];
-        NSDictionary *tempDic = @{
-                                  @"session":@{@"uid":[NSString stringWithFormat:@"%@",session[@"uid"]] ,@"sid":[NSString stringWithFormat:@"%@",session[@"sid"]]},
-                                  @"pay_id":[NSString stringWithFormat:@"%@", _orderModel.pay_id],
-                                  @"shipping_id":[NSString stringWithFormat:@"%@",_orderModel.shipping_id],
-                                  @"yuyue_time":[NSString stringWithFormat:@"%@",_orderModel.yuyue_time]
-                                  };
-        [AFHTTPClient postJSONPath:HONGYI_flow_done httpHost:BBS_IP parameters:tempDic success:^(id responseObject) {
-            
-            NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:responseObject];
-            if ([dict[@"status"][@"succeed"] intValue] == 1) {
-                _orderModel.oderID = [NSString stringWithFormat:@"%@",dict[@"data"][@"order_id"]];
-                [_headView changeBtnBg:YES];
-            }
-            else
-            {
-                [ShareFunction showAlertWithText:dict[@"status"][@"error_desc"]];
-            }
-            [MBHud removeFromView:self.view];
-        } fail:^{
-            [MBHud removeFromView:self.view];
-        }];
+    
+    // 获取caseID
+    // 判断是否有默认病例
+//    __block NSString *case_id = nil;
+    [UserOperation hasDefaultPatientCase:^(NSString *case_id) {
+        if (case_id)
+        {
+            [UserOperation getSession:^(NSDictionary *session) {
+                [MBHud showInView:self.view withTitle:@"请稍等..."];
+                NSDictionary *tempDic = @{
+                                          @"session":@{
+                                                  @"uid":[NSString stringWithFormat:@"%@",session[@"uid"]] ,
+                                                  @"sid":[NSString stringWithFormat:@"%@",session[@"sid"]]},
+                                          @"pay_id":[NSString stringWithFormat:@"%@", _orderModel.pay_id],
+                                          @"shipping_id":[NSString stringWithFormat:@"%@",_orderModel.shipping_id],
+                                          @"yuyue_time":[NSString stringWithFormat:@"%@",_orderModel.yuyue_time],
+                                          @"case_id":case_id
+                                          };
+                [AFHTTPClient postJSONPath:HONGYI_flow_done httpHost:BBS_IP parameters:tempDic success:^(id responseObject) {
+                    
+                    NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:responseObject];
+                    if ([dict[@"status"][@"succeed"] intValue] == 1) {
+                        _orderModel.oderID = [NSString stringWithFormat:@"%@",dict[@"data"][@"order_id"]];
+                        [_headView changeBtnBg:YES];
+                    }
+                    else
+                    {
+                        [ShareFunction showAlertWithText:dict[@"status"][@"error_desc"]];
+                    }
+                    [MBHud removeFromView:self.view];
+                } fail:^{
+                    [MBHud removeFromView:self.view];
+                }];
+            }];
+        }
     }];
 }
 /**
@@ -109,13 +121,12 @@
 //        vc.orderID = _orderModel.oderID;
 //        [self.navigationController pushViewController:vc animated:YES];
 //        return;
-    
     [UserOperation getSession:^(NSDictionary *session) {
         [MBHud showInView:self.view withTitle:@"请稍等..."];
         NSDictionary *tempDic = @{
-                                  @"session":@{@"uid":[NSString stringWithFormat:@"%@",session[@"uid"]] ,@"sid":[NSString stringWithFormat:@"%@",session[@"sid"]]},
-                                  @"order_id":[NSString stringWithFormat:@"%@", _orderModel.oderID]
-                                  //                                  @"order_id":@"176"
+                                  @"session":@{@"uid":[NSString stringWithFormat:@"%@",session[@"uid"]] ,
+                                               @"sid":[NSString stringWithFormat:@"%@",session[@"sid"]]},
+                                               @"order_id":[NSString stringWithFormat:@"%@", _orderModel.oderID],
                                   };
         [AFHTTPClient postJSONPath:HONGYI_order_pay httpHost:BBS_IP parameters:tempDic success:^(id responseObject) {
             
