@@ -10,7 +10,7 @@
 #import "UpdataPWView.h"
 #import "Tools.h"
 
-@interface SettingDetailController ()
+@interface SettingDetailController () <UpdataPWViewDelegate>
 
 
 @end
@@ -100,8 +100,17 @@
         type = UpdataPWViewChangePasswordTypeReset;
     }
     UpdataPWView *updataPWView = [UpdataPWView viewWithType:type];
+    updataPWView.delegate = self;
     updataPWView.frame = CGRectMake(0, self.topView.bottom, SCREEN_WIDTH, SCREEN_HEIGHT - self.topView.height);
     [self.view addSubview:updataPWView];
+}
+
+- (void)updataPWViewUpdataSucceed
+{
+    self.view.userInteractionEnabled = NO;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self.navigationController popViewControllerAnimated:YES];
+    });
 }
 
 #pragma mark - 创建控制器

@@ -90,6 +90,8 @@
     [UserOperation updataPasswordWithCode:self.code.text account:self.account.text password:self.nowPW.text succeed:^{
         [MBProgressHUD hideAllHUDsForView:self animated:YES];
         [ShareFunction showToast:@"修改成功"];
+        
+        [self.delegate updataPWViewUpdataSucceed];
     } failed:^{
         [MBProgressHUD hideAllHUDsForView:self animated:YES];
     }];

@@ -227,41 +227,53 @@
     if (self.model.age && self.model.blood_type && self.model.disease_desc && self.model.disease_history && self.model.weight && self.model.height && self.model.rhblood_type) {
         [self.view endEditing:YES];
         [MBProgressHUD showHUDAddedTo:self.tableView animated:YES];
-        [UserOperation addPatientCase:self.model Succeed:^{
-            [UserOperation getPatientListSucceed:^(NSArray *caseList) {
-                
-                if (caseList.count < 1) {
-                    
-                    [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_BINGLI object:nil userInfo:@{@"yitianxie":@"0"}];
-                    [self.navigationController popViewControllerAnimated:YES];
-                }
-                
-                [MBProgressHUD hideHUDForView:self.tableView animated:YES];
-                [self.dataArray removeAllObjects];
-                for (PatientCaseModel *model in caseList) {
-                    [self.dataArray addObject:model];
-                }
-                _isOK = YES;
-                [ShareFunction showToast:@"保存成功"];
-                self.view.userInteractionEnabled = NO;
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                    [self backBtnClick];
-                });
-                [MBProgressHUD hideAllHUDsForView:self.view animated:YES];
+        
+        if (self.model.case_id) {
+            [UserOperation updataPatientCase:self.model Succeed:^{
+                [self submitSucceed];
             } failed:^{
-                [ShareFunction showToast:@"保存失败"];
                 [MBProgressHUD hideHUDForView:self.tableView animated:YES];
             }];
-            
-        } failed:^{
-            [MBProgressHUD hideHUDForView:self.tableView animated:YES];
-        }];
-        
+        } else {
+            [UserOperation addPatientCase:self.model Succeed:^{
+                [self submitSucceed];
+            } failed:^{
+                [MBProgressHUD hideHUDForView:self.tableView animated:YES];
+            }];
+        }
     } else {
         [ShareFunction showToast:@"请完善信息"];
     }
 }
 
+- (void)submitSucceed
+{
+    [UserOperation getPatientListSucceed:^(NSArray *caseList) {
+        
+        if (caseList.count < 1) {
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_BINGLI object:nil userInfo:@{@"yitianxie":@"0"}];
+            [self.navigationController popViewControllerAnimated:YES];
+        }
+        
+        [MBProgressHUD hideHUDForView:self.tableView animated:YES];
+        [self.dataArray removeAllObjects];
+        for (PatientCaseModel *model in caseList) {
+            [self.dataArray addObject:model];
+        }
+        _isOK = YES;
+        [ShareFunction showToast:@"保存成功"];
+        self.view.userInteractionEnabled = NO;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self backBtnClick];
+        });
+        [MBProgressHUD hideAllHUDsForView:self.view animated:YES];
+    } failed:^{
+        [ShareFunction showToast:@"保存失败"];
+        [MBProgressHUD hideHUDForView:self.tableView animated:YES];
+    }];
+
+}
 
 #pragma mark - 返回
 - (void)backBtnClick

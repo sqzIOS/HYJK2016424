@@ -13,6 +13,11 @@ typedef enum {
     UpdataPWViewChangePasswordTypeReset
 } UpdataPWViewChangePasswordType;
 
+@protocol UpdataPWViewDelegate <NSObject>
+
+- (void)updataPWViewUpdataSucceed;
+
+@end
 
 @interface UpdataPWView : UIView
 
@@ -21,6 +26,8 @@ typedef enum {
 
 
 @property (nonatomic) UpdataPWViewChangePasswordType changePasswordType;
+@property (nonatomic,weak) id<UpdataPWViewDelegate> delegate;
+
 
 
 @end

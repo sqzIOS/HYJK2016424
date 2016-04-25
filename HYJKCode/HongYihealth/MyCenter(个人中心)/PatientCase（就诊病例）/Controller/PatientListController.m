@@ -144,8 +144,9 @@
         
         if (self.isComeFromeSureOrder) {
             [[NSNotificationCenter defaultCenter] postNotificationName:NOTIFICATION_BINGLI object:nil userInfo:@{@"yitianxie":@"1"}];
-            [self.navigationController popViewControllerAnimated:YES];
         }
+        
+        [self.navigationController popViewControllerAnimated:YES];
         
     } failed:^{
         [MBProgressHUD hideAllHUDsForView:self.view animated:YES];  [ShareFunction showToast:@"请检查网络设置"];
