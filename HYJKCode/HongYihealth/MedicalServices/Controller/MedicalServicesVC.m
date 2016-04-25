@@ -60,7 +60,7 @@
  *  设置导航栏
  */
 - (void)setTopUpiew {
-    self.titleStr = @"医疗服务";
+    self.titleStr = @"弘医健康";
     self.isNeedBack = NO;
     
     UIButton *rightBtn = [[UIButton alloc] init];
@@ -153,7 +153,7 @@
  *  计时器
  */
 - (void)startTime {
-    _myTimer = [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(timerAction) userInfo:nil repeats:YES];
+    _myTimer = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(timerAction) userInfo:nil repeats:YES];
 }
 
 - (void)timerAction {

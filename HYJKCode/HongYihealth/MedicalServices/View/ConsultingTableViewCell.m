@@ -50,7 +50,7 @@
     //医院
     self.hospitalLab = [[UILabel alloc] init];
     self.hospitalLab.font = FONT_WITH_SIZE(MAKEOF5(13));
-    self.hospitalLab.numberOfLines = 0;
+//    self.hospitalLab.numberOfLines = 0;
     self.hospitalLab.textColor = RGBCOLOR16(0x8e8e8e);
     [self.contentView addSubview:self.hospitalLab];
     
@@ -79,26 +79,9 @@
         self.nameLab.text = @"";
     }
     CGSize size = [NSString getTextMultilineContent:self.nameLab.text withFont:self.nameLab.font withSize:CGSizeMake(SCREEN_WIDTH - MAKEOF5(24) - _headImageView.right, MAXFLOAT)];
-    self.nameLab.frame = CGRectMake(_headImageView.right + MAKEOF5(12), _headImageView.top, size.width, size.height);
+    self.nameLab.frame = CGRectMake(_headImageView.right + MAKEOF5(12), _headImageView.top, size.width, MAKEOF5(15));
     
     CGFloat Y = MAKEOF5(5);
-    //    //科室
-    //    if (model.doctorDeparment) {
-    //        self.deparmentLab.text = model.doctorDeparment;
-    //    } else {
-    //        self.deparmentLab.text = @"";
-    //    }
-    //    size = [NSString getTextMultilineContent:self.deparmentLab.text withFont:self.deparmentLab.font withSize:CGSizeMake(SCREEN_WIDTH - MAKEOF5(24) - _headImageView.right, MAXFLOAT)];
-    //    self.deparmentLab.frame = CGRectMake(_nameLab.left, _nameLab.bottom + Y, size.width, size.height);
-    //
-    //    //职称
-    //    if (model.doctorJobName) {
-    //        self.jobLab.text = model.doctorJobName;
-    //    } else {
-    //        self.jobLab.text = @"";
-    //    }
-    //    size = [NSString getTextMultilineContent:self.jobLab.text withFont:self.jobLab.font withSize:CGSizeMake(SCREEN_WIDTH - MAKEOF5(24) - _headImageView.right, MAXFLOAT)];
-    //    self.jobLab.frame = CGRectMake(_deparmentLab.right + MAKEOF5(5), _deparmentLab.top, size.width, size.height);
     
     //医院
     if (model.doctor_hospital) {
@@ -107,7 +90,7 @@
         self.hospitalLab.text = @"";
     }
     size = [NSString getTextMultilineContent:self.hospitalLab.text withFont:self.hospitalLab.font withSize:CGSizeMake(SCREEN_WIDTH - MAKEOF5(24) - _headImageView.right, MAXFLOAT)];
-    self.hospitalLab.frame = CGRectMake(_nameLab.left, _nameLab.bottom + Y, size.width, size.height);
+    self.hospitalLab.frame = CGRectMake(_nameLab.left, _nameLab.bottom + Y, size.width, MAKEOF5(15));
     
     //价格
     if (model.shop_price) {
@@ -119,11 +102,10 @@
     self.priceLab.frame = CGRectMake(_nameLab.left, _hospitalLab.bottom + Y, size.width, size.height);
     
     // 优惠前价格
-    if (model.market_price) {
+    if (model.market_price)
+    {
         self.market_priceLab.text = model.market_price;
-        
         NSMutableAttributedString *attrStr = [[NSMutableAttributedString alloc] initWithString:self.market_priceLab.text];
-//        NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc]init];
         [attrStr addAttribute:NSStrikethroughStyleAttributeName value:[NSNumber numberWithInteger:NSUnderlineStyleSingle] range:NSMakeRange(0, self.market_priceLab.text.length)];
         self.market_priceLab.attributedText = attrStr;
         CGSize size2 = CGSizeMake(SCREEN_WIDTH - MAKEOF5(24), MAXFLOAT);

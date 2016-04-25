@@ -46,6 +46,7 @@
     self.nameLab = [[UILabel alloc] init];
     self.nameLab.font = FONT_WITH_SIZE(MAKEOF5(13));
     self.nameLab.textColor = RGBCOLOR16(0x262626);
+    self.nameLab.numberOfLines = 0;
     [self addSubview:self.nameLab];
     if (_model.doctorName) {
         self.nameLab.text = _model.doctorName;
@@ -53,7 +54,7 @@
         self.nameLab.text = @"";
     }
     CGSize size = [NSString getTextMultilineContent:self.nameLab.text withFont:self.nameLab.font withSize:CGSizeMake(SCREEN_WIDTH - MAKEOF5(24) - _headImageView.right, MAXFLOAT)];
-    self.nameLab.frame = CGRectMake(_headImageView.right + MAKEOF5(12), _headImageView.centerY - size.height - MAKEOF5(3), size.width, size.height);
+    self.nameLab.frame = CGRectMake(_headImageView.right + MAKEOF5(12), _headImageView.top + MAKEOF5(3), size.width, size.height);
     
     //    //职称
     //    self.jobLab = [[UILabel alloc] init];
@@ -109,7 +110,7 @@
         }
     }
     size = [NSString getTextMultilineContent:self.hospitalLab.text withFont:self.hospitalLab.font withSize:CGSizeMake(_attentionBtn.left - MAKEOF5(6) - _nameLab.left, MAXFLOAT)];
-    self.hospitalLab.frame = CGRectMake(_nameLab.left, _headImageView.centerY + MAKEOF5(3), size.width, size.height);
+    self.hospitalLab.frame = CGRectMake(_nameLab.left, _nameLab.bottom + MAKEOF5(10), size.width, size.height);
     
     //科室
     self.deparmentLab = [[UILabel alloc] init];

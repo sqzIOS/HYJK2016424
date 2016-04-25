@@ -397,7 +397,8 @@ typedef enum {
 #define colorWithBK04  colorFrom16RGB(0x717171)
 // 性健康
 //颜色1   主调色
-#define colorWith01  RGBCOLOR16(0x32ed9b)
+//#define colorWith01  RGBCOLOR16(0x32ed9b)
+#define colorWith01  RGBCOLOR16(0x2fcc87)
 //颜色2   标题 (黑色)
 #define colorWith02  RGBCOLOR16(0x333333)
 //颜色3   内容 (黑灰色)
