@@ -149,6 +149,7 @@
     self.treatDay.text = model.treatDay;
     self.treatTime.text = model.treatTime;
     self.progress.text = model.progress;
+    [self.doctorPhoto sd_setImageWithURL:[NSURL URLWithString:model.doctorPhoto]];
 }
 
 - (void)setClock
