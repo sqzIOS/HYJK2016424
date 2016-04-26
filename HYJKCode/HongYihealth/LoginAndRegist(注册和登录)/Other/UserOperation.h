@@ -75,8 +75,7 @@ typedef enum {
 /**
  * 用户注册
  */
-+ (void)userSignupWithName:(NSString *)name password:(NSString *)password nick_name:(NSString *)nick_name avatar:(UIImage *)avatar sex:(Sex)sex email:(NSString *)email yzm:(NSString *)yzm field:(NSString *)field succeed:(void(^)())succeed failed:(void(^)())failed;
-
++ (void)userSignupWithName:(NSString *)name password:(NSString *)password nick_name:(NSString *)nick_name avatar:(UIImage *)avatar sex:(Sex)sex email:(NSString *)email yzm:(NSString *)yzm field:(NSString *)field invitecode:(NSString *)invitecode succeed:(void(^)())succeed failed:(void(^)())failed;
 
 /**
  * 获取当前session字典

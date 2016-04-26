@@ -8,6 +8,7 @@
 
 #import "SignUpDetailController.h"
 #import "SettingDetailController.h"
+#import "QRcodeManger.h"
 
 @interface SignUpDetailController ()<UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *account;
@@ -16,13 +17,17 @@
 @property (weak, nonatomic) IBOutlet UIButton *getCode;
 @property (weak, nonatomic) IBOutlet UIButton *agree;
 @property (weak, nonatomic) IBOutlet UIButton *submit;
-
+@property (weak, nonatomic) IBOutlet UITextField *inviter;
 @property (nonatomic) int time;
+
+@property (nonatomic,weak) UINavigationController *nav;
 
 - (IBAction)agreeBtnClick:(UIButton *)sender;
 - (IBAction)getCodeClick:(UIButton *)sender;
 - (IBAction)protocolClick:(UIButton *)sender;
 - (IBAction)submitBtnClick:(UIButton *)sender;
+- (IBAction)scanBtnClick:(UIButton *)sender;
+
 
 @end
 
@@ -91,7 +96,7 @@
 - (IBAction)submitBtnClick:(UIButton *)sender
 {
     [MBProgressHUD showHUDAddedTo:self.view animated:YES];
-    [UserOperation userSignupWithName:self.account.text password:self.password.text nick_name:self.nick_name avatar:self.icon sex:self.sex email:@"123" yzm:self.verificationvCode.text field:@"0" succeed:^{
+    [UserOperation userSignupWithName:self.account.text password:self.password.text nick_name:self.nick_name avatar:self.icon sex:self.sex email:@" " yzm:self.verificationvCode.text field:@"0" invitecode:self.inviter.text succeed:^{
         [MBProgressHUD hideHUDForView:self.view animated:YES];
         [ShareFunction showToast:@"注册成功,自动跳转到主界面"];
         // 俩秒后进入主界面
@@ -102,6 +107,69 @@
         [MBProgressHUD hideHUDForView:self.view animated:YES];
         [ShareFunction showMessageMiddle:@"注册失败"];
     }];
+}
+
+- (IBAction)scanBtnClick:(UIButton *)sender
+{
+    
+    UIViewController *scanController = [[UIViewController alloc] init];
+    scanController.title = @"扫描二维码";
+    scanController.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"关闭" style:UIBarButtonItemStylePlain target:self action:@selector(scanControllerDismiss)];
+    
+    
+    UILabel *tipLabel = [[UILabel alloc] init];
+    tipLabel.frame = CGRectMake(0, SCREEN_HEIGHT / 3 - 50, SCREEN_WIDTH, 40);
+    tipLabel.text = @"请将扫描框对准二维码";
+    tipLabel.textColor = [UIColor orangeColor];
+    tipLabel.textAlignment = NSTextAlignmentCenter;
+    [scanController.view addSubview:tipLabel];
+    
+    
+    UIView *scanView = [[UIView alloc] init];
+    scanView.frame = CGRectMake(SCREEN_WIDTH / 4, SCREEN_HEIGHT / 3, SCREEN_WIDTH / 2, SCREEN_WIDTH / 2);
+    scanView.clipsToBounds = YES;
+    [scanController.view addSubview:scanView];
+    
+    UIImage *image = [UIImage imageNamed:@"qrcode_border"];
+    image = [image stretchableImageWithLeftCapWidth:image.size.width /2 topCapHeight:image.size.height / 2];
+    UIImageView *imageView = [[UIImageView alloc] init];
+    imageView.image = image;
+    imageView.frame = scanView.bounds;
+    [scanView addSubview:imageView];
+    
+    UIImageView *line = [[UIImageView alloc] init];
+    line.image = [UIImage imageNamed:@"qrcode_scanline_qrcode"];
+    line.frame = scanView.bounds;
+    line.top = -scanView.height;
+    [scanView addSubview:line];
+    
+ 
+    NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(lineAnimate:) userInfo:line repeats:YES];
+    [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+    
+    UINavigationController *nav = [[UINavigationController alloc] init];
+    _nav = nav;
+    [nav pushViewController:scanController animated:NO];
+    [self presentViewController:nav animated:YES completion:nil];
+    
+    [[QRcodeManger defaultManger] starCaptureInSubperView:scanController.view didCaptureMessage:^(NSString *message) {
+        self.inviter.text = message;
+        [self scanControllerDismiss];
+    }];
+}
+
+- (void)lineAnimate:(NSTimer *)timer
+{
+    UIImageView *line = timer.userInfo;
+    line.top = -line.height;
+    [UIView animateWithDuration:1 animations:^{
+        line.top = line.height;
+    }];
+}
+
+- (void)scanControllerDismiss
+{
+    [_nav dismissViewControllerAnimated:YES completion:nil];
 }
 
 @end

@@ -69,6 +69,8 @@
 		044455481C87E00300876449 /* PatientListController.m in Sources */ = {isa = PBXBuildFile; fileRef = 044455471C87E00300876449 /* PatientListController.m */; };
 		0444554F1C87E2C400876449 /* PatientListCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 0444554D1C87E2C400876449 /* PatientListCell.m */; };
 		044455501C87E2C400876449 /* PatientListCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0444554E1C87E2C400876449 /* PatientListCell.xib */; };
+		044B007F1CCF49F0006608D7 /* qrcode_border@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 044B007D1CCF49F0006608D7 /* qrcode_border@2x.png */; };
+		044B00801CCF49F0006608D7 /* qrcode_scanline_qrcode@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 044B007E1CCF49F0006608D7 /* qrcode_scanline_qrcode@3x.png */; };
 		046BA8BC1C589498009113DD /* MyCustomController.m in Sources */ = {isa = PBXBuildFile; fileRef = 046BA8BB1C589498009113DD /* MyCustomController.m */; };
 		046BA8BE1C58AA89009113DD /* MyCustomCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 046BA8BD1C58AA89009113DD /* MyCustomCell.xib */; };
 		046BA8C11C58ACE2009113DD /* MyCustomCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 046BA8C01C58ACE2009113DD /* MyCustomCell.m */; };
@@ -538,6 +540,11 @@
 		515D6E161CC483B0001BC7B4 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 515D6E051CC483B0001BC7B4 /* README.md */; };
 		5176A7201C453C72001FE630 /* MyCenterCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 5176A71F1C453C72001FE630 /* MyCenterCell.m */; };
 		5176A7261C454638001FE630 /* appIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 5176A7251C454638001FE630 /* appIcon.png */; };
+		5178FDC71CCF002900C47C9D /* InviterIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5178FDC31CCF002900C47C9D /* InviterIcon@2x.png */; };
+		5178FDC81CCF002900C47C9D /* InviterIcon@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5178FDC41CCF002900C47C9D /* InviterIcon@3x.png */; };
+		5178FDC91CCF002900C47C9D /* scanIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5178FDC51CCF002900C47C9D /* scanIcon@2x.png */; };
+		5178FDCA1CCF002900C47C9D /* scanIcon@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 5178FDC61CCF002900C47C9D /* scanIcon@3x.png */; };
+		5178FDCD1CCF036400C47C9D /* QRcodeManger.m in Sources */ = {isa = PBXBuildFile; fileRef = 5178FDCC1CCF036400C47C9D /* QRcodeManger.m */; };
 		51A6F1161C847A520005E7A2 /* myCenterBack@2x.png.png in Resources */ = {isa = PBXBuildFile; fileRef = 51A6F1141C847A520005E7A2 /* myCenterBack@2x.png.png */; };
 		51A6F1171C847A520005E7A2 /* myCenterBack@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = 51A6F1151C847A520005E7A2 /* myCenterBack@3x.png */; };
 		51A6F11C1C847BA90005E7A2 /* addIcon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 51A6F1181C847BA90005E7A2 /* addIcon@2x.png */; };
@@ -848,6 +855,8 @@
 		0444554C1C87E2C400876449 /* PatientListCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PatientListCell.h; path = ../Model/PatientListCell.h; sourceTree = "<group>"; };
 		0444554D1C87E2C400876449 /* PatientListCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = PatientListCell.m; path = ../Model/PatientListCell.m; sourceTree = "<group>"; };
 		0444554E1C87E2C400876449 /* PatientListCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PatientListCell.xib; path = ../Model/PatientListCell.xib; sourceTree = "<group>"; };
+		044B007D1CCF49F0006608D7 /* qrcode_border@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "qrcode_border@2x.png"; sourceTree = "<group>"; };
+		044B007E1CCF49F0006608D7 /* qrcode_scanline_qrcode@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "qrcode_scanline_qrcode@3x.png"; sourceTree = "<group>"; };
 		046BA8BA1C589498009113DD /* MyCustomController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyCustomController.h; sourceTree = "<group>"; };
 		046BA8BB1C589498009113DD /* MyCustomController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MyCustomController.m; sourceTree = "<group>"; };
 		046BA8BD1C58AA89009113DD /* MyCustomCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MyCustomCell.xib; sourceTree = "<group>"; };
@@ -1566,6 +1575,12 @@
 		5176A71E1C453C72001FE630 /* MyCenterCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyCenterCell.h; sourceTree = "<group>"; };
 		5176A71F1C453C72001FE630 /* MyCenterCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MyCenterCell.m; sourceTree = "<group>"; };
 		5176A7251C454638001FE630 /* appIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = appIcon.png; sourceTree = "<group>"; };
+		5178FDC31CCF002900C47C9D /* InviterIcon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "InviterIcon@2x.png"; sourceTree = "<group>"; };
+		5178FDC41CCF002900C47C9D /* InviterIcon@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "InviterIcon@3x.png"; sourceTree = "<group>"; };
+		5178FDC51CCF002900C47C9D /* scanIcon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "scanIcon@2x.png"; sourceTree = "<group>"; };
+		5178FDC61CCF002900C47C9D /* scanIcon@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "scanIcon@3x.png"; sourceTree = "<group>"; };
+		5178FDCB1CCF036400C47C9D /* QRcodeManger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QRcodeManger.h; sourceTree = "<group>"; };
+		5178FDCC1CCF036400C47C9D /* QRcodeManger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QRcodeManger.m; sourceTree = "<group>"; };
 		51A6F1141C847A520005E7A2 /* myCenterBack@2x.png.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "myCenterBack@2x.png.png"; sourceTree = "<group>"; };
 		51A6F1151C847A520005E7A2 /* myCenterBack@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "myCenterBack@3x.png"; sourceTree = "<group>"; };
 		51A6F1181C847BA90005E7A2 /* addIcon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "addIcon@2x.png"; sourceTree = "<group>"; };
@@ -4231,6 +4246,8 @@
 		51DB75911C60E8B70075DDEB /* Other */ = {
 			isa = PBXGroup;
 			children = (
+				5178FDCB1CCF036400C47C9D /* QRcodeManger.h */,
+				5178FDCC1CCF036400C47C9D /* QRcodeManger.m */,
 				51DB75921C60E8B70075DDEB /* NSString+extend.h */,
 				51DB75931C60E8B70075DDEB /* NSString+extend.m */,
 				51DB75941C60E8B70075DDEB /* UserOperation.h */,
@@ -4242,6 +4259,12 @@
 		51DB75961C60E8B70075DDEB /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				044B007D1CCF49F0006608D7 /* qrcode_border@2x.png */,
+				044B007E1CCF49F0006608D7 /* qrcode_scanline_qrcode@3x.png */,
+				5178FDC31CCF002900C47C9D /* InviterIcon@2x.png */,
+				5178FDC41CCF002900C47C9D /* InviterIcon@3x.png */,
+				5178FDC51CCF002900C47C9D /* scanIcon@2x.png */,
+				5178FDC61CCF002900C47C9D /* scanIcon@3x.png */,
 				51DB75971C60E8B70075DDEB /* 1.png */,
 				51DB75981C60E8B70075DDEB /* 2.png */,
 				51DB75991C60E8B70075DDEB /* abord@2x.png */,
@@ -4787,7 +4810,7 @@
 				ORGANIZATIONNAME = dbCode;
 				TargetAttributes = {
 					BA2FE6DE19235B3B00B48933 = {
-						DevelopmentTeam = 9VRNPS4GBN;
+						DevelopmentTeam = 455FLQKUP8;
 					};
 					BA2FE6F919235B3B00B48933 = {
 						TestTargetID = BA2FE6DE19235B3B00B48933;
@@ -4876,6 +4899,7 @@
 				33AB2A001C425F54002FE21F /* ta@2x.png in Resources */,
 				51DB75E71C60E8B80075DDEB /* 2.png in Resources */,
 				33AB2A5C1C425F54002FE21F /* 医疗服务未选中 2.png in Resources */,
+				5178FDC71CCF002900C47C9D /* InviterIcon@2x.png in Resources */,
 				33AB2A4B1C425F54002FE21F /* wq_calendar_weekly_header@2x.png in Resources */,
 				01F2AA071C0D311400C5D072 /* mycenter_pre.png in Resources */,
 				33AB29A51C425F54002FE21F /* PayVC.xib in Resources */,
@@ -4948,10 +4972,12 @@
 				7437DAA719F65A9E0077F011 /* starBig0@2x.png in Resources */,
 				3358659A1C4AA25800EFC4B9 /* tabBar_2_pre@3x.png in Resources */,
 				7437DAAB19F65A9E0077F011 /* starBig2@2x.png in Resources */,
+				5178FDC81CCF002900C47C9D /* InviterIcon@3x.png in Resources */,
 				BA2FE6ED19235B3B00B48933 /* InfoPlist.strings in Resources */,
 				51DB75E61C60E8B80075DDEB /* 1.png in Resources */,
 				51DB75D11C60E8B80075DDEB /* BindAccountController.xib in Resources */,
 				33AB2A2E1C425F54002FE21F /* searchBg@2x.png in Resources */,
+				044B007F1CCF49F0006608D7 /* qrcode_border@2x.png in Resources */,
 				51DB75641C60E8180075DDEB /* notSelect@3x.png in Resources */,
 				749A7F9C1A11ECA800CD1AF0 /* progress-fg.png in Resources */,
 				0483D1F91C771520009001B9 /* myContact@3x.png in Resources */,
@@ -4964,6 +4990,7 @@
 				33AB2A1B1C425F54002FE21F /* select_pay@3x.png in Resources */,
 				33AB29E61C425F54002FE21F /* PhysicalVC.xib in Resources */,
 				51DB75651C60E8180075DDEB /* didSelect@2x.png in Resources */,
+				044B00801CCF49F0006608D7 /* qrcode_scanline_qrcode@3x.png in Resources */,
 				01BD79C91B53DF0F00E7B546 /* logoLove2.gif in Resources */,
 				33AB29AE1C425F54002FE21F /* SearchTableViewCell.xib in Resources */,
 				33AB29DE1C425F54002FE21F /* UpdataPassWordView.xib in Resources */,
@@ -4973,6 +5000,7 @@
 				3358659C1C4AA25800EFC4B9 /* tabBar_3_pre@3x.png in Resources */,
 				047F78B01C7B2E4900FDD7FD /* canNotSearch@2x.png in Resources */,
 				337B3BF21AB9732700317C1D /* save@2x.png in Resources */,
+				5178FDC91CCF002900C47C9D /* scanIcon@2x.png in Resources */,
 				33AB2A081C425F54002FE21F /* health_consulting@2x.png in Resources */,
 				337D08671A806DAF00DA690C /* UMSocialLocalizable.strings in Resources */,
 				51DB76111C60E8B80075DDEB /* uploadIcon@3x.png in Resources */,
@@ -5099,6 +5127,7 @@
 				51A6F11F1C847BA90005E7A2 /* noCaseData@3x.png in Resources */,
 				749A7FA51A11FAC700CD1AF0 /* progress-bg-w.png in Resources */,
 				337B3BF91AB9732700317C1D /* umeng_fb_audio_play_01@2x.png in Resources */,
+				5178FDCA1CCF002900C47C9D /* scanIcon@3x.png in Resources */,
 				337D086E1A806DAF00DA690C /* UMSLoginViewController.xib in Resources */,
 				33AB2A131C425F54002FE21F /* pay_n@3x.png in Resources */,
 				0483D2011C77155C009001B9 /* setting@3x.png in Resources */,
@@ -5263,6 +5292,7 @@
 				33AB29CD1C425F54002FE21F /* MyBookingController.m in Sources */,
 				33AB29AB1C425F54002FE21F /* SearchHeadView.m in Sources */,
 				33AB29BA1C425F54002FE21F /* BannerScrollView.m in Sources */,
+				5178FDCD1CCF036400C47C9D /* QRcodeManger.m in Sources */,
 				51DB75671C60E8180075DDEB /* CommentBar.m in Sources */,
 				01BD79BF1B53D5BF00E7B546 /* GiFHUD.m in Sources */,
 				336D90961C4263FD00C3790F /* LYProgressView.m in Sources */,
@@ -5691,7 +5721,7 @@
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.lct.HongYiheadlth;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HongYiheadlth.123;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = 1;
@@ -5742,7 +5772,7 @@
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_BUNDLE_IDENTIFIER = com.lct.HongYiheadlth;
+				PRODUCT_BUNDLE_IDENTIFIER = com.HongYiheadlth.123;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
 				TARGETED_DEVICE_FAMILY = 1;

@@ -105,24 +105,22 @@
 
 
 #pragma mark - 注册用户
-+ (void)userSignupWithName:(NSString *)name password:(NSString *)password nick_name:(NSString *)nick_name avatar:(UIImage *)avatar sex:(Sex)sex email:(NSString *)email yzm:(NSString *)yzm field:(NSString *)field succeed:(void(^)())succeed failed:(void(^)())failed
++ (void)userSignupWithName:(NSString *)name password:(NSString *)password nick_name:(NSString *)nick_name avatar:(UIImage *)avatar sex:(Sex)sex email:(NSString *)email yzm:(NSString *)yzm field:(NSString *)field invitecode:(NSString *)invitecode succeed:(void(^)())succeed failed:(void(^)())failed
 {
     NSString *path = @"/user/signup";
-    NSDictionary *params = @{@"name":name,
-                             @"password":password,
-                             @"nick_name":nick_name,
-                             @"sex":@(sex),
-                             @"avatar":[self stringWithImageBybase64Encoding:avatar andCompress:0.1],
-                             @"email":email,
-                             @"yzm":yzm,
-                             @"field":field};
+    NSMutableDictionary *params = [NSMutableDictionary dictionaryWithDictionary:@{@"name":name,
+                                                                                  @"password":password,
+                                                                                  @"nick_name":nick_name,
+                                                                                  @"sex":@(sex),
+                                                                                  @"avatar":[self stringWithImageBybase64Encoding:avatar andCompress:0.1],
+                                                                                  @"email":email,
+                                                                                  @"yzm":yzm,
+                                                                                  @"field":field}];
+    
     NSString *openapi = [[NSUserDefaults standardUserDefaults] objectForKey:@"openapi"];
-    
-    NSLog(@"%@",openapi);
-    
     if (openapi) {
         path = @"/user/oath_bind";
-        params = @{@"bind_type":@"0",
+        params = [NSMutableDictionary dictionaryWithDictionary:@{@"bind_type":@"0",
                    @"openapi":openapi,
                   @"name":name,
                   @"password":password,
@@ -131,8 +129,13 @@
                   @"avatar":[self stringWithImageBybase64Encoding:avatar andCompress:0.1],
                   @"email":email,
                   @"yzm":yzm,
-                  @"field":field};
+                  @"field":field}];
     }
+    
+    if (invitecode) {
+        [params setObject:invitecode forKey:@"invitecode"];
+    }
+    
     [AFHTTPClient postJSONPath:path httpHost:HOST parameters:params success:^(id json) {
         NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:json options:NSJSONReadingAllowFragments error:nil];
         
