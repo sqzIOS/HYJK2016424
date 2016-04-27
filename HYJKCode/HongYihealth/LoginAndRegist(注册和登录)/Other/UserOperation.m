@@ -402,8 +402,8 @@
                             finished(model.case_id);
                             return ;
                         }
-                    finished(nil);
         }
+        finished(nil);
     } failed:^{
         finished(nil);
     }];

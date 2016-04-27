@@ -82,7 +82,6 @@
                                   };
         [AFHTTPClient postJSONPath:HONGYI_flow_checkOrder httpHost:BBS_IP parameters:tempDic success:^(id responseObject) {
             
-            
             NSDictionary *dict = [AFHTTPClient jsonTurnToDictionary:responseObject];
             if ([dict[@"status"][@"succeed"] intValue] == 1) {
                 _headView.orderModel.userName = [NSString stringWithFormat:@"%@",dict[@"data"][@"consignee"][@"consignee"]];
@@ -99,7 +98,9 @@
                         [_headView changeBingLi:YES];
                     }
                     [MBHud removeFromView:self.view];
+
                 }];
+
             } else {
                 [ShareFunction showToast:dict[@"status"][@"error_desc"]];
                 self.view.userInteractionEnabled = NO;
