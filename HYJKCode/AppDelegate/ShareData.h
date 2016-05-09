@@ -203,7 +203,10 @@ APPOpenURLType appType;
 #define MAINCOLOR [UIColor colorWithRed:82/255.f green:198/255.f blue:117/255.f alpha:1.0]//二级回复的颜色
 #define ColorSecondName NAV_RED_COLOR //app主色调
 
-#define AppColor RGBCOLOR16(0x32ed9b)
+//治政主色调
+//#define AppColor RGBCOLOR16(0x32ed9b)
+#define AppColor RGBCOLOR16(0x2dbb7c)
+
 
 // 首页 及 分类 按钮边框颜色
 #define btnBorderColor [UIColor colorWithRed:220/255.f green:220/255.f blue:220/255.f alpha:1.0].CGColor
@@ -396,9 +399,10 @@ typedef enum {
 //颜色4  灰黑色
 #define colorWithBK04  colorFrom16RGB(0x717171)
 // 性健康
-//颜色1   主调色
+//颜色1   朝涛主调色
 //#define colorWith01  RGBCOLOR16(0x32ed9b)
-#define colorWith01  RGBCOLOR16(0x2fcc87)
+#define colorWith01  RGBCOLOR16(0x2dbb7c)
+
 //颜色2   标题 (黑色)
 #define colorWith02  RGBCOLOR16(0x333333)
 //颜色3   内容 (黑灰色)
