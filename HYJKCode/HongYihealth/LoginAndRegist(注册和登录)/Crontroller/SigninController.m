@@ -13,6 +13,7 @@
 #import "WXSignController.h"
 #import "SettingDetailController.h"
 
+#import "WXApi.h"
 @interface SigninController () <UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UITextField *account;
 @property (weak, nonatomic) IBOutlet UITextField *password;
@@ -31,6 +32,11 @@
     self.topView.hidden = YES;
     
     [self setUp];
+    
+    if ([WXApi isWXAppInstalled])
+    {
+        self.weiXinBtn.hidden = NO;
+    }else self.weiXinBtn.hidden = YES;
     
 }
 

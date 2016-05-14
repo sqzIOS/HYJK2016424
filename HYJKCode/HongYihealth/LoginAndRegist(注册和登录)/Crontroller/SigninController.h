@@ -10,4 +10,8 @@
 
 @interface SigninController : MyCenterBaseController
 
+@property (strong, nonatomic) IBOutlet UIButton *weiXinBtn;
+
+
+
 @end
